@@ -138,6 +138,9 @@ tr.sel td:first-child{position:relative}
 .att-item .nm{font-size:11px;padding:5px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-soft)}
 .att-item .del{position:absolute;top:4px;right:4px;background:rgba(27,42,58,.75);color:#fff;border-radius:4px;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;display:none}
 .att-item:hover .del{display:block}
+.ten{font-size:13px;font-weight:400;color:var(--steel);margin-top:2px;font-family:var(--sans)}
+.ten-sm{font-size:11px;color:var(--steel);margin-top:-2px;margin-bottom:4px;line-height:1.35}
+.ten-inline{color:var(--steel);font-size:12px}
 .att-sub{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink-soft)}
 .att-sub .tip{font-weight:400;letter-spacing:0;color:var(--steel);font-size:11px}
 .att-grid:empty{display:none}
@@ -330,7 +333,8 @@ tr.sel td:first-child{position:relative}
   <div class="modal">
     <div class="md-hd"><h2>发布采购需求</h2><button class="btn btn-sm" data-close="mNew">✕</button></div>
     <div class="md-bd">
-      <div class="fld"><label>标题 *</label><input id="nTitle" placeholder="例:Nanue桥 环链电动葫芦 3吨×2台"></div>
+      <div class="fld"><label>标题(中文) *</label><input id="nTitle" placeholder="例:Nanue桥 环链电动葫芦 3吨×2台"></div>
+      <div class="fld"><label>Title (English)</label><input id="nTitleEn" placeholder="e.g. Electric Chain Hoist 3T x 2 sets"></div>
       <div class="row2">
         <div class="fld"><label>项目号</label><input id="nJob" list="jobList" placeholder="例:26-031"><datalist id="jobList"></datalist></div>
         <div class="fld"><label>二级项目号</label><input id="nSub" placeholder="例:NM04"></div>
@@ -343,7 +347,8 @@ tr.sel td:first-child{position:relative}
         <div class="fld"><label>需求人</label><input id="nReq" placeholder="默认当前用户"></div>
         <div class="fld"><label>需要日期</label><input type="date" id="nDue"></div>
       </div>
-      <div class="fld"><label>说明 / 规格</label><textarea id="nDesc" rows="4" placeholder="数量、规格、交付地点、备注…"></textarea></div>
+      <div class="fld"><label>说明 / 规格(中文)</label><textarea id="nDesc" rows="3" placeholder="数量、规格、交付地点、备注…"></textarea></div>
+      <div class="fld"><label>Description / Specification (English)</label><textarea id="nDescEn" rows="3" placeholder="Qty, specs, delivery place, remarks…"></textarea></div>
       <div class="fld"><label>附件(照片 / 文件)</label>
         <button class="btn" id="nAttBtn" style="border:1px dashed var(--line);width:100%;padding:10px;color:var(--ink-soft)">＋ 添加附件</button>
         <div id="nAttList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
@@ -380,7 +385,8 @@ tr.sel td:first-child{position:relative}
   <div class="modal">
     <div class="md-hd"><h2>修改采购需求</h2><button class="btn btn-sm" data-close="mEdit">✕</button></div>
     <div class="md-bd">
-      <div class="fld"><label>标题 *</label><input id="eTitle"></div>
+      <div class="fld"><label>标题(中文) *</label><input id="eTitle"></div>
+      <div class="fld"><label>Title (English)</label><input id="eTitleEn" placeholder="e.g. Electric Chain Hoist 3T x 2 sets"></div>
       <div class="row2">
         <div class="fld"><label>项目号</label><input id="eJob" list="jobList"></div>
         <div class="fld"><label>二级项目号</label><input id="eSub" placeholder="例:NM04"></div>
@@ -393,7 +399,8 @@ tr.sel td:first-child{position:relative}
         <div class="fld"><label>需求人</label><input id="eReq"></div>
         <div class="fld"><label>需要日期</label><input type="date" id="eDue"></div>
       </div>
-      <div class="fld"><label>说明 / 规格</label><textarea id="eDesc" rows="4"></textarea></div>
+      <div class="fld"><label>说明 / 规格(中文)</label><textarea id="eDesc" rows="3"></textarea></div>
+      <div class="fld"><label>Description / Specification (English)</label><textarea id="eDescEn" rows="3"></textarea></div>
       <div class="row2">
         <div class="fld"><label>交期</label><input id="eEta" placeholder="如 45天 / 12月底"></div>
         <div class="fld"><label>签订日期</label><input type="date" id="eSigned"></div>
@@ -404,6 +411,24 @@ tr.sel td:first-child{position:relative}
       </div>
     </div>
     <div class="md-ft"><button class="btn" data-close="mEdit">取消</button><button class="btn btn-ink" id="eSave">保存修改</button></div>
+  </div>
+</div>
+
+<!-- 编辑报价 -->
+<div class="modal-mask" id="mQuote">
+  <div class="modal">
+    <div class="md-hd"><h2>修改报价</h2><button class="btn btn-sm" data-close="mQuote">✕</button></div>
+    <div class="md-bd">
+      <div class="fld"><label>供应商 *</label><input id="qeSup" list="supListData3" placeholder="可从供应商库选"><datalist id="supListData3"></datalist></div>
+      <div class="row2">
+        <div class="fld"><label>价格 *</label>
+          <div style="display:flex;gap:6px"><select id="qeCur" style="width:80px"><option>$</option><option>¥</option></select><input id="qePrice" type="number" step="0.01"></div>
+        </div>
+        <div class="fld"><label>货期</label><input id="qeLead" placeholder="如 45天 / 现货"></div>
+      </div>
+      <div class="fld"><label>备注</label><input id="qeNote" placeholder="FOB/CIF、关税、含税运…"></div>
+    </div>
+    <div class="md-ft"><button class="btn" data-close="mQuote">取消</button><button class="btn btn-ink" id="qeSave">保存</button></div>
   </div>
 </div>
 
@@ -701,7 +726,8 @@ async function createRecord(){
     id:uid(), title,
     job:$("#nJob").value.trim(), sub:$("#nSub").value.trim(), pri:$("#nPri").value,
     requester:$("#nReq").value.trim()||cfg.name||"", neededBy:$("#nDue").value||"",
-    desc:$("#nDesc").value.trim(),
+    titleEn:$("#nTitleEn").value.trim(),
+    desc:$("#nDesc").value.trim(), descEn:$("#nDescEn").value.trim(),
     status:"需求", createdAt:now(), updatedAt:now(),
     quotes:[], attachments:[], timeline:[], po:""
   };
@@ -867,7 +893,7 @@ function renderProjects(){
           const a=recAmount(r), od=isOverdue(r);
           return `<div class="psub" data-id="${r.id}">
             <span class="sn">${esc(r.sub||"—")}</span>
-            <span>${esc(r.title)}</span>
+            <span>${esc(r.title)}${r.titleEn?`<span class="ten-inline"> · ${esc(r.titleEn)}</span>`:""}</span>
             <span class="st ${r.status}">${r.status}</span>
             <span class="amt">${a?`${a.cur}${a.val.toLocaleString(undefined,{maximumFractionDigits:2})}`:"—"}</span>
             <span class="dd ${od?"overdue":""}">${(()=>{const dl=(r.ship&&r.ship.eta)||r.neededBy; return dl?((r.ship&&r.ship.eta)?"ETA ":"")+fmtD(dl)+(od?" 逾期":""):"—";})()}</span>
@@ -897,7 +923,7 @@ function setView(m){
 /* ================= 渲染:看板 ================= */
 function passFilter(r){
   const q=$("#fSearch").value.trim().toLowerCase();
-  if(q){ const hay=(r.title+" "+r.id+" "+r.job+" "+(r.sub||"")+" "+(r.quotes||[]).map(x=>x.supplier).join(" ")).toLowerCase(); if(!hay.includes(q))return false; }
+  if(q){ const hay=(r.title+" "+(r.titleEn||"")+" "+(r.descEn||"")+" "+r.id+" "+r.job+" "+(r.sub||"")+" "+(r.quotes||[]).map(x=>x.supplier).join(" ")).toLowerCase(); if(!hay.includes(q))return false; }
   if($("#fJob").value && r.job!==$("#fJob").value) return false;
   if($("#fPerson").value && r.requester!==$("#fPerson").value) return false;
   if($("#fPri").value && r.pri!==$("#fPri").value) return false;
@@ -915,6 +941,7 @@ function cardHTML(r){
   return `<article class="card" data-id="${r.id}" draggable="true" role="button" tabindex="0" aria-label="${esc(r.title)}">
     <div class="rid"><span>${r.id}</span><span class="pri ${r.pri}">${r.pri}</span></div>
     <h3>${esc(r.title)}</h3>
+    ${r.titleEn?`<div class="ten-sm">${esc(r.titleEn)}</div>`:""}
     <div class="meta">
       ${r.job||r.sub?`<span class="tag job">${esc(fullJob(r))}</span>`:""}
       ${r.neededBy?`<span class="tag due ${overdue?"overdue":""}">需 ${fmtD(r.neededBy)}${overdue?" 逾期":""}</span>`:""}
@@ -995,7 +1022,7 @@ function openDrawer(id,keep){
   currentId=id;
   $("#drawer").classList.add("open"); $("#drawerMask").classList.add("open");
   $("#dwRid").textContent=rec.id+"  ·  创建于 "+fmtDT(rec.createdAt);
-  $("#dwTitle").textContent=rec.title;
+  $("#dwTitle").innerHTML=esc(rec.title)+(rec.titleEn?`<div class="ten">${esc(rec.titleEn)}</div>`:"");
   const st=$("#dwStamp"); st.textContent=rec.status; st.className="stamp s-"+rec.status;
   const sel=rec.quotes.find(q=>q.selected);
   $("#dwBody").innerHTML=`
@@ -1007,6 +1034,7 @@ function openDrawer(id,keep){
         <dt>需要日期</dt><dd class="mono">${fmtD(rec.neededBy)||"—"}</dd>
         ${rec.po?`<dt>PO号</dt><dd class="mono">${esc(rec.po)}</dd>`:""}
         <dt>说明</dt><dd style="white-space:pre-wrap">${esc(rec.desc||"—")}</dd>
+        ${rec.descEn?`<dt>Description</dt><dd style="white-space:pre-wrap">${esc(rec.descEn)}</dd>`:""}
       </dl>
       <div class="att-sub"><span>附件</span><span class="tip">照片自动压缩 · 其他文件 ≤25MB</span></div>
       ${attBlockHTML(rec,"需求")}
@@ -1041,6 +1069,7 @@ function openDrawer(id,keep){
           <td>${esc(q.note||"")}</td>
           <td style="white-space:nowrap">
             ${!q.selected?`<button class="btn btn-sm" onclick="pickQuote('${rec.id}',${i})">选定</button>`:`<button class="btn btn-sm" onclick="unpickQuote('${rec.id}',${i})">取消选定</button>`}
+            <button class="btn btn-sm" onclick="openEditQuote('${rec.id}',${i})">改</button>
             <button class="btn btn-sm btn-danger" onclick="delQuote('${rec.id}',${i})">删</button>
           </td></tr>`).join("")}
       </tbody></table>`:`<div class="empty">${rec.status==="需求"?"尚未开始询价":"还没有报价"}</div>`}
@@ -1149,7 +1178,7 @@ let editingRecId=null;
 function openEditInfo(id){
   const rec=getRec(id); if(!rec)return;
   editingRecId=id;
-  $("#eTitle").value=rec.title||""; $("#eJob").value=rec.job||""; $("#eSub").value=rec.sub||"";
+  $("#eTitle").value=rec.title||""; $("#eTitleEn").value=rec.titleEn||""; $("#eDescEn").value=rec.descEn||""; $("#eJob").value=rec.job||""; $("#eSub").value=rec.sub||"";
   $("#ePri").value=rec.pri||"中"; $("#eReq").value=rec.requester||"";
   $("#eDue").value=rec.neededBy||""; $("#eDesc").value=rec.desc||"";
   $("#ePo").value=rec.po||""; $("#eEta").value=rec.eta||""; $("#eSigned").value=rec.signed||"";
@@ -1159,10 +1188,10 @@ async function saveEditInfo(){
   const rec=getRec(editingRecId); if(!rec)return;
   const title=$("#eTitle").value.trim();
   if(!title) return toast("标题必填","err");
-  const before={title:rec.title,job:rec.job,sub:rec.sub,pri:rec.pri,requester:rec.requester,neededBy:rec.neededBy,desc:rec.desc,po:rec.po,eta:rec.eta,signed:rec.signed};
-  const after={title,job:$("#eJob").value.trim(),sub:$("#eSub").value.trim(),pri:$("#ePri").value,requester:$("#eReq").value.trim(),
+  const before={title:rec.title,titleEn:rec.titleEn,descEn:rec.descEn,job:rec.job,sub:rec.sub,pri:rec.pri,requester:rec.requester,neededBy:rec.neededBy,desc:rec.desc,po:rec.po,eta:rec.eta,signed:rec.signed};
+  const after={title,titleEn:$("#eTitleEn").value.trim(),descEn:$("#eDescEn").value.trim(),job:$("#eJob").value.trim(),sub:$("#eSub").value.trim(),pri:$("#ePri").value,requester:$("#eReq").value.trim(),
                neededBy:$("#eDue").value||"",desc:$("#eDesc").value.trim(),po:$("#ePo").value.trim(),eta:$("#eEta").value.trim(),signed:$("#eSigned").value||""};
-  const labels={title:"标题",job:"项目号",sub:"二级项目号",pri:"优先级",requester:"需求人",neededBy:"需要日期",desc:"说明",po:"合同/PO号",eta:"交期",signed:"签订日期"};
+  const labels={title:"标题",titleEn:"英文标题",descEn:"英文说明",job:"项目号",sub:"二级项目号",pri:"优先级",requester:"需求人",neededBy:"需要日期",desc:"说明",po:"合同/PO号",eta:"交期",signed:"签订日期"};
   const diff=Object.keys(after).filter(k=>(before[k]||"")!==(after[k]||""))
                    .map(k=>`${labels[k]}:「${before[k]||"空"}」→「${after[k]||"空"}」`);
   if(!diff.length){ closeModal("mEdit"); return toast("没有改动"); }
@@ -1170,6 +1199,35 @@ async function saveEditInfo(){
   log(rec,"修改需求信息",diff.join("; "));
   closeModal("mEdit"); render(); openDrawer(editingRecId,true);
   if(await persist(`${rec.id} 修改需求信息`)) toast("已保存","ok");
+}
+
+/* ================= 修改报价 ================= */
+let editingQuote={id:null,idx:null};
+function openEditQuote(id,idx){
+  const rec=getRec(id); if(!rec)return;
+  const q=rec.quotes[idx]; if(!q)return;
+  editingQuote={id,idx};
+  $("#qeSup").value=q.supplier||""; $("#qeCur").value=q.currency||"$";
+  $("#qePrice").value=(q.price!==undefined&&q.price!==null)?q.price:"";
+  $("#qeLead").value=q.lead||""; $("#qeNote").value=q.note||"";
+  const dl=$("#supListData3"); if(dl) dl.innerHTML=supAll().map(sp=>`<option value="${esc(sp.name)}">${esc(sp.nameEn||"")}</option>`).join("");
+  openModal("mQuote"); setTimeout(()=>$("#qeSup").focus(),50);
+}
+async function saveEditQuote(){
+  const rec=getRec(editingQuote.id); if(!rec)return;
+  const q=rec.quotes[editingQuote.idx]; if(!q)return;
+  const sup=$("#qeSup").value.trim(), priceRaw=$("#qePrice").value.trim();
+  if(!sup||priceRaw==="") return toast("供应商和价格必填","err");
+  const before={supplier:q.supplier||"",currency:q.currency||"$",price:String(q.price??""),lead:q.lead||"",note:q.note||""};
+  const after={supplier:sup,currency:$("#qeCur").value,price:priceRaw,lead:$("#qeLead").value.trim(),note:$("#qeNote").value.trim()};
+  const labels={supplier:"供应商",currency:"币种",price:"价格",lead:"货期",note:"备注"};
+  const diff=Object.keys(after).filter(k=>before[k]!==after[k]).map(k=>`${labels[k]}:「${before[k]||"空"}」→「${after[k]||"空"}」`);
+  if(!diff.length){ closeModal("mQuote"); return toast("没有改动"); }
+  q.supplier=after.supplier; q.currency=after.currency; q.price=parseFloat(after.price)||0;
+  q.lead=after.lead; q.note=after.note; q.editedBy=cfg.name; q.editedAt=now();
+  log(rec,"修改报价",diff.join("; "));
+  closeModal("mQuote"); render(); openDrawer(editingQuote.id,true);
+  if(await persist(`${rec.id} 修改报价 ${sup}`)) toast("已保存","ok");
 }
 
 /* ================= 修改订单信息 ================= */
@@ -1334,7 +1392,7 @@ function closeModal(id){ $("#"+id).classList.remove("open"); }
 $$("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
 $$(".modal-mask").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
 
-$("#btnNew").addEventListener("click",()=>{ $("#nReq").value=cfg.name||""; $("#nSub").value=""; pendingFiles=[]; renderPendingAtt(); openModal("mNew"); setTimeout(()=>$("#nTitle").focus(),50); });
+$("#btnNew").addEventListener("click",()=>{ $("#nReq").value=cfg.name||""; $("#nSub").value=""; $("#nTitleEn").value=""; $("#nDescEn").value=""; pendingFiles=[]; renderPendingAtt(); openModal("mNew"); setTimeout(()=>$("#nTitle").focus(),50); });
 
 /* 新建弹窗:待上传附件 */
 let pendingFiles=[];
@@ -1364,6 +1422,7 @@ $("#supAddBtn").addEventListener("click",()=>openSupEdit(null));
 $("#supSearch").addEventListener("input",renderSuppliers);
 $("#spProdAdd").addEventListener("click",addDraftProd);
 ["spProdName","spProdSpec"].forEach(id=>$("#"+id).addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();addDraftProd();} }));
+$("#qeSave").addEventListener("click",saveEditQuote);
 $("#eSave").addEventListener("click",saveEditInfo);
 $("#oSave").addEventListener("click",saveEditOrder);
 $("#shSave").addEventListener("click",saveEditShip);
@@ -1403,7 +1462,7 @@ function startApp(){
   // 每3分钟自动刷新,避免同事更新看不到
   setInterval(()=>{ if(authUser() && ghReady() && !document.hidden && !currentId) loadData(true).catch(()=>{}); },180000);
 })();
-window.saveOrderFields=saveOrderFields; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
+window.saveOrderFields=saveOrderFields; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
 window.changeStatus=changeStatus; window.removeAttachment=removeAttachment;
 window.getRec=getRec; window.log=log; window.openDrawer=openDrawer; window.persist=persist;
 </script>
