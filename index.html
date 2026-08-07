@@ -145,6 +145,28 @@ tr.sel td:first-child{position:relative}
 .ten{font-size:13px;font-weight:400;color:var(--steel);margin-top:2px;font-family:var(--sans)}
 .ten-sm{font-size:11px;color:var(--steel);margin-top:-2px;margin-bottom:4px;line-height:1.35}
 .ten-inline{color:var(--steel);font-size:12px}
+.sup-link{margin-top:9px;border-top:1px dashed var(--line);padding-top:8px}
+.sup-link .lk{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;font-size:12px;padding:4px 6px;border-radius:4px;cursor:pointer}
+.sup-link .lk:hover{background:var(--safety-soft)}
+.sup-link .lk .id{font-family:var(--mono);color:var(--steel)}
+.sup-link .lk .st{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--line-soft);color:var(--ink-soft)}
+.sup-link .sum{font-size:12px;font-weight:700;margin-bottom:4px}
+.chip.alert{border-color:var(--reject);color:var(--reject);cursor:pointer;font-weight:700}
+.chip.alert.on{background:var(--reject);color:#fff}
+@media print{
+  body>*{display:none!important}
+  #printArea{display:block!important;position:static}
+  #printArea{font-family:var(--sans);color:#000}
+}
+#printArea{display:none}
+body.readonly #btnNew,body.readonly #btnBulk,body.readonly #btnEditInfo,body.readonly #btnEditOrder,body.readonly #btnEditShip,
+body.readonly .upl-zone,body.readonly .att-item .del,body.readonly #supAddBtn,body.readonly [data-supedit],
+body.readonly .proj-hd .addbtn,body.readonly #dwBody .actions,body.readonly #dwBody .act-note,
+body.readonly #dwBody .qt td:last-child,body.readonly #dwBody .qt th:last-child,
+body.readonly #qSup,body.readonly #qCur,body.readonly #qPrice,body.readonly #qLead,body.readonly #qNote,
+body.readonly #dwBody .row2:has(#qSup),body.readonly #dwBody .row2:has(#qLead),body.readonly #dwBody [onclick^="addQuote"]{display:none!important}
+body.readonly .card{cursor:pointer}
+.ro-tag{background:var(--steel);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;margin-left:6px;letter-spacing:.05em}
 .att-sub{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink)}
 .att-sub .tip{font-weight:400;letter-spacing:0;color:var(--steel);font-size:11px}
 .att-grid:empty{display:none}
@@ -216,6 +238,12 @@ tr.sel td:first-child{position:relative}
 .login-err{color:var(--reject);font-size:13px;min-height:18px;margin:4px 0 8px}
 
 /* ===== 供应商 ===== */
+#supList{max-height:56vh;overflow-y:auto;padding-right:4px;margin-right:-4px}
+#supList::-webkit-scrollbar{width:9px}
+#supList::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px}
+#supList::-webkit-scrollbar-thumb:hover{background:var(--steel)}
+#bRows{max-height:44vh;overflow-y:auto;padding-right:4px;margin-right:-4px}
+.md-bd{max-height:none}
 .sup-item{border:1px solid var(--line);border-radius:var(--r);background:var(--card);margin-bottom:6px;overflow:hidden}
 .sup-item .sup-hd{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer}
 .sup-item .sup-hd:hover{background:var(--safety-soft)}
@@ -241,6 +269,21 @@ tr.sel td:first-child{position:relative}
 .view-tabs button{padding:5px 12px;background:var(--card);color:var(--ink-soft);font-weight:700;font-size:12px;border-right:1px solid var(--line)}
 .view-tabs button:last-child{border-right:none}
 .view-tabs button.on{background:var(--ink);color:#fff}
+.proj-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.proj-bar .hint{font-size:12px;color:var(--steel)}
+.proj-hd .addbtn{font-size:11px;padding:3px 8px;border:1px solid var(--line);border-radius:5px;color:var(--ink-soft);background:#fff;flex-shrink:0}
+.proj-hd .addbtn:hover{border-color:var(--safety);color:var(--safety)}
+.brow{display:grid;grid-template-columns:92px 1fr 1fr 148px 30px;gap:6px;align-items:center;margin-bottom:6px}
+.brow input{padding:6px 8px;font-size:13px}
+.brow .brm{color:var(--steel);font-size:13px;padding:4px;border-radius:4px;text-align:center}
+.brow .brm:hover{color:#fff;background:var(--reject)}
+.bhead{display:grid;grid-template-columns:92px 1fr 1fr 148px 30px;gap:6px;font-size:11px;font-weight:700;color:var(--steel);letter-spacing:.06em;margin-bottom:4px}
+@media(max-width:640px){.brow,.bhead{grid-template-columns:1fr 1fr}.bhead{display:none}}
+.bulk-prev{border:1px solid var(--line-soft);border-radius:6px;background:#FBFAF7;padding:8px 10px;font-size:12px;max-height:170px;overflow:auto}
+.bulk-prev table{width:100%;border-collapse:collapse}
+.bulk-prev td{padding:2px 6px;border-bottom:1px solid var(--line-soft)}
+.bulk-prev .sn{font-family:var(--mono);color:var(--safety);font-weight:700;white-space:nowrap}
+.bulk-prev .en{color:var(--steel)}
 .proj-wrap{max-width:1200px;margin:0 auto;padding:14px 20px 60px;display:flex;flex-direction:column;gap:14px}
 .proj{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .proj-hd{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--line-soft)}
@@ -297,6 +340,7 @@ tr.sel td:first-child{position:relative}
       <span class="chip"><span class="dot" id="connDot"></span><span id="connText">未连接</span></span>
       <span class="chip" id="userChip" title="当前用户" style="cursor:pointer">👤 未设置</span>
       <button class="btn btn-sm" id="btnRefresh">↻ 刷新</button>
+      <span class="chip alert" id="alertChip" style="display:none" title="点击只看预警项"></span>
       <span class="chip" id="lastSync" style="display:none"></span>
     </div>
     <div class="hd-right">
@@ -321,7 +365,7 @@ tr.sel td:first-child{position:relative}
 </div>
 
 <main class="board" id="board"></main>
-<main class="proj-wrap" id="projView" style="display:none"></main>
+<main class="proj-wrap" id="projView" style="display:none"><div class="proj-bar"><span class="hint">按项目号分组 · 可批量新建采购需求，之后在看板补细节</span><button class="btn btn-primary" id="btnBulk">＋ 新建项目 / 批量加需求</button></div><div id="projList"></div></main>
 
 <!-- 抽屉 -->
 <div class="drawer-mask" id="drawerMask"></div>
@@ -333,6 +377,7 @@ tr.sel td:first-child{position:relative}
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
       <span class="stamp" id="dwStamp"></span>
+      <button class="btn btn-sm" id="dwPrint" title="打印 / 导出PDF">🖨 打印</button>
       <button class="btn btn-sm" id="dwClose">✕ 关闭</button>
     </div>
   </div>
@@ -425,6 +470,30 @@ tr.sel td:first-child{position:relative}
   </div>
 </div>
 
+<!-- 批量新建采购需求 -->
+<div class="modal-mask" id="mBulk">
+  <div class="modal">
+    <div class="md-hd"><h2>新建项目 / 批量加采购需求</h2><button class="btn btn-sm" data-close="mBulk">✕</button></div>
+    <div class="md-bd">
+      <div class="row2">
+        <div class="fld"><label>项目号 *</label><input id="bJob" list="jobList" placeholder="例:26-016"></div>
+        <div class="fld"><label>需求人</label><input id="bReq"></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>优先级(默认)</label><select id="bPri"><option>中</option><option>高</option><option>低</option></select></div>
+        <div class="fld"></div>
+      </div>
+      <div class="fld"><label>采购需求清单</label>
+        <div class="bhead"><span>二级项目号</span><span>中文标题 *</span><span>英文标题</span><span>需要日期</span><span></span></div>
+        <div id="bRows"></div>
+        <button class="btn" id="bAddRow" style="border:1px dashed var(--line);width:100%;padding:8px;color:var(--ink-soft);margin-top:2px">＋ 添加一条</button>
+        <div class="hint" id="bCount"></div>
+      </div>
+    </div>
+    <div class="md-ft"><button class="btn" data-close="mBulk">取消</button><button class="btn btn-primary" id="bSave">批量创建</button></div>
+  </div>
+</div>
+
 <!-- 编辑报价 -->
 <div class="modal-mask" id="mQuote">
   <div class="modal">
@@ -499,7 +568,7 @@ tr.sel td:first-child{position:relative}
 <!-- 供应商列表 -->
 <div class="modal-mask" id="mSupList">
   <div class="modal">
-    <div class="md-hd"><h2>供应商库</h2><button class="btn btn-sm" data-close="mSupList">✕</button></div>
+    <div class="md-hd"><h2>供应商库 <span id="supCount" style="font-weight:400;font-size:12px;color:var(--steel)"></span></h2><button class="btn btn-sm" data-close="mSupList">✕</button></div>
     <div class="md-bd">
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <input id="supSearch" type="search" placeholder="搜索名称 / 英文名 / 电话…">
@@ -546,6 +615,8 @@ tr.sel td:first-child{position:relative}
   </div>
 </div>
 
+<div id="printArea"></div>
+
 <div id="toast"></div>
 <div id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div><div style="display:flex;gap:8px"><button class="btn" onclick="window.open(document.getElementById('lbImg').src,'_blank')">新标签页打开</button><button class="btn" onclick="document.getElementById('lightbox').classList.remove('open')">关闭</button></div></div>
 <input type="file" id="fileInput" multiple style="display:none">
@@ -571,8 +642,12 @@ let currentId = null;
 const AUTH_SALT="pt2026";
 const ACCOUNTS={
   "Xiaolin Liu":"c20ec9fdaa4bb74cbecab1a7edf1476d04b252ae2098e7c5bb0f20641a06928c",
-  "Fang Jiang":"d40181ec07d24c5b276784d25f7629c1f174c5164864d937bbcd4bf572409e76"
+  "Fang Jiang":"d40181ec07d24c5b276784d25f7629c1f174c5164864d937bbcd4bf572409e76",
+  "Viewer":"726d9a8a6ca31e7807a4cd7c65146a95f94f391982b4bf1a0da7915486f736b8"
 };
+const READONLY_USERS=["Viewer"];
+const isViewer=()=>READONLY_USERS.includes(authUser()||"");
+function denyRO(){ toast("只读账号，无法修改数据","err"); return false; }
 function sha256(ascii){
  function rightRotate(v,a){return (v>>>a)|(v<<(32-a));}
  var mathPow=Math.pow, maxWord=mathPow(2,32), result='';
@@ -619,7 +694,8 @@ function enterApp(u){
   const saved=JSON.parse(storage.getItem("pt_cfg")||"null");
   if(saved && saved.name!==u){ saved.name=u; storage.setItem("pt_cfg",JSON.stringify(saved)); }
   document.querySelector("#loginGate").classList.add("hidden");
-  document.querySelector("#userChip").textContent="👤 "+u;
+  document.querySelector("#userChip").textContent="👤 "+u+(READONLY_USERS.includes(u)?"（只读）":"");
+  document.body.classList.toggle("readonly",READONLY_USERS.includes(u));
   startApp();
 }
 const attCache = {}; // path -> objectURL
@@ -717,6 +793,7 @@ function mergeRecords(remote,local){
 }
 
 async function persist(message){
+  if(isViewer()){ toast("只读账号，改动不会保存","err"); return false; }
   if(!ghReady()){ toast("请先在设置里配置 GitHub 仓库","err"); return false; }
   try{
     // 保存前检查远端是否被同事改过
@@ -740,6 +817,7 @@ const getRec=id=>state.records.find(r=>r.id===id);
 function log(rec,action,note){ rec.timeline.push({at:now(),by:cfg.name||"匿名",action,note:note||""}); rec.updatedAt=now(); }
 
 async function createRecord(){
+  if(isViewer()) return denyRO();
   const title=$("#nTitle").value.trim();
   if(!title) return toast("请填写标题","err");
   const rec={
@@ -760,6 +838,7 @@ async function createRecord(){
 }
 
 async function closeRecord(id){
+  if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   if(!confirm("确认货物已到货并完结此采购?\n完结后不再显示在看板上(勾选「显示已完结/已取消」可查看)。")) return;
   const today=new Date().toISOString().slice(0,10);
@@ -769,6 +848,7 @@ async function closeRecord(id){
   return changeStatus(id,"完结",note,"确认到货并完结");
 }
 async function saveOrderFields(id,advance){
+  if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   const po=($("#poNum")?$("#poNum").value.trim():rec.po||"");
   const eta=($("#etaInp")?$("#etaInp").value.trim():rec.eta||"");
@@ -785,6 +865,7 @@ async function saveOrderFields(id,advance){
   if(await persist(`${rec.id} 更新订单信息`)) toast("已保存","ok");
 }
 async function changeStatus(id,to,note,extraAction){
+  if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec) return;
   const from=rec.status;
   rec.status=to;
@@ -795,6 +876,7 @@ async function changeStatus(id,to,note,extraAction){
 
 const canQuote=r=>r.status!=="需求" && r.status!=="完结" && r.status!=="已取消";
 async function addQuote(id){
+  if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   if(!canQuote(rec)) return toast(rec.status==="需求"?"请先点「开始询价」":"当前阶段不能添加报价","err");
   const sup=$("#qSup").value.trim(), price=$("#qPrice").value.trim();
@@ -805,6 +887,7 @@ async function addQuote(id){
   await persist(`${rec.id} 添加报价 ${sup}`);
 }
 async function pickQuote(id,idx){
+  if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   rec.quotes.forEach((q,i)=>q.selected=(i===idx));
   log(rec,"选定报价",rec.quotes[idx].supplier);
@@ -812,6 +895,7 @@ async function pickQuote(id,idx){
   await persist(`${rec.id} 选定 ${rec.quotes[idx].supplier}`);
 }
 async function unpickQuote(id,idx){
+  if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   const q=rec.quotes[idx]; if(!q||!q.selected)return;
   q.selected=false;
@@ -820,6 +904,7 @@ async function unpickQuote(id,idx){
   await persist(`${rec.id} 取消选定 ${q.supplier}`);
 }
 async function delQuote(id,idx){
+  if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   const q=rec.quotes.splice(idx,1)[0];
   log(rec,"删除报价",q.supplier);
@@ -846,6 +931,7 @@ function compressImage(file,maxDim=1600,quality=.82){
 const blobToB64=blob=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(",")[1]); r.onerror=rej; r.readAsDataURL(blob); });
 
 async function uploadFiles(id,files,group){
+  if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   if(!ghReady()) return toast("请先配置 GitHub","err");
   for(const file of files){
@@ -868,6 +954,7 @@ async function uploadFiles(id,files,group){
   toast("附件上传完成","ok");
 }
 async function removeAttachment(id,idx){
+  if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   const a=rec.attachments[idx];
   if(!confirm(`删除附件 ${a.name}?仓库里的文件也会删除。`))return;
@@ -890,7 +977,7 @@ function projProgress(list){
 }
 let openProjects=new Set();
 function renderProjects(){
-  const box=$("#projView");
+  const box=$("#projList");
   const groups=new Map();
   for(const r of state.records.filter(passFilter)){
     const k=r.job||"(未填项目号)";
@@ -917,6 +1004,7 @@ function renderProjects(){
         ${late?`<span class="warn">⚠ ${late} 项逾期</span>`:""}
         <span class="bar"><i class="${pct===100?"done":"prog"}" style="width:${pct}%"></i></span>
         <span class="pct">${pct}%</span>
+        <button class="addbtn" data-addto="${esc(k)}" title="向该项目添加采购需求">＋ 加需求</button>
       </div>
       <div class="proj-bd">
         ${list.map(r=>{
@@ -933,7 +1021,9 @@ function renderProjects(){
       </div>
     </section>`;
   }).join("");
-  $$(".proj-hd").forEach(h=>h.addEventListener("click",()=>{
+  $$("[data-addto]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openBulk(b.dataset.addto==="(未填项目号)"?"":b.dataset.addto); }));
+  $$(".proj-hd").forEach(h=>h.addEventListener("click",e=>{
+    if(e.target.closest("[data-addto]")) return;
     const sec=h.parentElement, k=sec.dataset.pj;
     sec.classList.toggle("open");
     sec.classList.contains("open")?openProjects.add(k):openProjects.delete(k);
@@ -957,6 +1047,7 @@ function passFilter(r){
   if($("#fJob").value && r.job!==$("#fJob").value) return false;
   if($("#fPerson").value && r.requester!==$("#fPerson").value) return false;
   if($("#fPri").value && r.pri!==$("#fPri").value) return false;
+  if(alertOnly && !alertLevel(r)) return false;
   return true;
 }
 function railHTML(r){
@@ -1017,6 +1108,7 @@ function render(){
   $("#jobList").innerHTML=jobs.map(j=>`<option value="${esc(j)}">`).join("");
   $("#countNote").textContent=`显示 ${filtered.filter(r=>cols.includes(r.status)).length} / 共 ${state.records.length} 条`;
   renderProjects();
+  renderAlert();
   // 事件
   $$(".card").forEach(c=>{
     c.addEventListener("click",()=>openDrawer(c.dataset.id));
@@ -1028,6 +1120,7 @@ function render(){
     col.addEventListener("dragleave",()=>col.classList.remove("drag-over"));
     col.addEventListener("drop",e=>{
       e.preventDefault(); col.classList.remove("drag-over");
+      if(isViewer()) return denyRO();
       const id=e.dataTransfer.getData("text/plain"), to=col.dataset.status;
       const rec=getRec(id);
       if(rec && rec.status!==to) changeStatus(id,to,"(拖拽调整)");
@@ -1068,7 +1161,7 @@ function openDrawer(id,keep){
   const rec=getRec(id); if(!rec)return;
   currentId=id;
   $("#drawer").classList.add("open"); $("#drawerMask").classList.add("open");
-  $("#dwRid").textContent=rec.id+"  ·  创建于 "+fmtDT(rec.createdAt);
+  $("#dwRid").innerHTML=esc(rec.id)+"  ·  创建于 "+fmtDT(rec.createdAt)+(isViewer()?'<span class="ro-tag">只读</span>':"");
   $("#dwTitle").innerHTML=esc(rec.title)+(rec.titleEn?`<div class="ten">${esc(rec.titleEn)}</div>`:"");
   const st=$("#dwStamp"); st.textContent=rec.status; st.className="stamp s-"+rec.status;
   const sel=rec.quotes.find(q=>q.selected);
@@ -1247,6 +1340,7 @@ function openEditInfo(id){
   openModal("mEdit"); setTimeout(()=>$("#eTitle").focus(),50);
 }
 async function saveEditInfo(){
+  if(isViewer()) return denyRO();
   const rec=getRec(editingRecId); if(!rec)return;
   const title=$("#eTitle").value.trim();
   if(!title) return toast("标题必填","err");
@@ -1263,6 +1357,171 @@ async function saveEditInfo(){
   if(await persist(`${rec.id} 修改需求信息`)) toast("已保存","ok");
 }
 
+/* ================= 预警 / 导出 / 打印 ================= */
+let alertOnly=false;
+const daysTo=d=>{ if(!d) return null; return Math.round((new Date(d)-new Date(new Date().toISOString().slice(0,10)))/86400000); };
+function alertLevel(r){
+  if(r.status==="完结"||r.status==="已取消") return null;
+  const eta=(r.ship&&r.ship.eta)||"", need=r.neededBy||"";
+  const dl=eta||need; if(!dl) return null;
+  const d=daysTo(dl);
+  if(d===null) return null;
+  if(d<0) return {lv:"逾期",d,dl,src:eta?"ETA":"需要日期"};
+  if(d<=7) return {lv:"临近",d,dl,src:eta?"ETA":"需要日期"};
+  return null;
+}
+function alertList(){ return state.records.map(r=>({r,a:alertLevel(r)})).filter(x=>x.a); }
+function renderAlert(){
+  const list=alertList(), late=list.filter(x=>x.a.lv==="逾期").length, soon=list.length-late;
+  const el=$("#alertChip"); if(!el) return;
+  if(!list.length){ el.style.display="none"; alertOnly=false; el.classList.remove("on"); return; }
+  el.style.display=""; el.textContent=`⚠ 逾期 ${late}${soon?` · 7天内 ${soon}`:""}`;
+  el.classList.toggle("on",alertOnly);
+  el.title=list.slice(0,8).map(x=>`${x.r.title} · ${x.a.lv}(${x.a.src} ${fmtD(x.a.dl)})`).join("\n");
+}
+/* CSV 导出 */
+const csvCell=v=>{ const t=(v===undefined||v===null)?"":String(v); return /[",\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t; };
+function downloadCSV(name,rows){
+  const csv="\ufeff"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n");
+  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  const a=document.createElement("a"); a.href=url; a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+function exportRecords(){
+  const list=state.records.filter(passFilter);
+  const head=["单号","项目号","二级项目号","合同/PO号","标题","英文标题","状态","优先级","需求人","需要日期","交期","签订日期","供应商","币种","金额","报价家数","BL#","ORIGIN","DESTINATION","ETD","ETA","实际到货","附件数","说明","创建时间","更新时间"];
+  const rows=[head].concat(list.map(r=>{
+    const oi=orderInfo(r), sp=r.ship||{}, a=recAmount(r);
+    return [r.id,r.job||"",r.sub||"",r.po||"",r.title||"",r.titleEn||"",r.status,r.pri,r.requester||"",fmtD(r.neededBy),r.eta||"",fmtD(r.signed),
+      oi.supplier||"",a?a.cur:"",a?a.val:"",(r.quotes||[]).length,sp.bl||"",sp.origin||"",sp.dest||"",fmtD(sp.etd),fmtD(sp.eta),fmtD(sp.arrived),
+      (r.attachments||[]).length,(r.desc||"").replace(/\n/g," "),fmtDT(r.createdAt),fmtDT(r.updatedAt)];
+  }));
+  downloadCSV(`采购台账_${new Date().toISOString().slice(0,10)}.csv`,rows);
+  toast(`已导出 ${list.length} 条采购记录`,"ok");
+}
+function exportSuppliers(){
+  const head=["名称","英文名称","地址","电话","纳税人识别号","开户行","银行账户","产品","备注","关联采购数","累计金额","创建人","更新时间"];
+  const rows=[head].concat(supAll().map(sp=>{
+    const lk=supplierRecords(sp), sums={};
+    lk.forEach(r=>{ const a=recAmount(r); if(a&&r.status!=="已取消") sums[a.cur]=(sums[a.cur]||0)+a.val; });
+    return [sp.name,sp.nameEn||"",sp.addr||"",sp.tel||"",sp.tax||"",sp.bank||"",sp.acct||"",
+      (sp.products||[]).map(p=>p.name+(p.spec?"("+p.spec+")":"")).join("；"),sp.note||"",lk.length,
+      Object.entries(sums).map(([c,v])=>c+v.toLocaleString()).join(" "),sp.createdBy||"",fmtDT(sp.updatedAt)];
+  }));
+  downloadCSV(`供应商台账_${new Date().toISOString().slice(0,10)}.csv`,rows);
+  toast(`已导出 ${state.suppliers.length} 家供应商`,"ok");
+}
+/* 供应商 ↔ 采购 */
+function supplierRecords(sp){
+  const nm=(sp.name||"").trim(); if(!nm) return [];
+  const key=nm.replace(/(有限公司|股份有限公司|有限责任公司|公司)$/,"");
+  return state.records.filter(r=>
+    (r.oSupplier&&(r.oSupplier.includes(key)||nm.includes(r.oSupplier))) ||
+    (r.quotes||[]).some(q=>q.supplier&&(q.supplier.includes(key)||nm.includes(q.supplier)))
+  );
+}
+function supLinkHTML(sp){
+  const list=supplierRecords(sp);
+  if(!list.length) return `<div class="sup-link" style="color:var(--steel);font-size:12px">暂无关联采购记录</div>`;
+  const sums={};
+  list.forEach(r=>{ const a=recAmount(r); if(a&&r.status!=="已取消"){ const sel=(r.quotes||[]).find(q=>q.selected); const mine=sel&&sel.supplier&&(sel.supplier.includes(sp.name.slice(0,4))||sp.name.includes(sel.supplier)); if(mine) sums[a.cur]=(sums[a.cur]||0)+a.val; } });
+  const sumTxt=Object.keys(sums).length?Object.entries(sums).map(([c,v])=>`${c}${v.toLocaleString(undefined,{maximumFractionDigits:2})}`).join("　"):"—";
+  return `<div class="sup-link">
+    <div class="sum">相关采购 ${list.length} 项 · 中标金额合计 ${sumTxt}</div>
+    ${list.slice(0,12).map(r=>{const a=recAmount(r);return `<div class="lk" data-goto="${r.id}">
+      <span class="id">${esc(r.po||fullJob(r)||r.id)}</span>
+      <span>${esc(r.title)}</span>
+      <span class="st">${r.status}</span>
+      <span class="id">${a?a.cur+a.val.toLocaleString():"—"}</span>
+    </div>`;}).join("")}
+    ${list.length>12?`<div style="font-size:11px;color:var(--steel);padding:2px 6px">… 另有 ${list.length-12} 项</div>`:""}
+  </div>`;
+}
+/* 打印单据 */
+function printRecord(id){
+  const r=getRec(id); if(!r) return;
+  const oi=orderInfo(r), sp=r.ship||{};
+  const row=(k,v)=>v?`<tr><td style="color:#666;padding:3px 10px 3px 0;white-space:nowrap">${k}</td><td style="padding:3px 0">${esc(v)}</td></tr>`:"";
+  const html=`<h2 style="margin:0 0 2px">${esc(r.title)}</h2>
+  <div style="color:#666;font-size:13px;margin-bottom:10px">${esc(r.titleEn||"")}</div>
+  <div style="font-family:monospace;font-size:12px;margin-bottom:12px">${r.id} · ${esc(fullJob(r))} · 状态 ${r.status} · 打印 ${fmtDT(now())}</div>
+  <table style="font-size:13px;border-collapse:collapse">
+   ${row("项目号",fullJob(r))}${row("需求人",r.requester)}${row("优先级",r.pri)}${row("需要日期",fmtD(r.neededBy))}${row("说明",r.desc)}${row("Description",r.descEn)}
+   ${row("供应商",oi.supplier)}${row("金额",oi.amount)}${row("签订日期",fmtD(r.signed))}${row("交期",r.eta)}${row("合同/PO号",r.po)}
+   ${row("BL#",sp.bl)}${row("货物信息",sp.cargo)}${row("ORIGIN",sp.origin)}${row("DESTINATION",sp.dest)}${row("ETD",fmtD(sp.etd))}${row("ETA",fmtD(sp.eta))}${row("实际到货",fmtD(sp.arrived))}
+  </table>
+  ${(r.quotes||[]).length?`<h3 style="font-size:14px;margin:16px 0 6px">报价对比</h3>
+  <table style="font-size:12px;border-collapse:collapse;width:100%">
+   <tr style="border-bottom:1px solid #999"><th align="left">供应商</th><th align="left">价格</th><th align="left">货期</th><th align="left">备注</th></tr>
+   ${r.quotes.map(q=>`<tr style="border-bottom:1px solid #ddd"><td>${q.selected?"✓ ":""}${esc(q.supplier)}</td><td>${q.currency}${(q.price||0).toLocaleString()}</td><td>${esc(q.lead||"")}</td><td>${esc(q.note||"")}</td></tr>`).join("")}
+  </table>`:""}
+  <h3 style="font-size:14px;margin:16px 0 6px">时间线</h3>
+  <table style="font-size:12px;border-collapse:collapse">
+   ${[...r.timeline].reverse().map(t=>`<tr><td style="color:#666;white-space:nowrap;padding-right:10px">${fmtDT(t.at)} · ${esc(t.by)}</td><td>${esc(t.action)}${t.note?" — "+esc(t.note):""}</td></tr>`).join("")}
+  </table>
+  <div style="margin-top:40px;font-size:13px">审批签字：______________　　日期：______________</div>`;
+  const w=window.open("","_blank","width=900,height=700");
+  if(!w) return toast("浏览器拦截了打印窗口","err");
+  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(r.po||r.id)} ${esc(r.title)}</title>
+    <style>body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;padding:28px;color:#111}h2,h3{margin:0}</style></head><body>${html}</body></html>`);
+  w.document.close(); setTimeout(()=>{ w.focus(); w.print(); },400);
+}
+
+/* ================= 批量新建采购需求 ================= */
+function addBulkRow(v){
+  v=v||{};
+  const div=document.createElement("div");
+  div.className="brow";
+  div.innerHTML=`<input class="bsub" placeholder="NM01" value="${esc(v.sub||"")}">
+    <input class="btitle" placeholder="例:移动破碎站" value="${esc(v.title||"")}">
+    <input class="bten" placeholder="Mobile Crusher" value="${esc(v.titleEn||"")}">
+    <input type="date" class="bdue" value="${esc(v.due||"")}">
+    <button class="brm" title="删除本行">✕</button>`;
+  div.querySelector(".brm").addEventListener("click",()=>{ div.remove(); if(![...$$("#bRows .brow")].length) addBulkRow(); updateBulkCount(); });
+  div.querySelectorAll("input").forEach(i=>i.addEventListener("input",updateBulkCount));
+  div.querySelector(".btitle").addEventListener("keydown",e=>{
+    if(e.key==="Enter"){ e.preventDefault(); const rows=[...$$("#bRows .brow")]; if(rows[rows.length-1]===div){ addBulkRow(); setTimeout(()=>{const rr=[...$$("#bRows .brow")]; rr[rr.length-1].querySelector(".bsub").focus();},10);} }
+  });
+  $("#bRows").appendChild(div);
+  updateBulkCount();
+}
+function readBulkRows(){
+  return [...$$("#bRows .brow")].map(r=>({
+    sub:r.querySelector(".bsub").value.trim(),
+    title:r.querySelector(".btitle").value.trim(),
+    titleEn:r.querySelector(".bten").value.trim(),
+    due:r.querySelector(".bdue").value||""
+  })).filter(r=>r.title);
+}
+function updateBulkCount(){
+  const n=readBulkRows().length;
+  $("#bCount").textContent=n?`已填写 ${n} 条`:"至少填写一条中文标题";
+}
+function openBulk(job){
+  $("#bJob").value=job||""; $("#bReq").value=cfg.name||""; $("#bPri").value="中";
+  $("#bRows").innerHTML=""; addBulkRow(); addBulkRow(); addBulkRow();
+  openModal("mBulk"); setTimeout(()=>{ const el=job?[...$$("#bRows .bsub")][0]:$("#bJob"); if(el) el.focus(); },50);
+}
+async function saveBulk(){
+  if(isViewer()) return denyRO();
+  const job=$("#bJob").value.trim();
+  const rows=readBulkRows();
+  if(!job) return toast("请填写项目号","err");
+  if(!rows.length) return toast("请至少填写一条采购需求","err");
+  const dup=rows.filter(r=>r.sub && state.records.some(x=>x.job===job && (x.sub||"")===r.sub && x.status!=="已取消"));
+  if(dup.length && !confirm(`二级号 ${dup.map(d=>d.sub).join("、")} 在该项目下已存在，仍要继续创建?`)) return;
+  const req=$("#bReq").value.trim()||cfg.name||"", pri=$("#bPri").value;
+  const created=[];
+  rows.forEach(r=>{
+    const rec={id:uid(), title:r.title, titleEn:r.titleEn||"", job, sub:r.sub||"", pri, requester:req, neededBy:r.due||"",
+      desc:"", descEn:"", status:"需求", createdAt:now(), updatedAt:now(), quotes:[], attachments:[], timeline:[], po:"", eta:"", signed:""};
+    log(rec,"发布采购需求","批量创建");
+    state.records.unshift(rec); created.push(rec.id);
+  });
+  closeModal("mBulk"); render();
+  if(await persist(`批量新建 ${job} 共 ${created.length} 条`)) toast(`已在 ${job} 下创建 ${created.length} 条采购需求`,"ok");
+}
+
 /* ================= 修改报价 ================= */
 let editingQuote={id:null,idx:null};
 function openEditQuote(id,idx){
@@ -1276,6 +1535,7 @@ function openEditQuote(id,idx){
   openModal("mQuote"); setTimeout(()=>$("#qeSup").focus(),50);
 }
 async function saveEditQuote(){
+  if(isViewer()) return denyRO();
   const rec=getRec(editingQuote.id); if(!rec)return;
   const q=rec.quotes[editingQuote.idx]; if(!q)return;
   const sup=$("#qeSup").value.trim(), priceRaw=$("#qePrice").value.trim();
@@ -1310,6 +1570,7 @@ function openEditOrder(id){
   openModal("mOrder"); setTimeout(()=>$("#oSup").focus(),50);
 }
 async function saveEditOrder(){
+  if(isViewer()) return denyRO();
   const rec=getRec(editingOrderId); if(!rec)return;
   const q=(rec.quotes||[]).find(x=>x.selected)||{};
   const sup=$("#oSup").value.trim(), cur=$("#oCur").value, priceRaw=$("#oPrice").value.trim();
@@ -1351,6 +1612,7 @@ function openEditShip(id){
   openModal("mShip"); setTimeout(()=>$("#shBl").focus(),50);
 }
 async function saveEditShip(){
+  if(isViewer()) return denyRO();
   const rec=getRec(editingShipId); if(!rec)return;
   const before=sh(rec), after={};
   Object.entries(SHIP_FIELDS).forEach(([k,[,el]])=>{ after[k]=$("#"+el).value.trim(); });
@@ -1373,6 +1635,7 @@ function renderSuppliers(){
   const q=($("#supSearch").value||"").trim().toLowerCase();
   const list=supAll().filter(sp=>!q||[sp.name,sp.nameEn,sp.tel,sp.addr,sp.tax,(sp.products||[]).map(x=>x.name+" "+(x.spec||"")).join(" ")].some(v=>(v||"").toLowerCase().includes(q)));
   const box=$("#supList");
+  const cnt=$("#supCount"); if(cnt) cnt.textContent=`共 ${state.suppliers.length} 家${list.length!==state.suppliers.length?` · 匹配 ${list.length}`:""}`;
   if(!list.length){ box.innerHTML=`<div class="sup-empty">${state.suppliers.length?"没有匹配的供应商":"还没有供应商,点右上角 ＋ 新增"}</div>`; return; }
   box.innerHTML=list.map(sp=>`<div class="sup-item ${openSups.has(sp.id)||q?"open":""}" data-supid="${esc(sp.id)}">
     <div class="sup-hd">
@@ -1391,6 +1654,7 @@ function renderSuppliers(){
       ${sp.note?`<b>备注</b><span>${esc(sp.note)}</span>`:""}
     </div>
     ${(sp.products||[]).length?`<div class="sup-prods">${sp.products.map(pr=>`<span>${esc(pr.name)}${pr.spec?" · "+esc(pr.spec):""}</span>`).join("")}</div>`:""}
+    ${supLinkHTML(sp)}
     </div>
   </div>`).join("");
   $$("#supList .sup-hd").forEach(h=>h.addEventListener("click",e=>{
@@ -1400,6 +1664,7 @@ function renderSuppliers(){
     item.classList.contains("open")?openSups.add(id):openSups.delete(id);
   }));
   $$("#supList [data-supedit]").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();openSupEdit(b.dataset.supedit)}));
+  $$("#supList [data-goto]").forEach(el=>el.addEventListener("click",e=>{ e.stopPropagation(); closeModal("mSupList"); openDrawer(el.dataset.goto); }));
 }
 function refreshSupDatalist(){
   const el=$("#supListData"); if(!el) return;
@@ -1434,6 +1699,7 @@ function openSupEdit(id){
   openModal("mSupEdit"); setTimeout(()=>$("#spName").focus(),50);
 }
 async function saveSupplier(){
+  if(isViewer()) return denyRO();
   const name=$("#spName").value.trim();
   if(!name) return toast("中文名称必填","err");
   const data={name,nameEn:$("#spNameEn").value.trim(),addr:$("#spAddr").value.trim(),tel:$("#spTel").value.trim(),
@@ -1452,6 +1718,7 @@ async function saveSupplier(){
   if(await persist(`${editingSupId?"更新":"新增"}供应商 ${name}`)) toast("已保存","ok");
 }
 async function deleteSupplier(){
+  if(isViewer()) return denyRO();
   const sp=state.suppliers.find(x=>x.id===editingSupId); if(!sp) return;
   if(!confirm(`删除供应商「${sp.name}」?已有报价记录不受影响。`)) return;
   state.suppliers=state.suppliers.filter(x=>x.id!==editingSupId);
@@ -1490,11 +1757,16 @@ $("#userChip").addEventListener("click",()=>openSettings());
 $("#btnSettings").addEventListener("click",()=>openSettings());
 $("#tabBoard").addEventListener("click",()=>setView("board"));
 $("#tabProj").addEventListener("click",()=>setView("proj"));
+$("#alertChip").addEventListener("click",()=>{ alertOnly=!alertOnly; render(); });
+$("#dwPrint").addEventListener("click",()=>{ if(currentId) printRecord(currentId); });
 $("#btnSuppliers").addEventListener("click",()=>{ $("#supSearch").value=""; openSups.clear(); renderSuppliers(); openModal("mSupList"); });
 $("#supAddBtn").addEventListener("click",()=>openSupEdit(null));
 $("#supSearch").addEventListener("input",renderSuppliers);
 $("#spProdAdd").addEventListener("click",addDraftProd);
 ["spProdName","spProdSpec"].forEach(id=>$("#"+id).addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();addDraftProd();} }));
+$("#btnBulk").addEventListener("click",()=>openBulk(""));
+$("#bSave").addEventListener("click",saveBulk);
+$("#bAddRow").addEventListener("click",()=>{ addBulkRow(); const r=[...$$("#bRows .brow")]; r[r.length-1].querySelector(".bsub").focus(); });
 $("#qeSave").addEventListener("click",saveEditQuote);
 $("#eSave").addEventListener("click",saveEditInfo);
 $("#oSave").addEventListener("click",saveEditOrder);
@@ -1535,7 +1807,7 @@ function startApp(){
   // 每3分钟自动刷新,避免同事更新看不到
   setInterval(()=>{ if(authUser() && ghReady() && !document.hidden && !currentId) loadData(true).catch(()=>{}); },180000);
 })();
-window.closeRecord=closeRecord; window.saveOrderFields=saveOrderFields; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
+window.printRecord=printRecord; window.closeRecord=closeRecord; window.saveOrderFields=saveOrderFields; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
 window.changeStatus=changeStatus; window.removeAttachment=removeAttachment;
 window.getRec=getRec; window.log=log; window.openDrawer=openDrawer; window.persist=persist;
 </script>
