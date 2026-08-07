@@ -119,6 +119,7 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 .stamp{font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:.2em;border:2px solid var(--ink);color:var(--ink);border-radius:6px;padding:5px 12px;transform:rotate(-2deg);white-space:nowrap}
 .stamp.s-审批{border-color:var(--safety);color:var(--safety)}
 .stamp.s-物流{border-color:var(--approve);color:var(--approve)}
+.stamp.s-完结{border-color:var(--approve);color:var(--approve);background:var(--approve-soft)}
 .stamp.s-已取消{border-color:var(--reject);color:var(--reject)}
 
 /* 报价表 */
@@ -131,21 +132,24 @@ tr.sel td:first-child{position:relative}
 .pick{font-size:11px;color:var(--approve);font-weight:800}
 
 /* 附件 */
-.att-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
-.att-item{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;cursor:pointer;position:relative}
-.att-item img{width:100%;height:84px;object-fit:cover;display:block;background:var(--line-soft)}
-.att-item .fx{height:84px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--steel);background:var(--line-soft)}
-.att-item .nm{font-size:11px;padding:5px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-soft)}
-.att-item .del{position:absolute;top:4px;right:4px;background:rgba(27,42,58,.75);color:#fff;border-radius:4px;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;display:none}
-.att-item:hover .del{display:block}
+.att-box{background:#F4F2EC;border:1px solid var(--line);border-radius:var(--r);padding:9px 10px;margin-top:6px}
+.att-grid{display:flex;flex-wrap:wrap;gap:6px}
+.att-grid:not(:empty){margin-bottom:8px}
+.att-item{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 1px 1px rgba(27,42,58,.05);cursor:pointer;padding:5px 8px;max-width:100%}
+.att-item:hover{border-color:var(--safety);background:var(--safety-soft)}
+.att-item img{width:22px;height:22px;object-fit:cover;border-radius:3px;display:block;background:var(--line-soft);flex-shrink:0}
+.att-item .fx{font-family:var(--mono);font-size:9px;font-weight:700;color:#fff;background:var(--steel);border-radius:3px;padding:3px 5px;line-height:1;flex-shrink:0;letter-spacing:.02em}
+.att-item .nm{font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.att-item .del{color:var(--steel);font-size:12px;line-height:1;padding:2px 3px;border-radius:3px;flex-shrink:0}
+.att-item .del:hover{color:#fff;background:var(--reject)}
 .ten{font-size:13px;font-weight:400;color:var(--steel);margin-top:2px;font-family:var(--sans)}
 .ten-sm{font-size:11px;color:var(--steel);margin-top:-2px;margin-bottom:4px;line-height:1.35}
 .ten-inline{color:var(--steel);font-size:12px}
-.att-sub{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink-soft)}
+.att-sub{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink)}
 .att-sub .tip{font-weight:400;letter-spacing:0;color:var(--steel);font-size:11px}
 .att-grid:empty{display:none}
-.upl-zone{border:2px dashed var(--line);border-radius:6px;padding:16px;text-align:center;color:var(--steel);font-size:13px;margin-top:10px;cursor:pointer;transition:border-color .15s}
-.upl-zone:hover,.upl-zone.over{border-color:var(--safety);color:var(--safety)}
+.upl-zone{border:1px dashed #C9C4B6;border-radius:6px;padding:10px;text-align:center;color:var(--steel);font-size:12px;background:rgba(255,255,255,.55);cursor:pointer;transition:border-color .15s,background .15s}
+.upl-zone:hover,.upl-zone.over{border-color:var(--safety);color:var(--safety);background:#fff}
 
 /* 时间线 */
 .tl{list-style:none}
@@ -212,11 +216,17 @@ tr.sel td:first-child{position:relative}
 .login-err{color:var(--reject);font-size:13px;min-height:18px;margin:4px 0 8px}
 
 /* ===== 供应商 ===== */
-.sup-item{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:10px 12px;margin-bottom:8px}
-.sup-item .sup-hd{display:flex;align-items:flex-start;gap:8px}
+.sup-item{border:1px solid var(--line);border-radius:var(--r);background:var(--card);margin-bottom:6px;overflow:hidden}
+.sup-item .sup-hd{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer}
+.sup-item .sup-hd:hover{background:var(--safety-soft)}
+.sup-item .sup-chev{color:var(--steel);font-size:11px;transition:transform .15s;flex-shrink:0}
+.sup-item.open .sup-chev{transform:rotate(90deg)}
+.sup-item .sup-body{display:none;padding:0 12px 10px 12px;border-top:1px solid var(--line-soft)}
+.sup-item.open .sup-body{display:block}
+.sup-item .sup-cnt{font-size:11px;color:var(--steel);white-space:nowrap}
 .sup-item .sup-nm{flex:1;font-weight:700}
 .sup-item .sup-en{font-size:12px;color:var(--steel);font-weight:400;font-family:var(--mono)}
-.sup-item .sup-meta{margin-top:6px;font-size:12px;color:var(--ink-soft);display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+.sup-item .sup-meta{margin-top:9px;font-size:12px;color:var(--ink-soft);display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
 .sup-item .sup-meta b{font-weight:700;color:var(--steel);white-space:nowrap}
 .sup-empty{text-align:center;color:var(--steel);padding:22px;border:1px dashed var(--line);border-radius:var(--r)}
 .prod-row{display:flex;align-items:center;gap:8px;border:1px solid var(--line-soft);border-radius:6px;padding:6px 10px;margin-bottom:6px;background:var(--card);font-size:13px}
@@ -252,6 +262,7 @@ tr.sel td:first-child{position:relative}
 .psub .sn{font-family:var(--mono);font-weight:700;color:var(--safety)}
 .psub .st{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--line-soft);color:var(--ink-soft);white-space:nowrap}
 .psub .st.物流{background:var(--approve-soft);color:var(--approve)}
+.psub .st.完结{background:var(--approve);color:#fff}
 .psub .st.已取消{background:var(--reject-soft);color:var(--reject)}
 .psub .amt{font-family:var(--mono);color:var(--ink-soft);white-space:nowrap}
 .psub .dd{font-family:var(--mono);font-size:12px;color:var(--steel);white-space:nowrap}
@@ -304,7 +315,7 @@ tr.sel td:first-child{position:relative}
   <select id="fPerson"><option value="">全部负责人</option></select>
   <select id="fPri"><option value="">全部优先级</option><option>高</option><option>中</option><option>低</option></select>
   <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink-soft)">
-    <input type="checkbox" id="fDone" style="width:auto">显示已取消
+    <input type="checkbox" id="fDone" style="width:auto">显示已完结 / 已取消
   </label>
   <span class="count-note" id="countNote"></span>
 </div>
@@ -536,14 +547,15 @@ tr.sel td:first-child{position:relative}
 </div>
 
 <div id="toast"></div>
-<div id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div><button class="btn" onclick="document.getElementById('lightbox').classList.remove('open')">关闭</button></div>
+<div id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div><div style="display:flex;gap:8px"><button class="btn" onclick="window.open(document.getElementById('lbImg').src,'_blank')">新标签页打开</button><button class="btn" onclick="document.getElementById('lightbox').classList.remove('open')">关闭</button></div></div>
 <input type="file" id="fileInput" multiple style="display:none">
 
 <script>
 "use strict";
 /* ================= 基础 ================= */
 const STAGES = ["需求","报价","审批","下单","物流"];
-const ALL_STATUS = [...STAGES,"已取消"];
+const ALL_STATUS = [...STAGES,"完结","已取消"];
+const CLOSED=r=>r.status==="完结"||r.status==="已取消";
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 
 const storage = (()=>{ // localStorage 保护(某些预览环境不可用)
@@ -644,11 +656,19 @@ async function ghDelete(path,sha,message){
   const r=await fetch(apiBase()+path,{method:"DELETE",headers:ghHeaders(),body:JSON.stringify({message,sha,branch:cfg.branch})});
   if(!r.ok) throw new Error("删除失败 "+r.status);
 }
-async function ghGetBlob(path){ // 私有仓库也能取文件(含>1MB)
+const MIME={pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",webp:"image/webp",
+  svg:"image/svg+xml",bmp:"image/bmp",txt:"text/plain;charset=utf-8",csv:"text/csv;charset=utf-8",json:"application/json",
+  mp4:"video/mp4",mov:"video/quicktime"};
+const mimeOf=name=>MIME[(name||"").split(".").pop().toLowerCase()]||"";
+const canPreview=name=>!!mimeOf(name);
+async function ghGetBlob(path,name){ // 私有仓库也能取文件(含>1MB)
   if(attCache[path]) return attCache[path];
   const r=await fetch(apiBase()+path+"?ref="+encodeURIComponent(cfg.branch),{headers:ghHeaders({Accept:"application/vnd.github.raw+json"})});
   if(!r.ok) throw new Error("附件读取失败 "+r.status);
-  const url=URL.createObjectURL(await r.blob());
+  let blob=await r.blob();
+  const mt=mimeOf(name||path);
+  if(mt && blob.type!==mt) blob=new Blob([blob],{type:mt}); // 让浏览器能内联预览而不是下载
+  const url=URL.createObjectURL(blob);
   attCache[path]=url; return url;
 }
 
@@ -739,6 +759,15 @@ async function createRecord(){
   if(files.length) await uploadFiles(rec.id,files,"需求");
 }
 
+async function closeRecord(id){
+  const rec=getRec(id); if(!rec)return;
+  if(!confirm("确认货物已到货并完结此采购?\n完结后不再显示在看板上(勾选「显示已完结/已取消」可查看)。")) return;
+  const today=new Date().toISOString().slice(0,10);
+  rec.ship=rec.ship||{};
+  let note=(window.__note?window.__note():"")||"";
+  if(!rec.ship.arrived){ rec.ship.arrived=today; note=(note?note+"; ":"")+"实际到货日期记为 "+fmtD(today); }
+  return changeStatus(id,"完结",note,"确认到货并完结");
+}
 async function saveOrderFields(id,advance){
   const rec=getRec(id); if(!rec)return;
   const po=($("#poNum")?$("#poNum").value.trim():rec.po||"");
@@ -764,7 +793,7 @@ async function changeStatus(id,to,note,extraAction){
   await persist(`${rec.id} ${from}→${to}`);
 }
 
-const canQuote=r=>r.status!=="需求" && r.status!=="已取消";
+const canQuote=r=>r.status!=="需求" && r.status!=="完结" && r.status!=="已取消";
 async function addQuote(id){
   const rec=getRec(id); if(!rec)return;
   if(!canQuote(rec)) return toast(rec.status==="需求"?"请先点「开始询价」":"当前阶段不能添加报价","err");
@@ -851,12 +880,12 @@ async function removeAttachment(id,idx){
 
 /* ================= 项目视图 ================= */
 const fullJob=r=>[r.job,r.sub].filter(Boolean).join("-");
-const isOverdue=r=>{const dl=(r.ship&&r.ship.eta)||r.neededBy; return !!(dl && r.status!=="物流" && r.status!=="已取消" && dl<new Date().toISOString().slice(0,10));};
+const isOverdue=r=>{const dl=(r.ship&&r.ship.eta)||r.neededBy; return !!(dl && r.status!=="物流" && r.status!=="完结" && r.status!=="已取消" && dl<new Date().toISOString().slice(0,10));};
 const recAmount=r=>{ const q=(r.quotes||[]).find(x=>x.selected); const cur=r.oCur||(q&&q.currency); const val=(r.oPrice!==undefined&&r.oPrice!=="")?Number(r.oPrice):(q?q.price||0:null); return (val===null||isNaN(val))?null:{cur:cur||"$",val}; };
 function projProgress(list){
   const live=list.filter(r=>r.status!=="已取消");
   if(!live.length) return 0;
-  const w=live.reduce((a,r)=>a+(STAGES.indexOf(r.status)+1)/STAGES.length,0);
+  const w=live.reduce((a,r)=>a+(r.status==="完结"?1:(STAGES.indexOf(r.status)+1)/STAGES.length),0);
   return Math.round(w/live.length*100);
 }
 let openProjects=new Set();
@@ -873,7 +902,8 @@ function renderProjects(){
   box.innerHTML=keys.map(k=>{
     const list=groups.get(k).slice().sort((a,b)=>(a.sub||"").localeCompare(b.sub||"","zh")||a.createdAt.localeCompare(b.createdAt));
     const pct=projProgress(list);
-    const done=list.filter(r=>r.status==="物流").length;
+    const done=list.filter(r=>r.status==="物流"||r.status==="完结").length;
+    const closed=list.filter(r=>r.status==="完结").length;
     const cancelled=list.filter(r=>r.status==="已取消").length;
     const late=list.filter(isOverdue).length;
     const sums={};
@@ -883,7 +913,7 @@ function renderProjects(){
       <div class="proj-hd">
         <span class="chev">▸</span>
         <span class="pj">${esc(k)}</span>
-        <span class="cnt">${list.length} 项${done?` · 物流 ${done}`:""}${cancelled?` · 取消 ${cancelled}`:""}</span>
+        <span class="cnt">${list.length} 项${done?` · 完成 ${done}`:""}${closed?`(完结 ${closed})`:""}${cancelled?` · 取消 ${cancelled}`:""}</span>
         ${late?`<span class="warn">⚠ ${late} 项逾期</span>`:""}
         <span class="bar"><i class="${pct===100?"done":"prog"}" style="width:${pct}%"></i></span>
         <span class="pct">${pct}%</span>
@@ -892,7 +922,7 @@ function renderProjects(){
         ${list.map(r=>{
           const a=recAmount(r), od=isOverdue(r);
           return `<div class="psub" data-id="${r.id}">
-            <span class="sn">${esc(r.sub||"—")}</span>
+            <span class="sn" title="${esc(r.po?("合同/PO号 "+r.po+(r.sub?" · 二级项目号 "+r.sub:"")):(r.sub?"二级项目号 "+r.sub:""))}">${esc(r.po||r.sub||"—")}</span>
             <span>${esc(r.title)}${r.titleEn?`<span class="ten-inline"> · ${esc(r.titleEn)}</span>`:""}</span>
             <span class="st ${r.status}">${r.status}</span>
             <span class="amt">${a?`${a.cur}${a.val.toLocaleString(undefined,{maximumFractionDigits:2})}`:"—"}</span>
@@ -933,18 +963,35 @@ function railHTML(r){
   const idx=STAGES.indexOf(r.status);
   return `<div class="rail">${STAGES.map((s,i)=>{
     if(r.status==="已取消") return `<i class="${i===0?"dead":""}" title="已取消"></i>`;
+    if(r.status==="完结") return `<i class="on" title="完结"></i>`;
     return `<i class="${i<idx?"on":i===idx?"now":""}" title="${s}"></i>`;
   }).join("")}</div>`;
 }
+const isDateStr=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||"");
+function cardDate(r){
+  const today=new Date().toISOString().slice(0,10);
+  if(r.status==="物流"||r.status==="完结"){
+    const sp=r.ship||{};
+    if(sp.arrived) return {label:"到货",text:fmtD(sp.arrived),late:false,tip:"实际到货日期"};
+    if(sp.eta) return {label:"ETA",text:fmtD(sp.eta),late:sp.eta<today,tip:"预计到港日期"};
+  }
+  if(r.status==="下单"){
+    if(r.eta) return {label:"交期",text:r.eta,late:isDateStr(r.eta)&&r.eta<today,tip:"交期(生产完成/可发运)"};
+    const sp=r.ship||{};
+    if(sp.eta) return {label:"ETA",text:fmtD(sp.eta),late:sp.eta<today,tip:"预计到港日期"};
+  }
+  if(r.neededBy) return {label:"需",text:fmtD(r.neededBy),late:r.status!=="物流"&&r.status!=="完结"&&r.status!=="已取消"&&r.neededBy<today,tip:"需要日期"};
+  return null;
+}
 function cardHTML(r){
-  const overdue=r.neededBy && r.status!=="物流" && r.status!=="已取消" && r.neededBy<new Date().toISOString().slice(0,10);
+  const dt=cardDate(r);
   return `<article class="card" data-id="${r.id}" draggable="true" role="button" tabindex="0" aria-label="${esc(r.title)}">
     <div class="rid"><span>${r.id}</span><span class="pri ${r.pri}">${r.pri}</span></div>
     <h3>${esc(r.title)}</h3>
     ${r.titleEn?`<div class="ten-sm">${esc(r.titleEn)}</div>`:""}
     <div class="meta">
       ${r.job||r.sub?`<span class="tag job">${esc(fullJob(r))}</span>`:""}
-      ${r.neededBy?`<span class="tag due ${overdue?"overdue":""}">需 ${fmtD(r.neededBy)}${overdue?" 逾期":""}</span>`:""}
+      ${dt?`<span class="tag due ${dt.late?"overdue":""}" title="${esc(dt.tip)}">${dt.label} ${esc(dt.text)}${dt.late?" 逾期":""}</span>`:""}
     </div>
     ${railHTML(r)}
     <div class="foot"><span>👤 ${esc(r.requester||"—")}</span><span class="att">${r.attachments.length?"📎"+r.attachments.length:""} ${r.quotes.length?"💰"+r.quotes.length:""}</span></div>
@@ -993,10 +1040,10 @@ function fillSelect(sel,arr,first){
 }
 
 /* ================= 渲染:抽屉 ================= */
-const isOrdered=r=>r.status==="下单"||r.status==="物流";
-const isShipping=r=>r.status==="物流";
+const isOrdered=r=>r.status==="下单"||r.status==="物流"||r.status==="完结";
+const isShipping=r=>r.status==="物流"||r.status==="完结";
 const sh=r=>r.ship||{};
-const etaLate=r=>{ const e=sh(r).eta; return !!(e && r.status!=="物流" && r.status!=="已取消" && e<new Date().toISOString().slice(0,10)); };
+const etaLate=r=>{ const e=sh(r).eta; return !!(e && r.status!=="物流" && r.status!=="完结" && r.status!=="已取消" && e<new Date().toISOString().slice(0,10)); };
 function orderInfo(r){
   const q=(r.quotes||[]).find(x=>x.selected)||{};
   const supplier=r.oSupplier||q.supplier||"";
@@ -1008,14 +1055,14 @@ function orderInfo(r){
 }
 function attBlockHTML(rec,group){
   const items=rec.attachments.map((a,i)=>({a,i})).filter(({a})=>(a.group||"需求")===group);
-  return `<div class="att-grid" data-attgrid="${group}">
+  return `<div class="att-box"><div class="att-grid" data-attgrid="${group}">
     ${items.map(({a,i})=>`<div class="att-item" data-path="${esc(a.path)}" data-type="${a.type}" data-name="${esc(a.name)}">
-      ${a.type==="image"?`<img alt="${esc(a.name)}" loading="lazy">`:`<div class="fx">${esc(a.name.split(".").pop().toUpperCase())}</div>`}
-      <div class="nm" title="${esc(a.name)} · ${fmtSize(a.size)} · ${esc(a.by||"")}">${esc(a.name)}</div>
+      ${a.type==="image"?`<img alt="" loading="lazy">`:`<span class="fx">${esc(a.name.split(".").pop().toUpperCase().slice(0,4))}</span>`}
+      <span class="nm" title="${esc(a.name)} · ${fmtSize(a.size)} · ${esc(a.by||"")} · 点击${a.type==="image"?"查看大图":(canPreview(a.name)?"在线预览":"下载")}">${esc(a.name)}</span>
       <button class="del" onclick="event.stopPropagation();removeAttachment('${rec.id}',${i})" title="删除">✕</button>
     </div>`).join("")}
   </div>
-  <div class="upl-zone" data-uplzone="${group}">点击或拖入文件上传${group==="报价"?"(报价单、PDF…)":"(照片、图纸、PDF…)"}</div>`;
+  <div class="upl-zone" data-uplzone="${group}">点击或拖入文件上传${group==="报价"?"(报价单、PDF…)":"(照片、图纸、PDF…)"}</div></div>`;
 }
 function openDrawer(id,keep){
   const rec=getRec(id); if(!rec)return;
@@ -1127,10 +1174,21 @@ function openDrawer(id,keep){
   $$(".att-grid .att-item").forEach(item=>{
     const path=item.dataset.path;
     if(item.dataset.type==="image"){
-      ghGetBlob(path).then(url=>{item.querySelector("img").src=url}).catch(()=>{});
-      item.addEventListener("click",async()=>{ try{ $("#lbImg").src=await ghGetBlob(path); $("#lbCap").textContent=item.dataset.name; $("#lightbox").classList.add("open"); }catch(e){toast(e.message,"err")} });
+      ghGetBlob(path,item.dataset.name).then(url=>{item.querySelector("img").src=url}).catch(()=>{});
+      item.addEventListener("click",async()=>{ try{ $("#lbImg").src=await ghGetBlob(path,item.dataset.name); $("#lbCap").textContent=item.dataset.name; $("#lightbox").classList.add("open"); }catch(e){toast(e.message,"err")} });
     }else{
-      item.addEventListener("click",async()=>{ try{ const url=await ghGetBlob(path); const a=document.createElement("a"); a.href=url; a.download=item.dataset.name; a.click(); }catch(e){toast(e.message,"err")} });
+      item.addEventListener("click",async()=>{
+        const name=item.dataset.name;
+        if(canPreview(name)){
+          const tab=window.open("","_blank"); // 先开标签页,避免被拦截
+          try{
+            const url=await ghGetBlob(path,name);
+            if(tab){ tab.location=url; } else { window.open(url,"_blank"); }
+          }catch(e){ if(tab) tab.close(); toast(e.message,"err"); }
+        }else{
+          try{ const url=await ghGetBlob(path,name); const a=document.createElement("a"); a.href=url; a.download=name; a.click(); toast("该格式无法在线预览,已下载"); }catch(e){toast(e.message,"err")}
+        }
+      });
     }
   });
 }
@@ -1163,8 +1221,12 @@ function actionsHTML(r){
         <button class="btn btn-primary" onclick="saveOrderFields('${r.id}',true)">进入物流 →</button>
       </div>${noteBox}`;
     case "物流": return `<div class="actions">
-        <span class="chip" style="border-color:var(--approve);color:var(--approve)">✓ 已下单发运</span>
         <button class="btn btn-sm" onclick="changeStatus('${r.id}','下单',__note(),'退回下单')">← 退回下单</button>
+        <button class="btn" style="background:var(--approve);border-color:var(--approve);color:#fff" onclick="closeRecord('${r.id}')">✓ 确认到货并完结</button>
+      </div>${noteBox}`;
+    case "完结": return `<div class="actions">
+        <span class="chip" style="border-color:var(--approve);color:var(--approve);background:var(--approve-soft)">✓ 已完结${r.ship&&r.ship.arrived?` · 到货 ${fmtD(r.ship.arrived)}`:""}</span>
+        <button class="btn btn-sm" onclick="changeStatus('${r.id}','物流',__note(),'重新打开')">← 重新打开</button>
       </div>${noteBox}`;
     case "已取消": return `<div class="actions">
         <button class="btn" onclick="changeStatus('${r.id}','需求',__note(),'重新激活')">重新激活</button>
@@ -1306,16 +1368,20 @@ let editingSupId=null;
 const supDisplay=sp=>sp.name+(sp.nameEn?" / "+sp.nameEn:"");
 const supAll=()=>[...state.suppliers].sort((a,b)=>supDisplay(a).localeCompare(supDisplay(b),"zh"));
 
+let openSups=new Set();
 function renderSuppliers(){
   const q=($("#supSearch").value||"").trim().toLowerCase();
   const list=supAll().filter(sp=>!q||[sp.name,sp.nameEn,sp.tel,sp.addr,sp.tax,(sp.products||[]).map(x=>x.name+" "+(x.spec||"")).join(" ")].some(v=>(v||"").toLowerCase().includes(q)));
   const box=$("#supList");
   if(!list.length){ box.innerHTML=`<div class="sup-empty">${state.suppliers.length?"没有匹配的供应商":"还没有供应商,点右上角 ＋ 新增"}</div>`; return; }
-  box.innerHTML=list.map(sp=>`<div class="sup-item">
+  box.innerHTML=list.map(sp=>`<div class="sup-item ${openSups.has(sp.id)||q?"open":""}" data-supid="${esc(sp.id)}">
     <div class="sup-hd">
+      <span class="sup-chev">▶</span>
       <div class="sup-nm">${esc(sp.name)}${sp.nameEn?`<div class="sup-en">${esc(sp.nameEn)}</div>`:""}</div>
+      ${(sp.products||[]).length?`<span class="sup-cnt">${sp.products.length} 个产品</span>`:""}
       <button class="btn btn-sm" data-supedit="${esc(sp.id)}">编辑</button>
     </div>
+    <div class="sup-body">
     <div class="sup-meta">
       ${sp.addr?`<b>地址</b><span>${esc(sp.addr)}</span>`:""}
       ${sp.tel?`<b>电话</b><span>${esc(sp.tel)}</span>`:""}
@@ -1325,8 +1391,15 @@ function renderSuppliers(){
       ${sp.note?`<b>备注</b><span>${esc(sp.note)}</span>`:""}
     </div>
     ${(sp.products||[]).length?`<div class="sup-prods">${sp.products.map(pr=>`<span>${esc(pr.name)}${pr.spec?" · "+esc(pr.spec):""}</span>`).join("")}</div>`:""}
+    </div>
   </div>`).join("");
-  $$("#supList [data-supedit]").forEach(b=>b.addEventListener("click",()=>openSupEdit(b.dataset.supedit)));
+  $$("#supList .sup-hd").forEach(h=>h.addEventListener("click",e=>{
+    if(e.target.closest("[data-supedit]")) return;
+    const item=h.parentElement, id=item.dataset.supid;
+    item.classList.toggle("open");
+    item.classList.contains("open")?openSups.add(id):openSups.delete(id);
+  }));
+  $$("#supList [data-supedit]").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();openSupEdit(b.dataset.supedit)}));
 }
 function refreshSupDatalist(){
   const el=$("#supListData"); if(!el) return;
@@ -1417,7 +1490,7 @@ $("#userChip").addEventListener("click",()=>openSettings());
 $("#btnSettings").addEventListener("click",()=>openSettings());
 $("#tabBoard").addEventListener("click",()=>setView("board"));
 $("#tabProj").addEventListener("click",()=>setView("proj"));
-$("#btnSuppliers").addEventListener("click",()=>{ $("#supSearch").value=""; renderSuppliers(); openModal("mSupList"); });
+$("#btnSuppliers").addEventListener("click",()=>{ $("#supSearch").value=""; openSups.clear(); renderSuppliers(); openModal("mSupList"); });
 $("#supAddBtn").addEventListener("click",()=>openSupEdit(null));
 $("#supSearch").addEventListener("input",renderSuppliers);
 $("#spProdAdd").addEventListener("click",addDraftProd);
@@ -1462,7 +1535,7 @@ function startApp(){
   // 每3分钟自动刷新,避免同事更新看不到
   setInterval(()=>{ if(authUser() && ghReady() && !document.hidden && !currentId) loadData(true).catch(()=>{}); },180000);
 })();
-window.saveOrderFields=saveOrderFields; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
+window.closeRecord=closeRecord; window.saveOrderFields=saveOrderFields; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
 window.changeStatus=changeStatus; window.removeAttachment=removeAttachment;
 window.getRec=getRec; window.log=log; window.openDrawer=openDrawer; window.persist=persist;
 </script>
