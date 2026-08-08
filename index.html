@@ -111,7 +111,7 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 .hd-title h1{font-size:17px;font-weight:800;letter-spacing:.08em}
 .hd-title .sub{font-family:var(--mono);font-size:11px;color:var(--steel);letter-spacing:.06em}
 .hd-nav{display:flex;align-items:center;gap:10px;padding:10px 16px;position:relative}
-.hd-mid{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;flex-wrap:wrap}
+.hd-mid{flex:0 1 auto;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;margin:0 auto}
 .hd-acct{display:flex;align-items:center;gap:8px;padding-left:12px;margin-left:4px;border-left:1px solid var(--line-soft)}
 .hd-right{display:flex;align-items:center;gap:10px;padding:10px 20px}
 .user-wrap{position:relative;display:inline-block}
@@ -127,11 +127,11 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 .sync-chip:hover{background:var(--line-soft);color:var(--ink)}
 .sync-chip:hover .dot.ok{background:var(--safety)}
 .sync-chip.loading{opacity:.6}
-.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;background:#fff;color:var(--ink-soft)}
+.chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-family:var(--mono);font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;background:#fff;color:var(--ink-soft)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--steel)}
 .dot.ok{background:var(--approve)}
 .dot.bad{background:var(--reject)}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink);transition:background .15s}
+.btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 14px;border-radius:6px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink);transition:background .15s}
 .btn:hover{background:var(--line-soft)}
 .btn-primary{background:var(--safety);border-color:var(--safety);color:#fff}
 .btn-primary:hover{background:#CF5605}
@@ -374,6 +374,24 @@ body.dark .undobar button{border-color:#4A555F}
 .view-anim-r .col:nth-child(n+6),.view-anim-l .col:nth-child(n+6){animation-delay:.17s}
 .view-tabs button{transition:background .2s ease,color .2s ease}
 @media (prefers-reduced-motion:reduce){.view-anim-r,.view-anim-l,.view-anim-r .col,.view-anim-l .col,.view-anim-r .proj,.view-anim-l .proj{animation:none}}
+.only-mobile{display:none}
+.only-mobile-ib{display:none}
+/* 平板:压缩顶栏,禁止竖排 */
+@media(max-width:1100px){
+  .hd-title{padding:10px 14px}
+  .hd-title h1{font-size:15px}
+  .hd-title .sub{font-size:9px;letter-spacing:.1em}
+  .hd-nav,.hd-mid,.hd-right{padding:8px 10px}
+  .hd-nav{gap:8px}
+  .hd-right{gap:7px}
+  .hd-right .btn,.hd-nav .btn{padding:6px 10px;font-size:12px}
+  .view-tabs button{padding:6px 11px;font-size:12px}
+  .chip{font-size:11px;padding:3px 8px}
+  .chip.alert{font-size:11px}
+  #userChip{font-size:11px;padding:4px 8px}
+  #connText{font-size:10px}
+  .hd-acct{padding-left:8px}
+}
 .att-sub{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink)}
 .att-sub .tip{font-weight:400;letter-spacing:0;color:var(--steel);font-size:11px}
 .att-grid:empty{display:none}
@@ -440,8 +458,13 @@ body.dark .undobar button{border-color:#4A555F}
   .col{flex:0 0 88vw;scroll-snap-align:center;display:flex;flex-direction:column;overflow:hidden;min-height:0}
   .col-body{overflow-y:auto;flex:1;min-height:0;max-height:none;-webkit-overflow-scrolling:touch}
   .proj-wrap{flex:1;min-height:0;overflow-y:auto;padding:12px 12px 40px}
-  /* 顶栏压缩 */
+  /* 顶栏精简:次要功能收进账户菜单 */
+  .only-mobile{display:block}
+  .only-mobile-ib{display:inline-flex}
+  #btnSuppliers,#btnBackfill,#btnTheme{display:none}
   .hd{flex-wrap:wrap;row-gap:0}
+  .hd-mid{order:3;margin:0 0 0 auto;padding:0 10px 7px}
+  .hd-nav{flex:1}
   .hd-title{width:100%;border-bottom:1px solid var(--line-soft);padding:8px 12px}
   .hd-title h1{font-size:15px}
   .hd-title .sub{font-size:9px}
@@ -456,7 +479,13 @@ body.dark .undobar button{border-color:#4A555F}
   .sync-chip{padding:6px}
   #userChip{padding:4px 7px;font-size:11px}
   .chip.alert{font-size:11px;padding:4px 8px}
-  /* 筛选条:两行紧凑 */
+  /* 筛选条:默认收起,点「筛选」展开 */
+  .filters select,.filters label{display:none}
+  body.filters-open .filters select{display:block}
+  body.filters-open .filters label{display:flex}
+  .filters input[type=search]{flex:1;width:auto;min-width:0}
+  .count-note{font-size:11px}
+  /* 两行紧凑 */
   .filters{gap:6px;padding:8px 12px 0}
   .filters input,.filters select{font-size:16px;padding:8px 10px}
   .filters input[type=search]{width:100%}
@@ -547,7 +576,7 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 @media(max-width:560px){.prod-add{grid-template-columns:1fr}}
 /* ===== 项目进度视图 ===== */
 .view-tabs{display:flex;gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.view-tabs button{padding:6px 15px;background:var(--card);color:var(--ink-soft);font-weight:700;font-size:13px;border-right:1px solid var(--line)}
+.view-tabs button{white-space:nowrap;padding:6px 15px;background:var(--card);color:var(--ink-soft);font-weight:700;font-size:13px;border-right:1px solid var(--line)}
 .view-tabs button:last-child{border-right:none}
 .view-tabs button.on{background:var(--ink);color:#fff}
 .proj-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -647,7 +676,10 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
         <span class="user-wrap">
           <button class="chip" id="userChip" title="账户菜单">👤 未设置 <span class="cv">▾</span></button>
           <div class="user-menu" id="userMenu">
-            <button data-um="settings">⚙ 数据仓库设置</button>
+            <button data-um="suppliers" class="only-mobile">🏢 供应商库</button>
+          <button data-um="backfill" class="only-mobile">⤓ 补录历史采购</button>
+          <button data-um="theme" class="only-mobile">🌓 切换深色模式</button>
+          <button data-um="settings">⚙ 数据仓库设置</button>
             <button data-um="logout">⇥ 退出登录</button>
           </div>
         </span>
@@ -658,6 +690,7 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 
 <div class="filters">
   <input type="search" id="fSearch" placeholder="搜索标题 / 单号 / 供应商…">
+  <button class="btn btn-sm only-mobile-ib" id="btnFilterToggle">筛选 ▾</button>
   <select id="fJob"><option value="">全部项目</option></select>
   <select id="fPerson"><option value="">全部负责人</option></select>
   <select id="fPri"><option value="">全部优先级</option><option>高</option><option>中</option><option>低</option></select>
@@ -2523,11 +2556,19 @@ $("#dwClose").addEventListener("click",closeDrawer);
 $("#drawerMask").addEventListener("click",closeDrawer);
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"){closeDrawer(); $$(".modal-mask.open").forEach(m=>m.classList.remove("open")); $("#lightbox").classList.remove("open");} });
 ["fSearch","fJob","fPerson","fPri","fDone"].forEach(id=>$("#"+id).addEventListener("input",render));
+$("#btnFilterToggle").addEventListener("click",()=>{
+  const on=document.body.classList.toggle("filters-open");
+  $("#btnFilterToggle").textContent=on?"筛选 ▴":"筛选 ▾";
+});
 $("#userChip").addEventListener("click",e=>{ e.stopPropagation(); $(".user-wrap").classList.toggle("open"); });
 document.addEventListener("click",()=>{ const uw=$(".user-wrap"); if(uw) uw.classList.remove("open"); });
 $$("#userMenu button").forEach(b=>b.addEventListener("click",()=>{
   $(".user-wrap").classList.remove("open");
-  if(b.dataset.um==="settings") openSettings();
+  const a=b.dataset.um;
+  if(a==="settings") openSettings();
+  else if(a==="suppliers") $("#btnSuppliers").click();
+  else if(a==="backfill") $("#btnBackfill").click();
+  else if(a==="theme") $("#btnTheme").click();
   else { sessionUser=null; storage.removeItem("pt_auth"); storage.removeItem("pt_cache"); location.reload(); }
 }));
 $("#tabBoard").addEventListener("click",()=>setView("board"));
