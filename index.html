@@ -63,8 +63,6 @@ body.dark .col-hd{border-bottom-color:#4A555F}
 body.dark .col-hd .ct{background:#3A4550;color:#E8EAED}
 body.dark .tag{background:#2E3742;color:var(--ink-soft)}
 body.dark .tag.job{background:#3A4550;color:#E8EAED}
-body.dark .tag.due{background:#3A2415;color:#FFA562}
-body.dark .tag.due.overdue{background:#8A3A2E;color:#fff}
 body.dark .pri.高{background:#3A1E1B;color:#F0A79C}
 body.dark .pri.中{background:#3A2415;color:#FFA562}
 body.dark .pri.低{background:#2E3742;color:var(--steel)}
@@ -167,25 +165,29 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 /* ===== 卡片 ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 12px 10px;cursor:pointer;
   transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease}
-.card:hover{transform:scale(1.025) translateY(-2px);box-shadow:0 8px 24px rgba(27,42,58,.18);border-color:var(--safety);position:relative;z-index:3}
-.card:hover h3{color:var(--safety)}
-.card:active{transform:scale(.995)}
-.card h3{transition:color .14s}
-@media (prefers-reduced-motion:reduce){.card,.card:hover{transition:none;transform:none}}
+.card:hover{box-shadow:0 6px 18px rgba(27,42,58,.16);border-color:var(--safety);position:relative;z-index:3}
+.card:active{background:var(--line-soft)}
+@media (prefers-reduced-motion:reduce){.card,.card:hover{transition:none}}
 /* 列悬停微亮 */
 .col{transition:background .15s,border-color .15s}
 .col:hover{background:rgba(255,255,255,.8)}
-.card .rid{font-family:var(--mono);font-size:11px;color:var(--steel);display:flex;justify-content:space-between;align-items:center}
-.card h3{font-size:14px;font-weight:700;margin:4px 0 6px;line-height:1.35}
-.card .meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.card .rid{font-family:var(--mono);font-size:11px;color:var(--steel);display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.card .rid>:first-child{margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .rid .due-t{white-space:nowrap;flex-shrink:0;font-size:11px;color:var(--steel)}
+.card .rid .due-t.overdue{color:var(--reject);font-weight:700}
+.card h3{font-size:14px;font-weight:700;margin:6px 0 0;line-height:1.35}
+.card .foot .rno{font-family:var(--mono);font-size:11px;color:var(--steel)}
 .tag{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--line-soft);color:var(--ink-soft);font-family:var(--mono)}
 .tag.job{background:var(--ink);color:#fff}
-.tag.due{background:var(--safety-soft);color:var(--safety);font-weight:700}
-.tag.due.overdue{background:var(--reject);color:#fff}
 .pri{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700}
 .pri.高{background:var(--reject-soft);color:var(--reject)}
 .pri.中{background:var(--safety-soft);color:var(--safety)}
 .pri.低{background:var(--line-soft);color:var(--steel)}
+/* 卡片上的优先级 —— 色点,避免和交期标签抢橙色 */
+.card .rid .pri{flex:0 0 auto;width:9px;height:9px;padding:0;border-radius:50%;font-size:0;line-height:0;overflow:hidden;margin-left:6px}
+.card .rid .pri.高{background:var(--reject)}
+.card .rid .pri.中{background:var(--safety)}
+.card .rid .pri.低{background:var(--steel);opacity:.5}
 .card .foot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--steel)}
 .card .foot .att{font-family:var(--mono)}
 
@@ -575,9 +577,10 @@ body.dark .cgrp-hd .pjt{background:#3A4550;color:#E8EAED}
   /* 项目行:强制单行 */
   .proj-hd{padding:9px 10px;flex-wrap:nowrap;gap:6px}
   .proj-hd .chev{font-size:10px}
-  .proj-hd .pj{font-size:12px;padding:2px 6px;letter-spacing:0}
+  .proj-hd .pj{font-size:12px;padding:2px 6px;letter-spacing:0;min-width:58px}
   .proj-hd .cnt{font-size:10px}
   .proj-hd .warn{font-size:10px}
+  .proj-hd .pinfo{gap:5px;flex:0 0 92px}
   .proj-hd .pct{font-size:12px;min-width:32px;margin-left:0}
   .proj-hd .addbtn{font-size:12px;padding:3px 7px;line-height:1.1}
   .proj-hd .addbtn .ab-t{display:none}
@@ -731,10 +734,13 @@ body.dark .cal-d.out{background:#1B2127}
 .proj.open:hover{transform:none;box-shadow:0 4px 16px rgba(27,42,58,.12)}
 @media (prefers-reduced-motion:reduce){.proj,.proj:hover{transition:none;transform:none}}
 .proj-hd{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
-.proj-hd .pj{font-family:var(--mono);font-weight:800;font-size:15px;background:var(--ink);color:#fff;padding:3px 10px;border-radius:4px;transition:background .14s;white-space:nowrap;flex-shrink:0}
+.proj-hd .pj{font-family:var(--mono);font-weight:800;font-size:15px;background:var(--ink);color:#fff;padding:3px 10px;border-radius:4px;transition:background .14s;white-space:nowrap;flex-shrink:0;min-width:76px;text-align:center}
 .proj-hd .pct{font-weight:800;font-size:15px;min-width:44px;text-align:right;white-space:nowrap;font-family:var(--mono)}
-.proj-hd .cnt{font-size:12px;color:var(--steel);white-space:nowrap}
-.proj-hd .warn{font-size:12px;color:var(--reject);font-weight:700;white-space:nowrap}
+/* 文字占定宽列、进度条吃掉剩余宽度 —— 进度条左右边缘对齐且不留空隙 */
+.proj-hd .pinfo{flex:0 0 250px;min-width:0;display:flex;align-items:center;gap:8px;overflow:hidden}
+.proj-hd .cnt{font-size:12px;color:var(--steel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-hd .warn{font-size:12px;color:var(--reject);font-weight:700;white-space:nowrap;flex-shrink:0}
+.proj-hd .bar{flex:1 1 auto;min-width:80px}
 .bar{flex:1 1 90px;min-width:70px;height:9px;background:var(--line-soft);border-radius:5px;overflow:hidden;display:flex}
 .bar i{display:block;height:100%}
 .bar i.done{background:var(--approve)}
@@ -1700,8 +1706,7 @@ function renderProjects(){
       <div class="proj-hd">
         <span class="chev">▸</span>
         <span class="pj">${esc(k)}</span>
-        <span class="cnt">${narrowUI()?`${list.length}项${done?` ✓${done}`:""}`:`${list.length} 项${done?` · 完成 ${done}`:""}${closed?`(完结 ${closed})`:""}${cancelled?` · 取消 ${cancelled}`:""}`}</span>
-        ${late?`<span class="warn">⚠ ${late}${narrowUI()?"":" 项逾期"}</span>`:""}
+        <span class="pinfo"><span class="cnt">${narrowUI()?`${list.length}项${done?` ✓${done}`:""}`:`${list.length} 项${done?` · 完成 ${done}`:""}${closed?`(完结 ${closed})`:""}${cancelled?` · 取消 ${cancelled}`:""}`}</span>${late?`<span class="warn">⚠ ${late}${narrowUI()?"":" 项逾期"}</span>`:""}</span>
         <span class="bar"><i class="${pct===100?"done":"prog"}" style="width:${pct}%"></i></span>
         <span class="pct">${pct}%</span>
         <button class="addbtn" data-addto="${esc(k)}" title="向该项目添加采购需求">＋<span class="ab-t"> 加需求</span></button>
@@ -1885,6 +1890,8 @@ function railHTML(r){
 }
 const isDateStr=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||"");
 const etaTxt=v=>isDateStr(v)?fmtD(v):(v||"");
+/* 卡片上省掉当年年份:2026-08-12 → 08-12,跨年仍显示完整日期 */
+const shortD=t=>String(t||"").replace(new RegExp("^"+new Date().getFullYear()+"-"),"");
 function cardDate(r){
   const today=new Date().toISOString().slice(0,10);
   if(r.status==="物流"||r.status==="完结"){
@@ -1904,17 +1911,13 @@ function cardHTML(r){
   const dt=cardDate(r);
   return `<article class="card${selectedIds.has(r.id)?" sel":""}" data-id="${r.id}" draggable="true" role="button" tabindex="0" aria-label="${esc(r.title)}">
     <input type="checkbox" class="pick" ${selectedIds.has(r.id)?"checked":""} title="选择">
-    <div class="rid"><span>${hl(r.id)}</span><span class="pri ${r.pri}">${r.pri}</span></div>
+    <div class="rid">${(()=>{const showPo=r.po&&(r.status==="下单"||r.status==="物流"||r.status==="完结");
+      return showPo?`<span class="tag job" title="合同/PO号 · 项目 ${esc(fullJob(r))}">${hl(r.po)}</span>`
+        :(r.job||r.sub?`<span class="tag job" title="项目号">${hl(fullJob(r))}</span>`:`<span></span>`);})()}${dt?`<span class="due-t ${dt.late?"overdue":""}" title="${esc(dt.tip)}${dt.late?" · 已逾期":""}">${dt.label} ${esc(shortD(dt.text))}</span>`:""}<span class="pri ${r.pri}" title="优先级 ${esc(r.pri||"")}">${r.pri}</span></div>
     <h3>${hl(r.title)}</h3>
     ${r.titleEn?`<div class="ten-sm">${hl(r.titleEn)}</div>`:""}
-    <div class="meta">
-      ${(()=>{const showPo=r.po&&(r.status==="下单"||r.status==="物流"||r.status==="完结");
-        return showPo?`<span class="tag job" title="合同/PO号 · 项目 ${esc(fullJob(r))}">${hl(r.po)}</span>`
-          :(r.job||r.sub?`<span class="tag job" title="项目号">${hl(fullJob(r))}</span>`:"");})()}
-      ${dt?`<span class="tag due ${dt.late?"overdue":""}" title="${esc(dt.tip)}">${dt.label} ${esc(dt.text)}${dt.late?" 逾期":""}</span>`:""}
-    </div>
     ${railHTML(r)}
-    <div class="foot"><span class="who">${avatarHTML(r.requester||"—")}${esc(r.requester||"—")}</span><span class="att">${(r.attachments||[]).length?"📎"+r.attachments.length:""} ${(r.quotes||[]).length?"💰"+r.quotes.length:""}</span></div>
+    <div class="foot"><span class="who">${avatarHTML(r.requester||"—")}<span class="rno">${hl(r.id)}</span></span><span class="att">${(r.attachments||[]).length?"📎"+r.attachments.length:""} ${(r.quotes||[]).length?"💰"+r.quotes.length:""}</span></div>
   </article>`;
 }
 const SORT_LABEL={default:"排序 ⇅",need:"按日期",pri:"按优先级",job:"按项目号",title:"按名称"};
