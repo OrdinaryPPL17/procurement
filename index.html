@@ -121,7 +121,8 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 .user-wrap.open #userChip .cv{transform:rotate(180deg)}
 .user-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:172px;background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:5px;display:none;z-index:60}
 .user-wrap.open .user-menu{display:block}
-.user-menu button{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:5px;font-size:13px;color:var(--ink)}
+.user-menu button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:8px 10px;border-radius:5px;font-size:13px;line-height:1.2;color:var(--ink)}
+.user-menu button .ic{flex:none;width:17px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
 .user-menu button:hover{background:var(--safety-soft);color:var(--safety)}
 .sync-chip{cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--steel);background:none;border:none;padding:3px 4px;border-radius:5px;transition:color .15s,background .15s}
 .sync-chip:hover{background:var(--line-soft);color:var(--ink)}
@@ -394,6 +395,39 @@ body.dark .undobar button{border-color:#4A555F}
   #connText{font-size:10px}
   .hd-acct{padding-left:8px}
 }
+@keyframes colExpand{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes colCollapse{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:none}}
+@keyframes grpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.board.anim-expand .col-expanded{animation:colExpand .3s cubic-bezier(.22,.61,.36,1) both}
+.board.anim-collapse .col{animation:colCollapse .28s cubic-bezier(.22,.61,.36,1) both}
+.board.anim-collapse .col:nth-child(1){animation-delay:0s}
+.board.anim-collapse .col:nth-child(2){animation-delay:.03s}
+.board.anim-collapse .col:nth-child(3){animation-delay:.06s}
+.board.anim-collapse .col:nth-child(4){animation-delay:.09s}
+.board.anim-collapse .col:nth-child(5){animation-delay:.12s}
+.board.anim-collapse .col:nth-child(n+6){animation-delay:.15s}
+.board.anim-expand .cgrp{animation:grpIn .34s cubic-bezier(.22,.61,.36,1) both}
+.board.anim-expand .cgrp:nth-child(1){animation-delay:.04s}
+.board.anim-expand .cgrp:nth-child(2){animation-delay:.09s}
+.board.anim-expand .cgrp:nth-child(3){animation-delay:.14s}
+.board.anim-expand .cgrp:nth-child(4){animation-delay:.19s}
+.board.anim-expand .cgrp:nth-child(n+5){animation-delay:.24s}
+.col-hd .exp{transition:background .15s,color .15s}
+@media (prefers-reduced-motion:reduce){
+  .board.anim-expand .col-expanded,.board.anim-collapse .col,.board.anim-expand .cgrp{animation:none}
+}
+.col-hd .exp{font-size:12px;color:var(--steel);cursor:pointer;padding:2px 6px;border-radius:4px;margin-left:6px}
+.col-hd .exp:hover{background:var(--line-soft);color:var(--ink)}
+.board.expanded{display:block;overflow-y:auto}
+.col.col-expanded{width:100%;height:100%}
+.cgrp{margin-bottom:20px}
+.cgrp-hd{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;color:var(--stage,var(--ink));margin:10px 0 10px;letter-spacing:.04em}
+.cgrp-hd .pjt{font-family:var(--mono);background:var(--ink);color:#fff;padding:4px 11px;border-radius:5px;font-size:15px;font-weight:800;letter-spacing:.02em}
+body.dark .cgrp-hd .pjt{background:#3A4550;color:#E8EAED}
+.cgrp-hd .ln{flex:1;height:1px;background:var(--line-soft)}
+.cgrp-hd .amt{font-family:var(--mono);color:var(--steel);font-weight:600;font-size:13px}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;align-items:start}
+@media(max-width:760px){.cgrid{grid-template-columns:1fr}}
 .att-sub{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink)}
 .att-sub .tip{font-weight:400;letter-spacing:0;color:var(--steel);font-size:11px}
 .att-grid:empty{display:none}
@@ -463,7 +497,7 @@ body.dark .undobar button{border-color:#4A555F}
   /* 顶栏:压成两行 */
   .only-mobile{display:block}
   .only-mobile-ib{display:inline-flex}
-  #btnSuppliers,#btnBackfill,#btnTheme{display:none}
+  #btnSuppliers,#btnBackfill{display:none}
   .hd{flex-wrap:wrap;row-gap:0;align-items:center}
   .hd-title{order:1;flex:1;width:auto;border-bottom:none;padding:7px 0 7px 12px}
   .hd-title .sub{display:none}
@@ -629,6 +663,51 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 .year-group{display:flex;flex-direction:column;gap:14px}
 .year-group.hidden{display:none}
 .proj-wrap{flex:1;min-height:0;overflow-y:auto;width:100%;max-width:1200px;margin:0 auto;padding:14px 20px 60px;display:flex;flex-direction:column;gap:14px}
+.lnk{color:var(--safety);text-decoration:underline;text-underline-offset:2px;word-break:break-all}
+.lnk:hover{opacity:.75}
+body.dark .lnk{color:#FF9B4D}
+.cal-wrap{flex:1;min-height:0;overflow-y:auto;width:100%;max-width:1560px;margin:0 auto;padding:16px 24px 60px;display:flex;flex-direction:column;gap:12px}
+.cal-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cal-nav{display:inline-flex;gap:5px}
+.cal-mon{font-family:var(--mono);font-size:21px;font-weight:800;letter-spacing:.02em;color:var(--ink)}
+.cal-lg{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap}
+.cal-lg button{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--steel);padding:4px 11px;border-radius:20px;border:1px solid var(--line);background:var(--card);line-height:1.5}
+.cal-lg button.off{opacity:.38}
+.cal-lg i{width:10px;height:10px;border-radius:3px;flex:none}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.cal-wd{background:var(--card);text-align:center;font-size:13.5px;font-weight:700;color:var(--steel);padding:10px 0;letter-spacing:.04em}
+.cal-wd.we{color:var(--reject)}
+.cal-d{background:var(--card);min-height:136px;padding:8px 8px 10px;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.cal-d.out{background:var(--paper)}
+.cal-d.out .dn{opacity:.4}
+.cal-d .dn{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink-soft);align-self:flex-start;padding:2px 7px;border-radius:6px;margin-bottom:1px}
+.cal-d.today .dn{background:var(--safety);color:#fff}
+.cal-ev{display:block;font-size:13px;line-height:1.5;padding:3px 8px;border-radius:5px;cursor:pointer;background:var(--paper);border-left:3px solid var(--steel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .12s,transform .12s}
+.cal-d.out .cal-ev{opacity:.5}
+.cal-ev:hover{background:var(--safety-soft);transform:translateX(1px)}
+.cal-ev b{font-family:var(--mono);font-weight:700;font-size:11.5px;opacity:.85;margin-right:5px}
+.cal-ev{border-left-width:4px}
+.cal-ev.t-need{border-left-color:#2563EB}.cal-ev.t-eta{border-left-color:#E4610F}
+.cal-ev.t-etd{border-left-color:#7C3AED}.cal-ev.t-seta{border-left-color:#0891B2}
+.cal-ev.t-arr{border-left-color:#16A34A}.cal-ev.t-sign{border-left-color:#64748B}
+.cal-ev.late{background:#FDECEC;color:#B42318}
+body.dark .cal-ev.late{background:#3A1D1D;color:#FCA5A5}
+.cal-more{font-size:12px;color:var(--steel);cursor:pointer;padding:2px 6px;border-radius:4px}
+.cal-more:hover{color:var(--safety)}
+.cal-d:not(.open) .cal-ev.hid{display:none}
+.cal-empty{grid-column:1/-1;background:var(--card);padding:40px;text-align:center;color:var(--steel);font-size:13px}
+body.dark .cal-wd,body.dark .cal-d{background:var(--card)}
+body.dark .cal-d.out{background:#1B2127}
+@media (max-width:760px){
+  .cal-wrap{padding:12px 10px 40px}
+  .cal-mon{font-size:15px}
+  .cal-lg{margin-left:0;width:100%}
+  .cal-d{min-height:66px;padding:3px 3px 5px;gap:2px}
+  .cal-d .dn{font-size:11px;padding:0 4px}
+  .cal-ev{font-size:10px;padding:1px 4px;border-left-width:3px}
+  .cal-ev b{display:none}
+  .cal-wd{font-size:11px;padding:5px 0}
+}
 .proj{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease}
 .proj:hover{transform:scale(1.012);box-shadow:0 6px 22px rgba(27,42,58,.16);border-color:var(--safety);z-index:2;position:relative}
 .proj:hover .pj{background:var(--safety)}
@@ -703,27 +782,27 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
       </div>
     </div>
     <div class="hd-nav">
-      <span class="view-tabs"><button id="tabBoard" class="on">看板</button><button id="tabProj">项目进度</button></span>
+      <span class="view-tabs"><button id="tabBoard" class="on">看板</button><button id="tabProj">项目进度</button><button id="tabCal">日历</button></span>
       <button class="btn btn-sm" id="btnSuppliers">供应商</button>
     </div>
     <div class="hd-mid">
       <span class="chip alert" id="alertChip" style="display:none" title="点击只看预警项"></span>
     </div>
     <div class="hd-right">
-      <button class="btn btn-sm" id="btnTheme" title="切换深色 / 浅色">🌙</button>
       <button class="btn btn-sm" id="btnBackfill" title="一屏录入历史采购，直接生成到指定状态">⤓ 补录</button>
       <button class="btn btn-primary" id="btnNew">＋ 发布采购需求</button>
+      <button id="btnTheme" style="display:none" aria-hidden="true"></button>
     </div>
       <div class="hd-acct">
         <button class="sync-chip" id="btnRefresh" title="点击刷新数据"><span class="dot" id="connDot"></span><span id="connText">未连接</span></button>
         <span class="user-wrap">
           <button class="chip" id="userChip" title="账户菜单">👤 未设置 <span class="cv">▾</span></button>
           <div class="user-menu" id="userMenu">
-            <button data-um="suppliers" class="only-mobile">🏢 供应商库</button>
-          <button data-um="backfill" class="only-mobile">⤓ 补录历史采购</button>
-          <button data-um="theme" class="only-mobile">🌓 切换深色模式</button>
-          <button data-um="settings">⚙ 数据仓库设置</button>
-            <button data-um="logout">⇥ 退出登录</button>
+            <button data-um="suppliers" class="only-mobile"><span class="ic">🏢</span>供应商库</button>
+          <button data-um="backfill" class="only-mobile"><span class="ic">⤓</span>补录历史采购</button>
+          <button data-um="theme" id="umTheme"><span class="ic">🌙</span>深色模式</button>
+          <button data-um="settings"><span class="ic">⚙</span>数据仓库设置</button>
+            <button data-um="logout"><span class="ic">⇥</span>退出登录</button>
           </div>
         </span>
       </div>
@@ -741,6 +820,15 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 </div>
 
 <main class="board" id="board"></main>
+<main class="cal-wrap" id="calView" style="display:none">
+  <div class="cal-bar">
+    <span class="cal-nav"><button class="btn btn-sm" id="calPrev" title="上个月">‹</button><button class="btn btn-sm" id="calToday">今天</button><button class="btn btn-sm" id="calNext" title="下个月">›</button></span>
+    <span class="cal-mon" id="calMonLab"></span>
+    <span class="hint" id="calCount"></span>
+    <span class="cal-lg" id="calLegend"></span>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+</main>
 <main class="proj-wrap" id="projView" style="display:none"><div class="proj-bar"><span class="hint">按项目号分组 · 可批量新建采购需求，之后在看板补细节</span><button class="btn btn-primary" id="btnBulk">＋ 新建项目 / 批量加需求</button></div><div id="projList"></div></main>
 
 <!-- 抽屉 -->
@@ -840,7 +928,7 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
       <div class="fld"><label>说明 / 规格(中文)</label><textarea id="eDesc" rows="3"></textarea></div>
       <div class="fld"><label>Description / Specification (English)</label><textarea id="eDescEn" rows="3"></textarea></div>
       <div class="row2">
-        <div class="fld"><label>交期</label><input id="eEta" placeholder="如 45天 / 12月底"></div>
+        <div class="fld"><label>交期</label><input type="date" id="eEta"></div>
         <div class="fld"><label>签订日期</label><input type="date" id="eSigned"></div>
       </div>
       <div class="row2">
@@ -977,7 +1065,7 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
         <div class="fld"><label>金额</label>
           <div style="display:flex;gap:6px"><select id="oCur" style="width:80px"><option>$</option><option>¥</option></select><input id="oPrice" type="number" step="0.01" placeholder="默认取报价金额"></div>
           <div class="hint" id="oPriceHint"></div></div>
-        <div class="fld"><label>交期</label><input id="oEta" placeholder="如 45天 / 12月底 / 2026-12-20"></div>
+        <div class="fld"><label>交期</label><input type="date" id="oEta"><div class="hint" id="oEtaHint"></div></div>
       </div>
       <div class="row2">
         <div class="fld"><label>签订日期</label><input type="date" id="oSigned"></div>
@@ -1185,6 +1273,11 @@ const attCache = {}; // path -> objectURL
 function toast(msg,cls=""){ const d=document.createElement("div"); d.className="tst "+cls; d.textContent=msg; $("#toast").appendChild(d); setTimeout(()=>d.remove(),3200); }
 const hl=(txt)=>{ const q=($("#fSearch")&&$("#fSearch").value||"").trim(); const e=esc(txt); if(!q) return e; try{ return e.replace(new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>"); }catch(err){ return e; } };
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const linkify=t=>esc(t).replace(/https?:\/\/[^\s<]+/g,m=>{
+  const tail=(m.match(/[)\]}>.,;:!?\u3002\uff0c\uff1b\uff1a\uff01\uff1f]+$/)||[""])[0];
+  const url=tail?m.slice(0,m.length-tail.length):m;
+  return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="lnk" title="${url}">${url}</a>${tail}`;
+});
 const fmtDT=iso=>{ if(!iso)return""; const d=new Date(iso); const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
 const fmtD=iso=>iso?iso.slice(0,10):"";
 const now=()=>new Date().toISOString();
@@ -1197,7 +1290,36 @@ const initials=(nm)=>{
 };
 const avatarColor=(nm)=>{ let h=0; for(const c of String(nm||"")) h=(h*31+c.charCodeAt(0))%360; return `hsl(${h} 45% 42%)`; };
 const avatarHTML=(nm,cls)=>`<span class="avt ${cls||""}" style="background:${avatarColor(nm)}" title="${esc(nm||"")}">${esc(initials(nm))}</span>`;
-const uid=()=>{ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return `PR-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${Math.random().toString(36).slice(2,6).toUpperCase()}`; };
+const ID_ABC="23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // 去掉易混的 0O 1I
+const idCode=()=>Array.from({length:4},()=>ID_ABC[Math.floor(Math.random()*ID_ABC.length)]).join("");
+const issuedIds=new Set();
+const uid=()=>{
+  const used=new Set((state.records||[]).map(r=>r&&r.id));
+  for(let i=0;i<400;i++){ const id="PR-"+idCode(); if(!used.has(id)&&!issuedIds.has(id)){ issuedIds.add(id); return id; } }
+  const f="PR-"+idCode()+idCode().slice(0,1); issuedIds.add(f); return f;
+};
+/* 一次性:把历史的 PR-YYYYMMDD-XXXX 全部换成 PR-XXXX(按创建时间顺序,旧号记入时间线) */
+async function renumberAll(){
+  if(isViewer()) return denyRO();
+  const olds=state.records.filter(r=>/^PR-\d{8}-/.test(r.id||""));
+  if(!olds.length){ toast("没有需要重编号的记录"); return; }
+  if(!confirm(`把 ${olds.length} 条记录的编号改成 PR-XXXX 短码?\n\n旧编号会记入各自的时间线，可随时查。\n附件不受影响。`)) return;
+  const used=new Set(state.records.map(r=>r.id));
+  const sorted=olds.slice().sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
+  const map={};
+  for(const r of sorted){
+    let nid; do{ nid="PR-"+idCode(); }while(used.has(nid));
+    used.add(nid); map[r.id]=nid;
+    r.timeline=r.timeline||[];
+    r.timeline.push({at:now(),by:cfg.name||"系统",action:"编号变更",note:`${r.id} → ${nid}`});
+    r.id=nid; r.updatedAt=now();
+  }
+  render();
+  const ok=await persist(`重编号 ${sorted.length} 条采购单`);
+  toast(ok?`已重编号 ${sorted.length} 条`:"保存失败,请重试",ok?"ok":"err");
+  return map;
+}
+window.renumberAll=renumberAll;
 const fmtSize=b=>b>1048576?(b/1048576).toFixed(1)+"MB":b>1024?Math.round(b/1024)+"KB":b+"B";
 const b64encode=str=>{ const bytes=new TextEncoder().encode(str); let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin); };
 const b64decode=b64=>{ const bin=atob(b64.replace(/\n/g,"")); const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0)); return new TextDecoder().decode(bytes); };
@@ -1261,7 +1383,7 @@ async function loadData(silent){
       toast("已在仓库创建数据文件","ok");
     }else{
       const data=JSON.parse(b64decode(f.content));
-      state.records=(data.records||[]).map(r=>r.status==="到货"?{...r,status:"物流"}:r);
+      state.records=normAll((data.records||[]).map(r=>r&&r.status==="到货"?{...r,status:"物流"}:r));
       state.fromCache=false;
       state.suppliers=data.suppliers||[];
       state.sha=f.sha; state.loaded=true;
@@ -1307,7 +1429,7 @@ async function persist(message){
     const f=await ghGetJSON(cfg.path);
     if(f && f.sha!==state.sha && state.sha!==null){
       const data=JSON.parse(b64decode(f.content));
-      state.records=mergeRecords(remote_(data.records),state.records);
+      state.records=normAll(mergeRecords(remote_(data.records),state.records));
       state.suppliers=mergeSuppliers(remote_(data.suppliers),state.suppliers);
       toast("检测到同事更新,已自动合并");
     }
@@ -1321,6 +1443,23 @@ async function persist(message){
 
 /* ================= 业务操作 ================= */
 const getRec=id=>state.records.find(r=>r.id===id);
+function normRec(r){
+  if(!r||typeof r!=="object") return r;
+  if(!Array.isArray(r.quotes)) r.quotes=[];
+  if(!Array.isArray(r.attachments)) r.attachments=[];
+  if(!Array.isArray(r.timeline)) r.timeline=[];
+  if(!Array.isArray(r.payments)) r.payments=[];
+  if(!r.ship||typeof r.ship!=="object") r.ship={};
+  if(typeof r.title!=="string") r.title=String(r.title??"");
+  if(!r.status||![...ALL_STATUS].includes(r.status)) r.status=r.status||"需求";
+  if(!r.pri) r.pri="中";
+  if(!r.createdAt) r.createdAt=r.updatedAt||now();
+  if(!r.updatedAt) r.updatedAt=r.createdAt;
+  if(!r.id) r.id="R"+Math.random().toString(36).slice(2,8).toUpperCase();
+  if(typeof r.job!=="string") r.job=r.job==null?"":String(r.job);
+  return r;
+}
+const normAll=a=>(Array.isArray(a)?a:[]).map(normRec);
 function log(rec,action,note){ rec.timeline.push({at:now(),by:cfg.name||"匿名",action,note:note||""}); rec.updatedAt=now(); }
 
 async function createRecord(){
@@ -1498,7 +1637,7 @@ function projProgress(list){
 }
 const narrowUI=()=>window.innerWidth<=760;
 let openProjects=new Set();
-let closedYears=new Set();
+let closedYears=new Set(), yearsInit=false;
 function renderProjects(){
   const box=$("#projList");
   const groups=new Map();
@@ -1519,7 +1658,7 @@ function renderProjects(){
   });
   const yearOf=k=>{ const m=String(k).match(/^(\d{2})-/); return m?"20"+m[1]:"其他"; };
   const projHTML=k=>{
-    const list=groups.get(k).slice().sort((a,b)=>(a.sub||"").localeCompare(b.sub||"","zh")||a.createdAt.localeCompare(b.createdAt));
+    const list=groups.get(k).slice().sort((a,b)=>(a.sub||"").localeCompare(b.sub||"","zh")||(a.createdAt||"").localeCompare(b.createdAt||""));
     const pct=projProgress(list);
     const done=list.filter(r=>r.status==="物流"||r.status==="完结").length;
     const closed=list.filter(r=>r.status==="完结").length;
@@ -1560,6 +1699,14 @@ function renderProjects(){
   };
   const byYear=[];
   keys.forEach(k=>{ const y=yearOf(k); const g=byYear.find(x=>x.y===y); g?g.keys.push(k):byYear.push({y,keys:[k]}); });
+  if(!yearsInit && byYear.length){
+    yearsInit=true;
+    const cy=String(new Date().getFullYear());
+    const ys=byYear.map(x=>x.y);
+    let keep=ys.includes(cy)?cy:ys.filter(y=>/^\d{4}$/.test(y)).sort().pop();
+    if(!keep) keep=ys[0];
+    ys.forEach(y=>{ if(y!==keep) closedYears.add(y); });
+  }
   box.innerHTML=byYear.map(({y,keys:ks})=>{
     const recs=ks.flatMap(k=>groups.get(k));
     const live=recs.filter(r=>r.status!=="已取消");
@@ -1590,20 +1737,87 @@ function renderProjects(){
 let viewMode="board";
 function setView(m){
   const changed=viewMode!==m;
+  if(expandedCol){ expandedCol=null; $("#board").classList.remove("expanded","anim-expand","anim-collapse"); }
   viewMode=m;
   $("#tabBoard").classList.toggle("on",m==="board");
   $("#tabProj").classList.toggle("on",m==="proj");
+  $("#tabCal").classList.toggle("on",m==="cal");
   $("#board").style.display=m==="board"?"":"none";
   $("#projView").style.display=m==="proj"?"":"none";
+  $("#calView").style.display=m==="cal"?"":"none";
   render();
   if(changed && !reduceMotion()){
-    const el=m==="board"?$("#board"):$("#projView");
-    const cls=m==="proj"?"view-anim-r":"view-anim-l";
+    const el=m==="cal"?$("#calView"):(m==="board"?$("#board"):$("#projView"));
+    const cls=m==="board"?"view-anim-l":"view-anim-r";
     el.classList.remove("view-anim-r","view-anim-l");
     void el.offsetWidth;
     el.classList.add(cls);
     setTimeout(()=>el.classList.remove(cls),420);
   }
+}
+
+/* ================= 渲染:日历 ================= */
+const CAL_TYPES=[
+  {k:"need",lab:"需求交期",cls:"t-need",col:"#2563EB",tag:"需",get:r=>r.neededBy},
+  {k:"eta", lab:"交期",   cls:"t-eta", col:"#E4610F",tag:"交期",get:r=>isDateStr(r.eta)?r.eta:""},
+  {k:"sign",lab:"签订日期",cls:"t-sign",col:"#64748B",tag:"签订",get:r=>r.signed},
+  {k:"etd", lab:"ETD",   cls:"t-etd", col:"#7C3AED",tag:"ETD",get:r=>sh(r).etd},
+  {k:"seta",lab:"ETA",   cls:"t-seta",col:"#0891B2",tag:"ETA",get:r=>sh(r).eta},
+  {k:"arr", lab:"实际到货",cls:"t-arr", col:"#16A34A",tag:"到货",get:r=>sh(r).arrived}
+];
+let calMon=null, calOff=new Set();
+const calKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+function calShift(n){
+  const [y,m]=(calMon||calKey(new Date())).split("-").map(Number);
+  const d=new Date(y,m-1+n,1); calMon=calKey(d); renderCal();
+}
+function renderCal(){
+  const grid=$("#calGrid"); if(!grid) return;
+  if(!calMon) calMon=calKey(new Date());
+  const [y,m]=calMon.split("-").map(Number);
+  const today=new Date().toISOString().slice(0,10);
+  // 收集事件
+  const evs=new Map();
+  state.records.filter(passFilter).filter(r=>r.status!=="已取消").forEach(r=>{
+    CAL_TYPES.forEach(t=>{
+      if(calOff.has(t.k)) return;
+      const d=t.get(r);
+      if(!isDateStr(d)) return;
+      if(!evs.has(d)) evs.set(d,[]);
+      evs.get(d).push({r,t});
+    });
+  });
+  const first=new Date(y,m-1,1), offset=(first.getDay()+6)%7;
+  const days=new Date(y,m,0).getDate();
+  const cells=Math.ceil((offset+days)/7)*7;
+  let inMon=0;
+  const html=["一","二","三","四","五","六","日"].map((w,i)=>`<div class="cal-wd${i>4?" we":""}">${w}</div>`).join("")
+    +Array.from({length:cells},(_,i)=>{
+      const dt=new Date(y,m-1,1-offset+i);
+      const iso=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
+      const out=dt.getMonth()!==m-1;
+      const list=(evs.get(iso)||[]).sort((a,b)=>CAL_TYPES.indexOf(a.t)-CAL_TYPES.indexOf(b.t));
+      if(!out) inMon+=list.length;
+      const CAP=5;
+      return `<div class="cal-d${out?" out":""}${iso===today?" today":""}" data-cd="${iso}">
+        <span class="dn">${dt.getDate()}${dt.getDate()===1?`<span style="font-size:11px"> ${dt.getMonth()+1}月</span>`:""}</span>
+        ${list.map((e,j)=>{
+          const late=(e.t.k==="need"||e.t.k==="eta"||e.t.k==="seta") && iso<today && e.r.status!=="完结" && e.r.status!=="物流";
+          const sup=orderInfo(e.r).supplier||"";
+          return `<span class="cal-ev ${e.t.cls}${late?" late":""}${j>=CAP?" hid":""}" data-cev="${e.r.id}" title="${esc(e.t.lab+" "+iso+" · "+(e.r.job||"")+(e.r.sub?"-"+e.r.sub:"")+" "+e.r.title+(sup?" · "+sup:"")+" · "+e.r.status)}"><b>${esc(e.t.tag)}</b>${esc(e.r.title)}</span>`;
+        }).join("")}
+        ${list.length>CAP?`<span class="cal-more" data-cmore="${iso}">+${list.length-CAP} 更多</span>`:""}
+      </div>`;
+    }).join("");
+  grid.innerHTML=html;
+  $("#calMonLab").textContent=`${y} 年 ${m} 月`;
+  $("#calCount").textContent=inMon?`本月 ${inMon} 个节点`:"本月暂无节点";
+  $("#calLegend").innerHTML=CAL_TYPES.map(t=>`<button data-ctype="${t.k}" class="${calOff.has(t.k)?"off":""}"><i style="background:${t.col}"></i>${t.lab}</button>`).join("");
+  $$("#calLegend button").forEach(b=>b.addEventListener("click",()=>{
+    const k=b.dataset.ctype; calOff.has(k)?calOff.delete(k):calOff.add(k); renderCal();
+  }));
+  $$("[data-cev]").forEach(e=>e.addEventListener("click",()=>openDrawer(e.dataset.cev)));
+  $$("[data-cmore]").forEach(e=>e.addEventListener("click",ev=>{ ev.stopPropagation(); const c=e.closest(".cal-d"); c.classList.toggle("open"); e.textContent=c.classList.contains("open")?"收起":`+${c.querySelectorAll(".cal-ev.hid").length} 更多`; }));
 }
 
 /* ================= 渲染:看板 ================= */
@@ -1625,6 +1839,7 @@ function railHTML(r){
   }).join("")}</div>`;
 }
 const isDateStr=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||"");
+const etaTxt=v=>isDateStr(v)?fmtD(v):(v||"");
 function cardDate(r){
   const today=new Date().toISOString().slice(0,10);
   if(r.status==="物流"||r.status==="完结"){
@@ -1633,7 +1848,7 @@ function cardDate(r){
     if(sp.eta) return {label:"ETA",text:fmtD(sp.eta),late:sp.eta<today,tip:"预计到港日期"};
   }
   if(r.status==="下单"){
-    if(r.eta) return {label:"交期",text:r.eta,late:isDateStr(r.eta)&&r.eta<today,tip:"交期(生产完成/可发运)"};
+    if(r.eta) return {label:"交期",text:etaTxt(r.eta),late:isDateStr(r.eta)&&r.eta<today,tip:"交期(生产完成/可发运)"};
     const sp=r.ship||{};
     if(sp.eta) return {label:"ETA",text:fmtD(sp.eta),late:sp.eta<today,tip:"预计到港日期"};
   }
@@ -1654,12 +1869,13 @@ function cardHTML(r){
       ${dt?`<span class="tag due ${dt.late?"overdue":""}" title="${esc(dt.tip)}">${dt.label} ${esc(dt.text)}${dt.late?" 逾期":""}</span>`:""}
     </div>
     ${railHTML(r)}
-    <div class="foot"><span class="who">${avatarHTML(r.requester||"—")}${esc(r.requester||"—")}</span><span class="att">${r.attachments.length?"📎"+r.attachments.length:""} ${r.quotes.length?"💰"+r.quotes.length:""}</span></div>
+    <div class="foot"><span class="who">${avatarHTML(r.requester||"—")}${esc(r.requester||"—")}</span><span class="att">${(r.attachments||[]).length?"📎"+r.attachments.length:""} ${(r.quotes||[]).length?"💰"+r.quotes.length:""}</span></div>
   </article>`;
 }
 const SORT_LABEL={default:"排序 ⇅",need:"按日期",pri:"按优先级",job:"按项目号",title:"按名称"};
 const SORT_CYCLE=["default","need","pri","job","title"];
 let colSort={};
+let expandedCol=null;
 function sortItems(items,mode){
   const arr=items.slice(); const PRI={"高":0,"中":1,"低":2};
   if(mode==="need") arr.sort((a,b)=>{const x=(a.ship&&a.ship.eta)||a.neededBy||"9999",y=(b.ship&&b.ship.eta)||b.neededBy||"9999";return x.localeCompare(y);});
@@ -1736,10 +1952,37 @@ function render(){
   const board=$("#board");
   board.style.gridTemplateColumns=window.innerWidth>1100?`repeat(${cols.length},1fr)`:"";
   const filtered=state.records.filter(passFilter);
+  board.classList.toggle("expanded",!!expandedCol && cols.includes(expandedCol));
+  if(expandedCol && cols.includes(expandedCol)){
+    const st=expandedCol;
+    const items=filtered.filter(r=>r.status===st);
+    const groups=new Map();
+    items.forEach(r=>{ const k=r.job||"(未填项目号)"; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(r); });
+    const jobKey2=k=>{ const m=String(k).match(/(\d+)\D+(\d+)/); return m?[+m[1],+m[2]]:null; };
+    const keys=[...groups.keys()].sort((a,b)=>{ if(a==="(未填项目号)")return 1; if(b==="(未填项目号)")return -1;
+      const ka=jobKey2(a),kb=jobKey2(b); if(ka&&kb) return (ka[0]-kb[0])||(ka[1]-kb[1]); return a.localeCompare(b,"zh"); });
+    board.innerHTML=`<section class="col col-expanded" data-status="${st}">
+      <div class="col-hd"><span class="nm">${st}</span><span class="ct">${items.length}</span>
+        <span class="srt" data-sortcol="${st}" title="点击切换排序">${SORT_LABEL[colSort[st]||"default"]}</span>
+        <span class="exp" data-expcol="${st}" title="收起">⤡ 收起</span></div>
+      <div class="col-body">${keys.length?keys.map(k=>{
+        const list=sortItems(groups.get(k),colSort[st]||"job");
+        const sums={}; list.forEach(r=>{const a=recAmount(r); if(a) sums[a.cur]=(sums[a.cur]||0)+a.val;});
+        const sumTxt=Object.entries(sums).map(([c,v])=>`${c}${v.toLocaleString(undefined,{maximumFractionDigits:0})}`).join(" · ");
+        return `<div class="cgrp"><div class="cgrp-hd"><span class="pjt">${esc(k)}</span><span>${list.length} 项</span>
+          ${sumTxt?`<span class="amt">${sumTxt}</span>`:""}<span class="ln"></span></div>
+          <div class="cgrid">${list.map(cardHTML).join("")}</div></div>`;
+      }).join(""):`<div class="empty">暂无</div>`}</div>
+    </section>`;
+    bindBoardEvents();
+    renderProjects(); renderCal(); renderAlert();
+    $("#countNote").textContent=`${st} ${items.length} 条 / 共 ${state.records.length} 条`;
+    return;
+  }
   board.innerHTML=cols.map(st=>{
     const items=sortItems(filtered.filter(r=>r.status===st),colSort[st]||"default");
     return `<section class="col" data-status="${st}">
-      <div class="col-hd"><span class="nm">${st}</span><span class="ct">${items.length}</span><span class="srt" data-sortcol="${st}" title="点击切换排序">${SORT_LABEL[colSort[st]||"default"]}</span></div>
+      <div class="col-hd"><span class="nm">${st}</span><span class="ct">${items.length}</span><span class="srt" data-sortcol="${st}" title="点击切换排序">${SORT_LABEL[colSort[st]||"default"]}</span><span class="exp" data-expcol="${st}" title="${expandedCol===st?"收起":"展开为整屏，按项目号分组"}">${expandedCol===st?"⤡ 收起":"⤢ 展开"}</span></div>
       <div class="col-body">${items.length?items.map(cardHTML).join(""):`<div class="empty">${st==="需求"?"点右上角发布需求":"暂无"}</div>`}</div>
     </section>`;
   }).join("");
@@ -1750,8 +1993,25 @@ function render(){
   $("#jobList").innerHTML=jobs.map(j=>`<option value="${esc(j)}">`).join("");
   $("#countNote").textContent=`显示 ${filtered.filter(r=>cols.includes(r.status)).length} / 共 ${state.records.length} 条`;
   renderProjects();
+  renderCal();
   renderAlert();
   // 事件
+  bindBoardEvents();
+}
+function bindBoardEvents(){
+  $$("[data-expcol]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation();
+    const opening = expandedCol!==b.dataset.expcol;
+    expandedCol = opening ? b.dataset.expcol : null;
+    render();
+    if(!reduceMotion()){
+      const bd=$("#board");
+      bd.classList.remove("anim-expand","anim-collapse");
+      void bd.offsetWidth;
+      bd.classList.add(opening?"anim-expand":"anim-collapse");
+      setTimeout(()=>bd.classList.remove("anim-expand","anim-collapse"),700);
+    }
+  }));
   $$("[data-sortcol]").forEach(b=>b.addEventListener("click",e=>{
     e.stopPropagation();
     const st=b.dataset.sortcol, cur=colSort[st]||"default";
@@ -1835,7 +2095,7 @@ function payHTML(rec){
 const GROUP_SHORT={"需求":"需求附件","报价":"报价单","合同":"合同","送审":"送审文件","报关":"报关文件","物流":"物流附件","预付款":"预付款水单","尾款":"尾款水单"};
 let openAttZones=new Set();
 function attBlockHTML(rec,group){
-  const items=rec.attachments.map((a,i)=>({a,i})).filter(({a})=>(a.group||"需求")===group);
+  const items=(rec.attachments||[]).map((a,i)=>({a,i})).filter(({a})=>(a.group||"需求")===group);
   if(!items.length && !openAttZones.has(rec.id+"|"+group) && !isViewer())
     return `<div class="att-add" data-attopen="${group}">＋ 上传${esc(GROUP_SHORT[group]||group)}</div>`;
   if(!items.length && isViewer()) return `<div style="font-size:12px;color:var(--steel);padding:2px 0 6px">无</div>`;
@@ -1870,7 +2130,7 @@ function openDrawer(id,keep){
   $("#dwRid").innerHTML=esc(rec.id)+"  ·  创建于 "+fmtDT(rec.createdAt)+(isViewer()?'<span class="ro-tag">只读</span>':"");
   $("#dwTitle").innerHTML=esc(rec.title)+(rec.titleEn?`<div class="ten">${esc(rec.titleEn)}</div>`:"");
   const st=$("#dwStamp"); st.textContent=rec.status; st.className="stamp s-"+rec.status;
-  const sel=rec.quotes.find(q=>q.selected);
+  const sel=(rec.quotes||[]).find(q=>q.selected);
   $("#dwActions").innerHTML=actionsHTML(rec);
   $("#dwBody").innerHTML=`
     <div class="sec" data-sec="基本信息"><div class="sec-hd"><span class="fold">▼</span>基本信息<span class="sum">${esc((rec.desc||"").slice(0,28))}</span><span class="hdbtns"><button class="btn btn-sm" id="btnEditInfo">✎ 编辑</button><button class="btn btn-sm btn-danger" id="btnDelRec" title="删除这条采购记录">🗑 删除</button></span></div><div class="sec-bd">
@@ -1880,8 +2140,8 @@ function openDrawer(id,keep){
         <dt>优先级</dt><dd><span class="pri ${rec.pri}">${rec.pri}</span></dd>
         <dt>需要日期</dt><dd class="mono">${fmtD(rec.neededBy)||"—"}</dd>
         ${rec.po?`<dt>PO号</dt><dd class="mono">${esc(rec.po)}</dd>`:""}
-        <dt>说明</dt><dd style="white-space:pre-wrap">${esc(rec.desc||"—")}</dd>
-        ${rec.descEn?`<dt>Description</dt><dd style="white-space:pre-wrap">${esc(rec.descEn)}</dd>`:""}
+        <dt>说明</dt><dd style="white-space:pre-wrap">${rec.desc?linkify(rec.desc):"—"}</dd>
+        ${rec.descEn?`<dt>Description</dt><dd style="white-space:pre-wrap">${linkify(rec.descEn)}</dd>`:""}
       </dl>
       <div class="att-sub"><span>附件</span><span class="tip">照片自动压缩 · 其他文件 ≤25MB</span></div>
       ${attBlockHTML(rec,"需求")}
@@ -1894,7 +2154,7 @@ function openDrawer(id,keep){
           <td>${q.selected?'<span class="pick">✓ 选定</span><br>':""}${esc(q.supplier)}</td>
           <td class="num">${q.currency}${q.price.toLocaleString()}</td>
           <td>${esc(q.lead||"—")}</td>
-          <td>${esc(q.note||"")}</td>
+          <td>${linkify(q.note||"")}</td>
           <td style="white-space:nowrap">
             ${!q.selected?`<button class="btn btn-sm" onclick="pickQuote('${rec.id}',${i})">选定</button>`:`<button class="btn btn-sm" onclick="unpickQuote('${rec.id}',${i})">取消选定</button>`}
             <button class="btn btn-sm" onclick="openEditQuote('${rec.id}',${i})">改</button>
@@ -1920,7 +2180,7 @@ function openDrawer(id,keep){
         <dt>供应商</dt><dd>${esc(orderInfo(rec).supplier||"—")}${orderInfo(rec).overridden?' <span style="font-size:11px;color:var(--steel)">(已手工调整)</span>':""}</dd>
         <dt>金额</dt><dd class="mono">${orderInfo(rec).amount||"—"}</dd>
         <dt>签订日期</dt><dd class="mono">${rec.signed?fmtD(rec.signed):"—"}</dd>
-        <dt>交期</dt><dd>${esc(rec.eta||orderInfo(rec).lead||"—")}${rec.eta&&orderInfo(rec).lead?` <span style="color:var(--steel);font-size:12px">(报价货期 ${esc(orderInfo(rec).lead)})</span>`:""}</dd>
+        <dt>交期</dt><dd>${esc(etaTxt(rec.eta)||orderInfo(rec).lead||"—")}${rec.eta&&orderInfo(rec).lead?` <span style="color:var(--steel);font-size:12px">(报价货期 ${esc(orderInfo(rec).lead)})</span>`:""}</dd>
         <dt>合同 / PO号</dt><dd class="mono">${esc(rec.po||"—")}</dd>
       </dl>
       <div class="att-sub"><span>付款信息</span><span class="tip">预付款 / 尾款</span></div>
@@ -2020,10 +2280,10 @@ function actionsHTML(r){
         <button class="btn btn-danger" onclick="if(confirm('确定取消此采购?'))changeStatus('${r.id}','已取消',__note(),'取消采购')">取消采购</button>
       </div>${noteBox}`;
     case "报价": return `<div class="actions">
-        <button class="btn btn-primary" ${r.quotes.some(q=>q.selected)?"":"disabled title='请先在下方选定一家报价'"} onclick="changeStatus('${r.id}','审批',__note(),'提请审批')">提请审批 →</button>
+        <button class="btn btn-primary" ${(r.quotes||[]).some(q=>q.selected)?"":"disabled title='请先在下方选定一家报价'"} onclick="changeStatus('${r.id}','审批',__note(),'提请审批')">提请审批 →</button>
         <button class="btn" onclick="changeStatus('${r.id}','需求',__note(),'退回需求')">← 退回</button>
         <button class="btn btn-danger" onclick="if(confirm('确定取消?'))changeStatus('${r.id}','已取消',__note(),'取消采购')">取消</button>
-      </div>${r.quotes.some(q=>q.selected)?"":'<div class="hint" style="font-size:12px;color:var(--steel);margin-top:8px">提示:需先添加并选定一家报价才能提请审批</div>'}${noteBox}`;
+      </div>${(r.quotes||[]).some(q=>q.selected)?"":'<div class="hint" style="font-size:12px;color:var(--steel);margin-top:8px">提示:需先添加并选定一家报价才能提请审批</div>'}${noteBox}`;
     case "审批": return `<div class="actions">
         <button class="btn" style="background:var(--approve);border-color:var(--approve);color:#fff" onclick="changeStatus('${r.id}','下单',__note(),'审批通过')">✓ 批准 →</button>
         <button class="btn btn-danger" onclick="changeStatus('${r.id}','报价',__note()||'审批驳回','审批驳回')">✕ 驳回至报价</button>
@@ -2031,7 +2291,7 @@ function actionsHTML(r){
     case "下单": return `<div class="actions" style="align-items:center;flex-wrap:wrap">
         <input id="poNum" placeholder="合同 / PO号" value="${esc(r.po||"")}" style="width:180px">
         <input id="signedInp" type="date" title="签订日期" value="${esc(r.signed||"")}" style="width:170px">
-        <input id="etaInp" placeholder="交期(如 45天/12月底)" value="${esc(r.eta||"")}" style="width:170px">
+        <input id="etaInp" type="date" title="交期" value="${esc(isDateStr(r.eta)?r.eta:"")}" style="width:170px">
         <button class="btn btn-sm" onclick="changeStatus('${r.id}','审批',__note()||'退回审批','← 退回审批')">← 退回审批</button>
         <button class="btn btn-sm" onclick="saveOrderFields('${r.id}',false)">保存订单信息</button>
         <button class="btn btn-primary" onclick="saveOrderFields('${r.id}',true)">进入物流 →</button>
@@ -2059,7 +2319,7 @@ function openEditInfo(id){
   $("#eTitle").value=rec.title||""; $("#eTitleEn").value=rec.titleEn||""; $("#eDescEn").value=rec.descEn||""; $("#eJob").value=rec.job||""; $("#eSub").value=rec.sub||"";
   $("#ePri").value=rec.pri||"中"; $("#eReq").value=rec.requester||"";
   $("#eDue").value=rec.neededBy||""; $("#eDesc").value=rec.desc||"";
-  $("#ePo").value=rec.po||""; $("#eEta").value=rec.eta||""; $("#eSigned").value=rec.signed||"";
+  $("#ePo").value=rec.po||""; $("#eEta").value=isDateStr(rec.eta)?rec.eta:""; $("#eSigned").value=rec.signed||"";
   openModal("mEdit"); setTimeout(()=>$("#eTitle").focus(),50);
 }
 async function saveEditInfo(){
@@ -2171,7 +2431,7 @@ function printRecord(id){
   <div style="font-family:monospace;font-size:12px;margin-bottom:12px">${r.id} · ${esc(fullJob(r))} · 状态 ${r.status} · 打印 ${fmtDT(now())}</div>
   <table style="font-size:13px;border-collapse:collapse">
    ${row("项目号",fullJob(r))}${row("需求人",r.requester)}${row("优先级",r.pri)}${row("需要日期",fmtD(r.neededBy))}${row("说明",r.desc)}${row("Description",r.descEn)}
-   ${row("供应商",oi.supplier)}${row("金额",oi.amount)}${row("签订日期",fmtD(r.signed))}${row("交期",r.eta)}${row("合同/PO号",r.po)}
+   ${row("供应商",oi.supplier)}${row("金额",oi.amount)}${row("签订日期",fmtD(r.signed))}${row("交期",etaTxt(r.eta))}${row("合同/PO号",r.po)}
    ${(r.payments||[]).map(p=>row(p.kind||"付款",`${p.cur||""}${(Number(p.amount)||0).toLocaleString()}　${p.date?fmtD(p.date):""}　${p.note||""}`)).join("")}${row("BL#",sp.bl)}${row("货物信息",sp.cargo)}${row("ORIGIN",sp.origin)}${row("DESTINATION",sp.dest)}${row("ETD",fmtD(sp.etd))}${row("ETA",fmtD(sp.eta))}${row("实际到货",fmtD(sp.arrived))}
   </table>
   ${(r.quotes||[]).length?`<h3 style="font-size:14px;margin:16px 0 6px">报价对比</h3>
@@ -2379,7 +2639,7 @@ function openEditOrder(id){
   $("#oSup").value=rec.oSupplier||oi.quoteSupplier||"";
   $("#oCur").value=rec.oCur||oi.quoteCur||"$";
   $("#oPrice").value=(rec.oPrice!==undefined&&rec.oPrice!=="")?rec.oPrice:(oi.quotePrice!==undefined?oi.quotePrice:"");
-  $("#oEta").value=rec.eta||"";
+  $("#oEta").value=isDateStr(rec.eta)?rec.eta:""; $("#oEtaHint").textContent=(rec.eta&&!isDateStr(rec.eta))?("原填写:"+rec.eta+" · 保存后将被日期替换"):"";
   $("#oSigned").value=rec.signed||"";
   $("#oPo").value=rec.po||"";
   $("#oSupHint").textContent=oi.quoteSupplier?`已选定报价:${oi.quoteSupplier}`:"未选定报价";
@@ -2478,7 +2738,7 @@ async function checkRepoSize(){
 /* ================= 供应商库 ================= */
 let editingSupId=null;
 const supDisplay=sp=>sp.name+(sp.nameEn?" / "+sp.nameEn:"");
-const supAll=()=>[...state.suppliers].sort((a,b)=>supDisplay(a).localeCompare(supDisplay(b),"zh"));
+const supAll=()=>[...(state.suppliers||[])].sort((a,b)=>supDisplay(a).localeCompare(supDisplay(b),"zh"));
 
 let openSups=new Set();
 function renderSuppliers(){
@@ -2501,7 +2761,7 @@ function renderSuppliers(){
       ${sp.tax?`<b>税号</b><span>${esc(sp.tax)}</span>`:""}
       ${sp.bank?`<b>开户行</b><span>${esc(sp.bank)}</span>`:""}
       ${sp.acct?`<b>账户</b><span>${esc(sp.acct)}</span>`:""}
-      ${sp.note?`<b>备注</b><span>${esc(sp.note)}</span>`:""}
+      ${sp.note?`<b>备注</b><span>${linkify(sp.note)}</span>`:""}
     </div>
     ${(sp.products||[]).length?`<div class="sup-prods">${sp.products.map(pr=>`<span>${esc(pr.name)}${pr.spec?" · "+esc(pr.spec):""}</span>`).join("")}</div>`:""}
     ${supLinkHTML(sp)}
@@ -2620,6 +2880,10 @@ $$("#userMenu button").forEach(b=>b.addEventListener("click",()=>{
 }));
 $("#tabBoard").addEventListener("click",()=>setView("board"));
 $("#tabProj").addEventListener("click",()=>setView("proj"));
+$("#tabCal").addEventListener("click",()=>setView("cal"));
+$("#calPrev").addEventListener("click",()=>calShift(-1));
+$("#calNext").addEventListener("click",()=>calShift(1));
+$("#calToday").addEventListener("click",()=>{ calMon=calKey(new Date()); renderCal(); });
 $("#alertChip").addEventListener("click",()=>{ alertOnly=!alertOnly; render(); });
 $("#dwPrint").addEventListener("click",()=>{ if(currentId) printRecord(currentId); });
 $("#btnSuppliers").addEventListener("click",()=>{ $("#supSearch").value=""; openSups.clear(); renderSuppliers(); openModal("mSupList"); });
@@ -2633,7 +2897,7 @@ $("#btnTheme").addEventListener("click",()=>{
   const dark=!document.body.classList.contains("dark");
   document.body.classList.toggle("dark",dark);
   storage.setItem("pt_theme",dark?"dark":"light");
-  $("#btnTheme").textContent=dark?"☀":"🌙";
+  const um=$("#umTheme"); if(um) um.innerHTML=dark?'<span class="ic">☀</span>浅色模式':'<span class="ic">🌙</span>深色模式';
 });
 $("#bulkTo").innerHTML='<option value="">改为状态…</option>'+ALL_STATUS.map(x=>`<option>${x}</option>`).join("");
 $("#bulkTo").addEventListener("change",e=>{ const v=e.target.value; e.target.value=""; if(v) bulkStatus(v); });
@@ -2710,7 +2974,7 @@ function startApp(){
   try{
     const c=JSON.parse(storage.getItem("pt_cache")||"null");
     if(c && (c.records||[]).length){
-      state.records=c.records; state.suppliers=c.suppliers||[]; state.fromCache=true;
+      state.records=normAll(c.records); state.suppliers=c.suppliers||[]; state.fromCache=true;
       render(); painted=true;
       setConn(null,"同步中…","正在与仓库同步最新数据");
     }
@@ -2719,7 +2983,7 @@ function startApp(){
   loadData(true);
 }
 (function init(){
-  if(storage.getItem("pt_theme")==="dark"){ document.body.classList.add("dark"); const t=document.getElementById("btnTheme"); if(t) t.textContent="☀"; }
+  if(storage.getItem("pt_theme")==="dark"){ document.body.classList.add("dark"); const um=document.getElementById("umTheme"); if(um) um.innerHTML='<span class="ic">☀</span>浅色模式'; }
   $("#lgBtn").addEventListener("click",doLogin);
   $("#lgPass").addEventListener("keydown",e=>{ if(e.key==="Enter") doLogin(); });
   $("#lgUser").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#lgPass").focus(); });
