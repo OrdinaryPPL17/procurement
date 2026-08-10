@@ -267,7 +267,7 @@ tr.sel td:first-child{position:relative}
   #printArea{font-family:var(--sans);color:#000}
 }
 #printArea{display:none}
-body.readonly #bulkReq,body.readonly #bulkDel,body.readonly #bulkTo,body.readonly #btnNew,body.readonly #btnBackfill,body.readonly #btnBulk,body.readonly #btnEditInfo,body.readonly #btnDelRec,body.readonly #btnEditOrder,body.readonly #btnEditShip,
+body.readonly #bulkReq,body.readonly #bulkDel,body.readonly #bulkTo,body.readonly #btnNew,body.readonly [data-um="backfill"],body.readonly #btnBulk,body.readonly #btnEditInfo,body.readonly #btnDelRec,body.readonly #btnEditOrder,body.readonly #btnEditShip,
 body.readonly .upl-zone,body.readonly .att-item .del,body.readonly #supAddBtn,body.readonly [data-supedit],
 body.readonly .proj-hd .addbtn,body.readonly #dwBody .actions,body.readonly #dwBody .act-note,
 body.readonly #dwBody .qt td:last-child,body.readonly #dwBody .qt th:last-child,
@@ -511,7 +511,7 @@ body.dark .cgrp-hd .pjt{background:#3A4550;color:#E8EAED}
   /* 顶栏:压成两行 */
   .only-mobile{display:block}
   .only-mobile-ib{display:inline-flex}
-  #btnSuppliers,#btnBackfill{display:none}
+  #btnSuppliers{display:none}
   .hd{flex-wrap:wrap;row-gap:0;align-items:center}
   .hd-title{order:1;flex:1;width:auto;border-bottom:none;padding:7px 0 7px 12px}
   .hd-title .sub{display:none}
@@ -823,7 +823,6 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       <span class="chip alert" id="alertChip" style="display:none" title="点击只看预警项"></span>
     </div>
     <div class="hd-right">
-      <button class="btn btn-sm" id="btnBackfill" title="一屏录入历史采购，直接生成到指定状态">⤓ 补录</button>
       <button class="btn btn-primary" id="btnNew">＋ 发布采购需求</button>
       <button id="btnTheme" style="display:none" aria-hidden="true"></button>
     </div>
@@ -833,7 +832,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
           <button class="chip" id="userChip" title="账户菜单">👤 未设置 <span class="cv">▾</span></button>
           <div class="user-menu" id="userMenu">
             <button data-um="suppliers" class="only-mobile"><span class="ic">🏢</span>供应商库</button>
-          <button data-um="backfill" class="only-mobile"><span class="ic">⤓</span>补录历史采购</button>
+          <button data-um="backfill" title="一屏录入历史采购，直接生成到指定状态"><span class="ic">⤓</span>补录历史采购</button>
           <button data-um="theme" id="umTheme"><span class="ic">🌙</span>深色模式</button>
           <button data-um="settings"><span class="ic">⚙</span>数据仓库设置</button>
             <button data-um="logout"><span class="ic">⇥</span>退出登录</button>
@@ -2934,7 +2933,7 @@ $$("#userMenu button").forEach(b=>b.addEventListener("click",()=>{
   const a=b.dataset.um;
   if(a==="settings") openSettings();
   else if(a==="suppliers") $("#btnSuppliers").click();
-  else if(a==="backfill") $("#btnBackfill").click();
+  else if(a==="backfill") openBackfill("");
   else if(a==="theme") $("#btnTheme").click();
   else { sessionUser=null; storage.removeItem("pt_auth"); storage.removeItem("pt_cache"); location.reload(); }
 }));
@@ -2952,7 +2951,6 @@ $("#supSearch").addEventListener("input",renderSuppliers);
 $("#spProdAdd").addEventListener("click",addDraftProd);
 ["spProdName","spProdSpec"].forEach(id=>$("#"+id).addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();addDraftProd();} }));
 $("#btnBulk").addEventListener("click",()=>openBulk(""));
-$("#btnBackfill").addEventListener("click",()=>openBackfill(""));
 $("#btnTheme").addEventListener("click",()=>{
   const dark=!document.body.classList.contains("dark");
   document.body.classList.toggle("dark",dark);
