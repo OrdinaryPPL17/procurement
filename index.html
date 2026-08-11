@@ -217,6 +217,24 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 .sec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
 .sec-hd{padding:9px 14px;border-bottom:1px solid var(--line);font-weight:800;font-size:12px;letter-spacing:.14em;display:flex;justify-content:flex-start;align-items:center;gap:2px;background:linear-gradient(#fff,#FBFAF7)}
 .sec-bd{padding:14px;animation:secIn .2s ease-out}
+/* 分批发货:批次卡片 */
+.shb{border:1px solid var(--line);border-radius:6px;margin-bottom:10px;overflow:hidden;background:var(--paper)}
+.shb:last-child{margin-bottom:0}
+.shb-hd{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--line-soft);cursor:pointer;user-select:none;font-size:12px}
+.shb-hd .fold{color:var(--steel);font-size:9px;transition:transform .15s;flex-shrink:0}
+.shb.collapsed .shb-hd .fold{transform:rotate(-90deg)}
+.shb.collapsed .shb-bd{display:none}
+.shb-n{font-weight:800;letter-spacing:.06em;white-space:nowrap;flex-shrink:0}
+.shb-st{font-size:11px;padding:1px 7px;border-radius:20px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.shb-st.ok{background:var(--approve-soft);color:var(--approve)}
+.shb-st.go{background:var(--safety-soft);color:var(--safety)}
+.shb-st.late{background:var(--reject);color:#fff}
+.shb-st.idle{background:var(--line);color:var(--steel)}
+.shb-sum{font-family:var(--mono);font-size:11px;color:var(--steel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1 1 auto;min-width:0}
+.shb-hd .hdbtns{margin-left:auto;display:flex;gap:4px;align-items:center;flex-shrink:0}
+.shb-bd{padding:10px 10px 12px}
+.shb-bd .att-sub{margin-top:10px}
+body.dark .shb-hd{background:#232A32}
 @keyframes secIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .kv{display:grid;grid-template-columns:88px 1fr;gap:6px 12px;font-size:13px}
 .kv dt{color:var(--steel)}
@@ -436,6 +454,56 @@ body.dark .cgrp-hd .pjt{background:#3A4550;color:#E8EAED}
 @media(max-width:760px){.cgrid{grid-template-columns:1fr}}
 .kv-empty{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--steel);padding:4px 0 2px;margin-top:2px}
 .kv-empty .tip{font-size:11px;opacity:.75}
+/* 货物明细表(只读) */
+.cg-wrap{overflow-x:auto;margin-top:6px}
+.cg-tb{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}
+.cg-tb th{text-align:left;font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--line);padding:4px 6px;white-space:nowrap}
+.cg-tb th.n,.cg-tb td.n{text-align:right;font-family:var(--mono);white-space:nowrap}
+.cg-tb td{padding:5px 6px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+.cg-tb td.d{min-width:120px}
+.cg-tb td.rm{color:var(--steel);font-size:11px}
+.cg-tb tfoot td{border-top:1px solid var(--ink);border-bottom:none;padding-top:6px}
+/* 货物明细行编辑器 */
+.cg-ed{border:1px solid var(--line);border-radius:6px;padding:8px;background:rgba(255,255,255,.5)}
+.cg-grid{min-width:640px}
+.cg-row{display:grid;grid-template-columns:1.6fr .7fr .9fr .9fr .9fr .7fr 1.1fr 24px;gap:5px;align-items:center;margin-bottom:5px}
+.cg-row.cg-head{margin-bottom:4px}
+.cg-row.cg-head span{font-size:10px;font-weight:700;color:var(--steel);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cg-i{width:100%;min-width:0;font-size:12px;padding:5px 6px}
+.cg-i.cg-pcs,.cg-i.cg-pkgs,.cg-i.cg-gw,.cg-i.cg-nw,.cg-i.cg-cbm{font-family:var(--mono);text-align:right}
+.cg-del{color:var(--steel);font-size:12px;line-height:1;padding:3px;border-radius:3px;justify-self:center}
+.cg-del:hover{color:#fff;background:var(--reject)}
+.cg-ft{display:flex;align-items:center;gap:12px;margin-top:2px}
+.cg-tot{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-left:auto;text-align:right}
+body.dark .cg-ed{background:rgba(0,0,0,.15)}
+/* 物流附件文件夹 */
+.afd-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-2px 0 8px}
+.afd-crumb{font-size:12px;color:var(--steel);display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0}
+.afd-crumb a{cursor:pointer;color:var(--ink-soft);border-bottom:1px dashed transparent}
+.afd-crumb a:hover{color:var(--safety);border-bottom-color:var(--safety)}
+.afd-crumb a.on{color:var(--ink);cursor:default}
+.afd-crumb a.on:hover{color:var(--ink);border-bottom-color:transparent}
+.afd-crumb .sep{color:var(--line)}
+.afd-acts{margin-left:auto;display:flex;gap:4px;flex-shrink:0}
+.afd{display:flex;align-items:center;gap:8px;padding:7px 9px;margin-bottom:5px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;transition:border-color .14s,background .14s}
+.afd:hover{border-color:var(--safety);background:var(--safety-soft)}
+.afd.over{border-color:var(--safety);background:var(--safety-soft);border-style:dashed}
+.afd.up{background:transparent;border-style:dashed}
+.afd-ic{font-size:13px;line-height:1;flex-shrink:0}
+.afd-nm{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.afd-cnt{font-size:11px;color:var(--steel);font-family:var(--mono);white-space:nowrap}
+.afd-b{margin-left:auto;display:flex;gap:3px;flex-shrink:0}
+.afd-empty{font-size:12px;color:var(--steel);padding:4px 0 6px}
+.att-item.dragging{opacity:.4}
+.att-item .mv{color:var(--steel);font-size:12px;line-height:1;padding:2px 3px;border-radius:3px;flex-shrink:0}
+.att-item .mv:hover{color:#fff;background:var(--safety)}
+.mv-file{font-size:12px;color:var(--steel);padding:0 0 8px;border-bottom:1px solid var(--line-soft);margin-bottom:6px;word-break:break-all}
+.mv-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px}
+.mv-row:hover{background:var(--safety-soft);color:var(--safety)}
+.mv-row.on{background:var(--line-soft);cursor:default}
+.mv-row .mv-c{margin-left:auto;font-size:11px;color:var(--steel);font-family:var(--mono)}
+body.dark .afd{background:var(--card)}
+body.readonly .att-item .mv,body.readonly .afd-acts,body.readonly .afd-b{display:none!important}
 .att-more{font-size:12px;color:var(--steel);cursor:pointer;padding:7px 0 2px;margin-top:6px;border-top:1px dashed var(--line-soft)}
 .att-more:hover{color:var(--safety)}
 .att-sub{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink)}
@@ -1122,13 +1190,18 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 编辑物流信息 -->
 <div class="modal-mask" id="mShip">
   <div class="modal">
-    <div class="md-hd"><h2>物流信息</h2><button class="btn btn-sm" data-close="mShip">✕</button></div>
+    <div class="md-hd"><h2 id="shTitle">物流信息</h2><button class="btn btn-sm" data-close="mShip">✕</button></div>
     <div class="md-bd">
       <div class="row2">
         <div class="fld"><label>BL# / 提单号</label><input id="shBl" placeholder="例:COSU6398471230"></div>
         <div class="fld"><label>船名 / 航次</label><input id="shVessel" placeholder="例:COSCO SHIPPING / 025E"></div>
       </div>
-      <div class="fld"><label>货物信息</label><textarea id="shCargo" rows="3" placeholder="品名、件数、毛重、体积、包装方式…"></textarea></div>
+      <div class="fld"><label>货物信息</label>
+        <div class="cg-ed">
+          <div class="cg-wrap"><div class="cg-grid" id="shCargoRows"></div></div>
+          <div class="cg-ft"><button type="button" class="btn btn-sm" id="shCargoAdd">＋ 加一行</button><span class="cg-tot" id="shCargoTot"></span></div>
+        </div>
+      </div>
       <div class="row2">
         <div class="fld"><label>ORIGIN 起运港</label><input id="shOrigin" placeholder="例:Qingdao, China"></div>
         <div class="fld"><label>DESTINATION 目的港</label><input id="shDest" placeholder="例:Los Angeles, USA"></div>
@@ -1143,6 +1216,15 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       </div>
     </div>
     <div class="md-ft"><button class="btn" data-close="mShip">取消</button><button class="btn btn-ink" id="shSave">保存</button></div>
+  </div>
+</div>
+
+<!-- 移动附件到文件夹 -->
+<div class="modal-mask" id="mAttMove">
+  <div class="modal" style="max-width:460px">
+    <div class="md-hd"><h2>移动到</h2><button class="btn btn-sm" data-close="mAttMove">✕</button></div>
+    <div class="md-bd" id="amvList"></div>
+    <div class="md-ft"><button class="btn" data-close="mAttMove">取消</button></div>
   </div>
 </div>
 
@@ -1311,8 +1393,9 @@ const linkify=t=>esc(t).replace(/https?:\/\/[^\s<]+/g,m=>{
   const url=tail?m.slice(0,m.length-tail.length):m;
   return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="lnk" title="${url}">${url}</a>${tail}`;
 });
-const fmtDT=iso=>{ if(!iso)return""; const d=new Date(iso); const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
-const fmtD=iso=>iso?iso.slice(0,10):"";
+/* 显示用 MM/DD/YYYY;仓库里存的一律还是 ISO(YYYY-MM-DD),比较、排序、date 输入框都用原值 */
+const fmtDT=iso=>{ if(!iso)return""; const d=new Date(iso); const p=n=>String(n).padStart(2,"0"); return `${p(d.getMonth()+1)}/${p(d.getDate())}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+const fmtD=iso=>{ if(!iso)return""; const s=String(iso).slice(0,10); const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m?`${m[2]}/${m[3]}/${m[1]}`:s; };
 const money=v=>(Number(v)||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 const now=()=>new Date().toISOString();
 const initials=(nm)=>{
@@ -1484,6 +1567,16 @@ function normRec(r){
   if(!Array.isArray(r.timeline)) r.timeline=[];
   if(!Array.isArray(r.payments)) r.payments=[];
   if(!r.ship||typeof r.ship!=="object") r.ship={};
+  if(r.shipMore!==undefined&&!Array.isArray(r.shipMore)) r.shipMore=[];
+  if(r.attFolders!==undefined&&!Array.isArray(r.attFolders)) r.attFolders=[];
+  if(Array.isArray(r.attFolders)){
+    r.attFolders=r.attFolders.filter(f=>f&&typeof f==="object"&&f.fid);
+    const ids=new Set(r.attFolders.map(f=>f.fid));
+    r.attFolders.forEach(f=>{ if(!f.name) f.name="未命名"; if(!ids.has(f.parent)) f.parent=""; });  // 父级丢了就提到根层
+    (r.attachments||[]).forEach(a=>{ if(a.fid&&!ids.has(a.fid)) a.fid=""; });                      // 文件夹没了的文件回根层
+  }else{ (r.attachments||[]).forEach(a=>{ if(a.fid) a.fid=""; }); }
+  if(Array.isArray(r.shipMore)){ r.shipMore=r.shipMore.filter(b=>b&&typeof b==="object"); r.shipMore.forEach((b,i)=>{ if(!b.bid) b.bid="b"+(i+2); }); }
+  migrateCargo(r.ship); shMore(r).forEach(migrateCargo);
   if(typeof r.title!=="string") r.title=String(r.title??"");
   if(!r.status||![...ALL_STATUS].includes(r.status)) r.status=r.status||"需求";
   if(!r.pri) r.pri="中";
@@ -1538,7 +1631,11 @@ async function closeRecord(id){
   const today=new Date().toISOString().slice(0,10);
   rec.ship=rec.ship||{};
   let note=(window.__note?window.__note():"")||"";
-  if(!rec.ship.arrived){ rec.ship.arrived=today; note=(note?note+"; ":"")+"实际到货日期记为 "+fmtD(today); }
+  const noArr=[{b:rec.ship,n:1},...shMore(rec).map((b,i)=>({b,n:i+2}))].filter(x=>!x.b.arrived);
+  if(noArr.length){
+    noArr.forEach(x=>x.b.arrived=today);
+    note=(note?note+"; ":"")+(shMore(rec).length?`第 ${noArr.map(x=>x.n).join("/")} 批实际到货日期记为 `:"实际到货日期记为 ")+fmtD(today);
+  }
   return changeStatus(id,"完结",note,"确认到货并完结");
 }
 async function saveOrderFields(id,advance){
@@ -1624,7 +1721,7 @@ function compressImage(file,maxDim=1600,quality=.82){
 }
 const blobToB64=blob=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(",")[1]); r.onerror=rej; r.readAsDataURL(blob); });
 
-async function uploadFiles(id,files,group){
+async function uploadFiles(id,files,group,fid){
   if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   if(!ghReady()) return toast("请先配置 GitHub","err");
@@ -1638,7 +1735,9 @@ async function uploadFiles(id,files,group){
       const path=`uploads/${new Date().getFullYear()}/${id}/${Date.now()}_${safe}`;
       toast(`上传中 ${safe} (${fmtSize(blob.size)})…`);
       const res=await ghPut(path,await blobToB64(blob),`${cfg.name}: 上传附件 ${rec.id}`);
-      rec.attachments.push({name:safe,path,sha:res.content.sha,size:blob.size,type:isImg?"image":"file",group:group||"需求",by:cfg.name,at:now()});
+      const at={name:safe,path,sha:res.content.sha,size:blob.size,type:isImg?"image":"file",group:group||"需求",by:cfg.name,at:now()};
+      if(fid) at.fid=fid;
+      rec.attachments.push(at);
       log(rec,"上传附件",safe);
     }catch(e){ toast(file.name+" 上传失败: "+e.message,"err"); }
   }
@@ -1646,6 +1745,70 @@ async function uploadFiles(id,files,group){
   render();
   await persist(`${rec.id} 附件更新`);
   toast("附件上传完成","ok");
+}
+async function afNew(id,group,parent){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec)return;
+  const nm=(prompt("新文件夹名称","装箱照片")||"").trim();
+  if(!nm) return;
+  if(!Array.isArray(rec.attFolders)) rec.attFolders=[];
+  const fid=newFid(rec);
+  rec.attFolders.push({fid,group,name:nm,parent:parent||""});
+  attCwd[id+"|"+group]=fid;                       // 建完直接进去
+  log(rec,"新建附件文件夹",nm);
+  openDrawer(id,true);
+  if(await persist(`${rec.id} 新建文件夹 ${nm}`)) toast(`已建「${nm}」`,"ok");
+}
+async function afRename(id,fid){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec)return;
+  const f=afGet(rec,fid); if(!f)return;
+  const nm=(prompt("重命名文件夹",f.name)||"").trim();
+  if(!nm||nm===f.name) return;
+  const old=f.name; f.name=nm;
+  log(rec,"重命名附件文件夹",`「${old}」→「${nm}」`);
+  openDrawer(id,true);
+  if(await persist(`${rec.id} 文件夹改名 ${nm}`)) toast("已改名","ok");
+}
+async function afDelete(id,fid){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec)return;
+  const f=afGet(rec,fid); if(!f)return;
+  const n=afCount(rec,f.group,fid), sub=afSubCount(rec,fid);
+  if(n||sub) return toast(`「${f.name}」里还有${n?` ${n} 个文件`:""}${sub?` ${sub} 个子文件夹`:""}，请先清空`,"err");
+  if(!confirm(`删除文件夹「${f.name}」?`)) return;
+  rec.attFolders=(rec.attFolders||[]).filter(x=>x.fid!==fid);
+  if((attCwd[id+"|"+f.group]||"")===fid) attCwd[id+"|"+f.group]=f.parent||"";
+  log(rec,"删除附件文件夹",f.name);
+  openDrawer(id,true);
+  if(await persist(`${rec.id} 删除文件夹 ${f.name}`)) toast("已删除","ok");
+}
+let mvCtx=null;
+function openAttMove(id,idx){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec)return;
+  const a=rec.attachments[idx]; if(!a)return;
+  const group=a.group||"需求";
+  mvCtx={id,idx};
+  const rowsFor=(parent,depth)=>afList(rec,group,parent).map(f=>
+    `<div class="mv-row${(a.fid||"")===f.fid?" on":""}" data-mvto="${f.fid}" style="padding-left:${12+depth*18}px">📁 ${esc(f.name)}<span class="mv-c">${afCount(rec,group,f.fid)} 个文件</span></div>`
+    +rowsFor(f.fid,depth+1)).join("");
+  $("#amvList").innerHTML=`<div class="mv-file">${esc(a.name)}</div>
+    <div class="mv-row${a.fid?"":" on"}" data-mvto="" style="padding-left:12px">📄 ${esc(attLabel(group))}（根层）</div>`
+    +(rowsFor("",1)||`<div class="afd-empty">还没有文件夹，先在附件区点「＋ 新建文件夹」</div>`);
+  openModal("mAttMove");
+}
+async function afMove(id,idx,fid){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec)return;
+  const a=rec.attachments[idx]; if(!a)return;
+  if((a.fid||"")===(fid||"")){ closeModal("mAttMove"); return; }
+  const to=fid?afGet(rec,fid):null;
+  if(fid&&(!to||to.group!==(a.group||"需求"))){ closeModal("mAttMove"); return toast("目标文件夹不在这个附件分类下","err"); }
+  a.fid=fid||"";
+  log(rec,"移动附件",`${a.name} → ${to?to.name:"根层"}`);
+  closeModal("mAttMove"); openDrawer(id,true);
+  if(await persist(`${rec.id} 移动附件`)) toast(`已移到${to?`「${to.name}」`:"根层"}`,"ok");
 }
 async function removeAttachment(id,idx){
   if(isViewer()) return denyRO();
@@ -1890,7 +2053,7 @@ function railHTML(r){
 const isDateStr=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||"");
 const etaTxt=v=>isDateStr(v)?fmtD(v):(v||"");
 /* 卡片上省掉当年年份:2026-08-12 → 08-12,跨年仍显示完整日期 */
-const shortD=t=>String(t||"").replace(new RegExp("^"+new Date().getFullYear()+"-"),"");
+const shortD=t=>String(t||"").replace(new RegExp("/"+new Date().getFullYear()+"$"),"");
 function cardDate(r){
   const today=new Date().toISOString().slice(0,10);
   if(r.status==="物流"||r.status==="完结"){
@@ -2107,6 +2270,83 @@ function fillSelect(sel,arr,first){
 const isOrdered=r=>r.status==="下单"||r.status==="物流"||r.status==="完结";
 const isShipping=r=>r.status==="物流"||r.status==="完结";
 const sh=r=>r.ship||{};
+/* ── 分批发货 ──
+   rec.ship 永远是第 1 批;rec.shipMore 存第 2 批起,每批带 bid。
+   附件按 bid 分组(物流 / 物流#bid),所以删掉中间某批不会串号。
+   日历、卡片日期、逾期判定一律只看第 1 批。 */
+const shMore=r=>Array.isArray(r.shipMore)?r.shipMore:[];
+const shBatches=r=>[Object.assign({bid:""},sh(r)),...shMore(r)];
+const shGroup=bid=>bid?"物流#"+bid:"物流";
+const shGet=(r,bid)=>bid?shMore(r).find(b=>b.bid===bid):sh(r);
+/* ── 货物信息明细 ──
+   batch.cargoLines=[{desc,pcs,pkgs,gw,nw,cbm,note}];合计四列自动求和,不入库。
+   老数据的 batch.cargo 自由文本会被 parseCargo 拆成明细行(拆不动的整段进品名,不丢数据)。 */
+const CGN=["pcs","pkgs","gw","nw","cbm"];
+const cgNum=v=>{ const n=parseFloat(String(v==null?"":v).replace(/,/g,"")); return isNaN(n)?null:n; };
+const cgFmt=n=>n==null?"":(Math.round(n*1000)/1000).toLocaleString("en-US",{maximumFractionDigits:3});
+function parseCargoLine(raw){
+  const s=String(raw||"").trim(); if(!s) return null;
+  const o={desc:"",pcs:"",pkgs:"",gw:"",nw:"",cbm:"",note:""};
+  let rest=" "+s+" ", kgs=[];
+  const grab=(re,fn)=>{ rest=rest.replace(re,(m,num)=>{ fn(String(num).replace(/,/g,"")); return " "; }); };
+  grab(/毛重\s*[:：]?\s*([\d.,]+)\s*(?:KGS?|公斤|千克)?/gi, n=>{ if(!o.gw) o.gw=n; });
+  grab(/净重\s*[:：]?\s*([\d.,]+)\s*(?:KGS?|公斤|千克)?/gi, n=>{ if(!o.nw) o.nw=n; });
+  grab(/([\d.,]+)\s*(?:PCS|PC|PIECES?)(?![A-Za-z])/gi, n=>{ if(!o.pcs) o.pcs=n; });
+  grab(/([\d.,]+)\s*(?:个|件|支|套|条)/g,             n=>{ if(!o.pcs) o.pcs=n; });
+  grab(/([\d.,]+)\s*(?:PACKAGES?|PKGS?|PKG|CTNS?|CARTONS?|PALLETS?)(?![A-Za-z])/gi, n=>{ if(!o.pkgs) o.pkgs=n; });
+  grab(/([\d.,]+)\s*(?:箱|包|托)/g,                   n=>{ if(!o.pkgs) o.pkgs=n; });
+  grab(/([\d.,]+)\s*(?:KGS?|KG)(?![A-Za-z])/gi,       n=>kgs.push(n));
+  grab(/([\d.,]+)\s*(?:公斤|千克)/g,                  n=>kgs.push(n));
+  grab(/([\d.,]+)\s*(?:CBM|M3)(?![A-Za-z])/gi,        n=>{ if(!o.cbm) o.cbm=n; });
+  grab(/([\d.,]+)\s*(?:立方米|立方|方)/g,              n=>{ if(!o.cbm) o.cbm=n; });
+  kgs.forEach(n=>{ if(!o.gw) o.gw=n; else if(!o.nw) o.nw=n; });
+  rest=rest.replace(/[，,、;；]+/g," ").replace(/\s+/g," ").trim();
+  const toks=rest?rest.split(" "):[];
+  const dp=[]; let i=0;
+  while(i<toks.length&&!/\d/.test(toks[i])) dp.push(toks[i++]);   // 品名=开头连续不含数字的词
+  o.desc=dp.join(" ");
+  o.note=toks.slice(i).join(" ");                                 // 剩下的进备注,不丢
+  if(!o.desc&&!CGN.some(k=>o[k])){ o.desc=s; o.note=""; }         // 一点没认出来:整段进品名
+  return o;
+}
+function parseCargo(text){
+  const rows=String(text||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(parseCargoLine).filter(Boolean);
+  if(rows.length<2) return rows;
+  // 末行没品名、且数字≈其余行合计 → 那是原来的合计行,丢掉(合计改为自动算)
+  const last=rows[rows.length-1];
+  if(!last.desc){
+    const body=rows.slice(0,-1), t=cargoTotals(body);
+    const near=(a,b)=>{ const x=cgNum(a),y=b; if(x==null&&y==null) return true; if(x==null||y==null) return x==null&&!y; return Math.abs(x-y)<=Math.max(0.02,Math.abs(y)*0.005); };
+    if(near(last.pkgs,t.pkgs)&&near(last.gw,t.gw)&&near(last.cbm,t.cbm)) return body;
+    last.desc="(原合计)";
+  }
+  return rows;
+}
+function cargoTotals(lines){
+  const t={pcs:null,pkgs:null,gw:null,nw:null,cbm:null};
+  (lines||[]).forEach(l=>CGN.forEach(k=>{ const n=cgNum(l[k]); if(n!=null) t[k]=(t[k]||0)+n; }));
+  return t;
+}
+const cargoOf=b=>(Array.isArray(b&&b.cargoLines)&&b.cargoLines.length)?b.cargoLines:(b&&b.cargo?parseCargo(b.cargo):[]);
+const cargoEmpty=l=>!String(l.desc||"").trim()&&!String(l.note||"").trim()&&!CGN.some(k=>String(l[k]||"").trim());
+function migrateCargo(b){
+  if(!b||typeof b!=="object") return;
+  if(Array.isArray(b.cargoLines)){
+    b.cargoLines=b.cargoLines.filter(l=>l&&typeof l==="object").map(l=>{
+      const o={desc:String(l.desc||""),note:String(l.note||"")};
+      CGN.forEach(k=>o[k]=(l[k]==null||l[k]==="")?"":String(l[k]));
+      return o;
+    }).filter(l=>!cargoEmpty(l));
+    delete b.cargo;
+    if(!b.cargoLines.length) delete b.cargoLines;
+    return;
+  }
+  if(b.cargo&&String(b.cargo).trim()){
+    const lines=parseCargo(b.cargo);
+    if(lines.length){ b.cargoLines=lines; delete b.cargo; }
+  }else if(b.cargo!==undefined&&!String(b.cargo).trim()) delete b.cargo;
+}
+const newBid=r=>{ const used=new Set(shMore(r).map(b=>b.bid)); let s; do{ s=Math.random().toString(36).slice(2,6); }while(used.has(s)); return s; };
 const etaLate=r=>{ const e=sh(r).eta; return !!(e && r.status!=="物流" && r.status!=="完结" && r.status!=="已取消" && e<new Date().toISOString().slice(0,10)); };
 function orderInfo(r){
   const q=(r.quotes||[]).find(x=>x.selected)||{};
@@ -2116,6 +2356,75 @@ function orderInfo(r){
   const amount=(price===null||isNaN(price))?"":`${cur}${money(price)}`;
   const overridden=!!(r.oSupplier&&q.supplier&&r.oSupplier!==q.supplier)||!!(r.oPrice!==undefined&&r.oPrice!==""&&q.price!==undefined&&Number(r.oPrice)!==q.price);
   return {supplier,amount,cur,price,lead:q.lead||"",quoteSupplier:q.supplier||"",quotePrice:q.price,quoteCur:q.currency||"$",overridden};
+}
+let shbFold=new Set();   // 折叠的批次:rec.id+"|"+bid
+function cargoTableHTML(b){
+  const lines=cargoOf(b);
+  if(!lines.length) return `<div class="afd-empty">还没有货物明细，点「✎ 编辑」按行填写</div>`;
+  const t=cargoTotals(lines), multi=lines.length>1;
+  return `<div class="cg-wrap"><table class="cg-tb">
+    <thead><tr><th>品名</th><th class="n">PCS</th><th class="n">PACKAGES</th><th class="n">毛重 KGS</th><th class="n">净重 KGS</th><th class="n">CBM</th><th>备注</th></tr></thead>
+    <tbody>${lines.map(l=>`<tr>
+      <td class="d">${esc(l.desc||"—")}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.pcs)))||"—"}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.pkgs)))||"—"}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.gw)))||"—"}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.nw)))||"—"}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.cbm)))||"—"}</td>
+      <td class="rm">${esc(l.note||"")}</td></tr>`).join("")}</tbody>
+    ${multi?`<tfoot><tr><td class="d">合计 ${lines.length} 项</td>
+      <td class="n">${esc(cgFmt(t.pcs))}</td><td class="n">${esc(cgFmt(t.pkgs))}</td>
+      <td class="n">${esc(cgFmt(t.gw))}</td><td class="n">${esc(cgFmt(t.nw))}</td>
+      <td class="n">${esc(cgFmt(t.cbm))}</td><td></td></tr></tfoot>`:""}
+  </table></div>`;
+}
+function shipKvHTML(b,late){
+  return `<dl class="kv">
+    <dt>BL# / 提单号</dt><dd class="mono">${esc(b.bl||"—")}</dd>
+    <dt>ORIGIN</dt><dd class="mono">${esc(b.origin||"—")}</dd>
+    <dt>DESTINATION</dt><dd class="mono">${esc(b.dest||"—")}</dd>
+    <dt>ETD</dt><dd class="mono">${b.etd?fmtD(b.etd):"—"}</dd>
+    <dt>ETA</dt><dd class="mono">${b.eta?fmtD(b.eta):"—"}${late?' <span style="color:var(--reject);font-weight:700">已超期</span>':""}</dd>
+    <dt>船名 / 航次</dt><dd class="mono">${esc(b.vessel||"—")}</dd>
+    <dt>柜号 / 唛头</dt><dd class="mono">${esc(b.ctnr||"—")}</dd>
+    ${b.arrived?`<dt>实际到货</dt><dd class="mono">${fmtD(b.arrived)}</dd>`:""}
+  </dl>`;
+}
+function shipSecHTML(rec){
+  const bs=shBatches(rec), multi=bs.length>1;
+  const today=new Date().toISOString().slice(0,10);
+  const dead=rec.status==="完结"||rec.status==="已取消";
+  const bLate=b=>!!(b.eta&&!b.arrived&&!dead&&b.eta<today);
+  const bState=b=>b.arrived?["已到货","ok"]:(bLate(b)?["已超期","late"]:(b.etd?["在途","go"]:["待发","idle"]));
+  const addBtn=isViewer()?"":`<button class="btn btn-sm" id="btnAddShipB" title="再加一批发货记录">＋ 加一批</button>`;
+  const sum=multi
+    ? `${bs.length} 批 · 已到货 ${bs.filter(b=>b.arrived).length}/${bs.length}${bs[0].eta?` · 首批 ETA ${fmtD(bs[0].eta)}`:""}`
+    : `${esc(bs[0].bl||"")}${bs[0].eta?` · ETA ${fmtD(bs[0].eta)}`:""}${bs[0].arrived?` · 到货 ${fmtD(bs[0].arrived)}`:""}`;
+  let body;
+  if(!multi){
+    body=shipKvHTML(bs[0],bLate(bs[0]))
+      +`<div class="att-sub"><span>货物信息</span><span class="tip">按明细行填，合计自动算</span></div>`
+      +cargoTableHTML(bs[0])
+      +`<div class="att-sub"><span>物流附件</span><span class="tip">提单、装箱单、到货照片、签收单…</span></div>`
+      +attBlockHTML(rec,"物流");
+  }else{
+    body=bs.map((b,i)=>{
+      const st=bState(b), key=rec.id+"|"+(b.bid||"1"), folded=shbFold.has(key);
+      return `<section class="shb${folded?" collapsed":""}" data-shb="${esc(b.bid||"")}">
+        <div class="shb-hd"><span class="fold">▼</span><span class="shb-n">第 ${i+1} 批</span>
+          <span class="shb-st ${st[1]}">${st[0]}</span>
+          <span class="shb-sum">${esc(b.bl||"")}${b.eta?` · ETA ${fmtD(b.eta)}`:""}${b.arrived?` · 到货 ${fmtD(b.arrived)}`:""}</span>
+          <span class="hdbtns">${isViewer()?"":`<button class="btn btn-sm" data-shedit="${esc(b.bid||"")}">✎ 编辑</button>${i?`<button class="btn btn-sm" data-shdel="${esc(b.bid)}" title="删除这一批">🗑</button>`:""}`}</span>
+        </div>
+        <div class="shb-bd">${shipKvHTML(b,bLate(b))}
+          <div class="att-sub"><span>货物信息</span><span class="tip">按明细行填，合计自动算</span></div>
+          ${cargoTableHTML(b)}
+          <div class="att-sub"><span>第 ${i+1} 批物流附件</span><span class="tip">提单、装箱单、到货照片、签收单…</span></div>
+          ${attBlockHTML(rec,shGroup(b.bid))}
+        </div></section>`;
+    }).join("");
+  }
+  return `<div class="sec" data-sec="物流信息"><div class="sec-hd"><span class="fold">▼</span>物流信息<span class="sum">${sum}</span><span class="hdbtns">${multi||isViewer()?"":`<button class="btn btn-sm" id="btnEditShip">✎ 编辑</button>`}${addBtn}</span></div><div class="sec-bd">${body}</div></div>`;
 }
 function payHTML(rec){
   const ps=rec.payments||[];
@@ -2139,6 +2448,21 @@ function payHTML(rec){
     <span>未付 <b class="${left>0?"left":"done"}">${cur}${money(left)}</b>${left<=0?" ✓ 已结清":""}</span>`:""}
   </div>`;
 }
+/* ── 物流附件文件夹(可嵌套) ──
+   rec.attFolders=[{fid,group,name,parent}];附件的 a.fid 指向所属文件夹,空=该分组根层。
+   纯界面分组:仓库里的文件路径不变,所以改名/移动都是瞬时的元数据操作,不搬文件。
+   同名文件夹允许并存(靠 fid 区分)。只在物流分组启用。 */
+const isShipGroup=g=>g==="物流"||/^物流#/.test(g);
+const afAll=(rec,group)=>(rec.attFolders||[]).filter(f=>f.group===group);
+const afList=(rec,group,parent)=>afAll(rec,group).filter(f=>(f.parent||"")===(parent||""));
+const afGet=(rec,fid)=>(rec.attFolders||[]).find(f=>f.fid===fid);
+const afPath=(rec,fid)=>{ const out=[]; let g=0; while(fid&&g++<60){ const f=afGet(rec,fid); if(!f)break; out.unshift(f); fid=f.parent||""; } return out; };
+const afDesc=(rec,fid)=>{ const out=[]; const walk=p=>(rec.attFolders||[]).filter(f=>(f.parent||"")===p).forEach(f=>{ out.push(f.fid); walk(f.fid); }); walk(fid); return out; };
+const afCount=(rec,group,fid)=>{ const set=new Set([fid,...afDesc(rec,fid)]); return (rec.attachments||[]).filter(a=>(a.group||"需求")===group&&set.has(a.fid||"")).length; };
+const afSubCount=(rec,fid)=>(rec.attFolders||[]).filter(f=>(f.parent||"")===fid).length;
+const newFid=rec=>{ const used=new Set((rec.attFolders||[]).map(f=>f.fid)); let s; do{ s="f"+Math.random().toString(36).slice(2,6); }while(used.has(s)); return s; };
+let attCwd={};   // 当前所在文件夹:rec.id+"|"+group -> fid
+const attLabel=g=>GROUP_SHORT[g]||(/^物流#/.test(g)?"物流附件":g);
 const GROUP_SHORT={"需求":"需求附件","报价":"报价单","合同":"合同","送审":"送审文件","报关":"报关文件","物流":"物流附件","预付款":"预付款水单","尾款":"尾款水单"};
 let openAttZones=new Set();
 /* 多个附件分区:全空时合并成一行"＋ 添加附件",点开再展开 */
@@ -2159,22 +2483,61 @@ function attZonesHTML(rec,zones){
   }).join("") + (attFold.has(key)?"":`<div class="att-more" data-zonesopen="1">＋ 其他附件分类</div>`);
 }
 function attBlockHTML(rec,group){
+  if(isShipGroup(group)) return attFolderBlockHTML(rec,group);
   const items=(rec.attachments||[]).map((a,i)=>({a,i})).filter(({a})=>(a.group||"需求")===group);
   if(!items.length && !openAttZones.has(rec.id+"|"+group) && !isViewer())
-    return `<div class="att-add" data-attopen="${group}">＋ 上传${esc(GROUP_SHORT[group]||group)}</div>`;
+    return `<div class="att-add" data-attopen="${group}">＋ 上传${esc(attLabel(group))}</div>`;
   if(!items.length && isViewer()) return `<div style="font-size:12px;color:var(--steel);padding:2px 0 6px">无</div>`;
   const key=rec.id+"|"+group;
   const compact=(rec.status==="完结"||rec.status==="已取消") && !openAttZones.has(key) && !isViewer();
   return `<div class="att-box"><div class="att-grid" data-attgrid="${group}">
-    ${items.map(({a,i})=>`<div class="att-item" data-path="${esc(a.path)}" data-type="${a.type}" data-name="${esc(a.name)}">
-      ${a.type==="image"?`<img alt="" loading="lazy">`:`<span class="fx">${esc(a.name.split(".").pop().toUpperCase().slice(0,4))}</span>`}
-      <span class="nm" title="${esc(a.name)} · ${fmtSize(a.size)} · ${esc(a.by||"")} · 点击${a.type==="image"?"查看大图":(canPreview(a.name)?"在线预览":"下载")}">${esc(a.name)}</span>
-      <button class="del" onclick="event.stopPropagation();removeAttachment('${rec.id}',${i})" title="删除">✕</button>
-    </div>`).join("")}
+    ${items.map(({a,i})=>attItemHTML(rec,a,i,false)).join("")}
   </div>
   ${isViewer()?"":(compact
     ? `<button class="att-add" data-attopen="${group}" style="margin-top:2px">＋ 添加</button>`
     : `<div class="upl-zone" data-uplzone="${group}">点击或拖入文件上传${group==="报价"?"(报价单、PDF…)":"(照片、图纸、PDF…)"}</div>`)}</div>`;
+}
+function attItemHTML(rec,a,i,movable){
+  const mv=movable&&!isViewer();
+  return `<div class="att-item" data-attidx="${i}"${mv?' draggable="true"':""} data-path="${esc(a.path)}" data-type="${a.type}" data-name="${esc(a.name)}">
+      ${a.type==="image"?`<img alt="" loading="lazy">`:`<span class="fx">${esc(a.name.split(".").pop().toUpperCase().slice(0,4))}</span>`}
+      <span class="nm" title="${esc(a.name)} · ${fmtSize(a.size)} · ${esc(a.by||"")} · 点击${a.type==="image"?"查看大图":(canPreview(a.name)?"在线预览":"下载")}">${esc(a.name)}</span>
+      ${mv?`<button class="mv" onclick="event.stopPropagation();openAttMove('${rec.id}',${i})" title="移动到文件夹">⤴</button>`:""}
+      <button class="del" onclick="event.stopPropagation();removeAttachment('${rec.id}',${i})" title="删除">✕</button>
+    </div>`;
+}
+/* 物流附件:带文件夹的浏览块 */
+function attFolderBlockHTML(rec,group){
+  const key=rec.id+"|"+group;
+  let cwd=attCwd[key]||"";
+  if(cwd&&!afGet(rec,cwd)){ cwd=""; delete attCwd[key]; }
+  const groupAtts=(rec.attachments||[]).filter(a=>(a.group||"需求")===group);
+  const anyFolder=afAll(rec,group).length;
+  if(!groupAtts.length&&!anyFolder&&!openAttZones.has(key)&&!isViewer())
+    return `<div class="att-add" data-attopen="${group}">＋ 上传${esc(attLabel(group))}</div>`;
+  if(!groupAtts.length&&!anyFolder&&isViewer())
+    return `<div style="font-size:12px;color:var(--steel);padding:2px 0 6px">无</div>`;
+  const subs=afList(rec,group,cwd);
+  const items=(rec.attachments||[]).map((a,i)=>({a,i})).filter(({a})=>(a.group||"需求")===group&&(a.fid||"")===cwd);
+  const path=afPath(rec,cwd);
+  const cur=cwd?afGet(rec,cwd):null;
+  const crumb=`<div class="afd-bar">
+    <span class="afd-crumb"><a data-afgo="" class="${cwd?"":"on"}" title="回到根层">${esc(attLabel(group))}</a>${path.map((f,i)=>` <span class="sep">/</span> <a data-afgo="${f.fid}" class="${i===path.length-1?"on":""}">${esc(f.name)}</a>`).join("")}</span>
+    ${isViewer()?"":`<span class="afd-acts"><button class="btn btn-sm" data-afnew="${cwd}">＋ 新建文件夹</button>${cwd?`<button class="btn btn-sm" data-afren="${cwd}" title="重命名当前文件夹">✎ 改名</button><button class="btn btn-sm" data-afdel="${cwd}" title="删除当前文件夹">🗑</button>`:""}</span>`}
+  </div>`;
+  const rows=subs.map(f=>`<div class="afd" data-afgo="${f.fid}"${isViewer()?"":` data-afdrop="${f.fid}"`}>
+      <span class="afd-ic">📁</span><span class="afd-nm">${esc(f.name)}</span>
+      <span class="afd-cnt">${afCount(rec,group,f.fid)} 个文件${afSubCount(rec,f.fid)?` · ${afSubCount(rec,f.fid)} 个子文件夹`:""}</span>
+      ${isViewer()?"":`<span class="afd-b"><button class="btn btn-sm" data-afren="${f.fid}" title="重命名">✎</button><button class="btn btn-sm" data-afdel="${f.fid}" title="删除">🗑</button></span>`}
+    </div>`).join("");
+  const upRow=cwd?`<div class="afd up" data-afgo="${esc(cur.parent||"")}"${isViewer()?"":` data-afdrop="${esc(cur.parent||"")}"`}><span class="afd-ic">⬅</span><span class="afd-nm">上一层</span></div>`:"";
+  const compact=(rec.status==="完结"||rec.status==="已取消")&&!openAttZones.has(key)&&!isViewer();
+  return `<div class="att-box">${crumb}${upRow}${rows}
+    ${items.length?`<div class="att-grid" data-attgrid="${group}">${items.map(({a,i})=>attItemHTML(rec,a,i,true)).join("")}</div>`
+      :`<div class="afd-empty">${subs.length?"这一层没有文件，都在文件夹里":"还没有文件"}</div>`}
+    ${isViewer()?"":(compact
+      ? `<button class="att-add" data-attopen="${group}" style="margin-top:2px">＋ 添加</button>`
+      : `<div class="upl-zone" data-uplzone="${group}" data-uplfid="${esc(cwd)}">点击或拖入文件上传${cwd?`到「${esc(cur.name)}」`:"(照片、图纸、PDF…)"}</div>`)}</div>`;
 }
 let tlFull=new Set();
 let secFold={};   // {区块名:true/false} 用户手动折叠状态
@@ -2245,7 +2608,7 @@ function openDrawer(id,keep){
         <dt>供应商</dt><dd>${esc(orderInfo(rec).supplier||"—")}${orderInfo(rec).overridden?' <span style="font-size:11px;color:var(--steel)">(已手工调整)</span>':""}</dd>
         <dt>金额</dt><dd class="mono">${orderInfo(rec).amount||"—"}</dd>
         ${rec.signed?`<dt>签订日期</dt><dd class="mono">${fmtD(rec.signed)}</dd>`:""}
-        ${(etaTxt(rec.eta)||orderInfo(rec).lead)?`<dt>交期</dt><dd>${esc(etaTxt(rec.eta)||orderInfo(rec).lead)}${rec.eta&&orderInfo(rec).lead?` <span style="color:var(--steel);font-size:12px">(报价货期 ${esc(orderInfo(rec).lead)})</span>`:""}</dd>`:""}
+        ${(etaTxt(rec.eta)||orderInfo(rec).lead)?`<dt>交期</dt><dd class="mono">${esc(etaTxt(rec.eta)||orderInfo(rec).lead)}${rec.eta&&orderInfo(rec).lead?` <span style="color:var(--steel);font-size:12px">(报价货期 ${esc(orderInfo(rec).lead)})</span>`:""}</dd>`:""}
         ${rec.po?`<dt>合同 / PO号</dt><dd class="mono">${esc(rec.po)}</dd>`:""}
       </dl>
       ${(()=>{const empty=[!rec.signed&&"签订日期",!(etaTxt(rec.eta)||orderInfo(rec).lead)&&"交期",!rec.po&&"合同/PO号"].filter(Boolean);
@@ -2255,21 +2618,7 @@ function openDrawer(id,keep){
       ${attZonesHTML(rec,[["预付款","预付款水单","银行回单、汇款凭证"],["尾款","尾款水单","银行回单、汇款凭证"],["合同","合同","采购合同、订单确认书"],["送审","送审文件","审批单、请款单…"],["报关","报关文件","发票、装箱单、提单、报关单…"]])}
     </div></div>`:""}
 
-    ${isShipping(rec)?`<div class="sec" data-sec="物流信息"><div class="sec-hd"><span class="fold">▼</span>物流信息<span class="sum">${esc(sh(rec).bl||"")}${sh(rec).eta?` · ETA ${fmtD(sh(rec).eta)}`:""}${sh(rec).arrived?` · 到货 ${fmtD(sh(rec).arrived)}`:""}</span><span class="hdbtns"><button class="btn btn-sm" id="btnEditShip">✎ 编辑</button></span></div><div class="sec-bd">
-      <dl class="kv">
-        <dt>BL# / 提单号</dt><dd class="mono">${esc(sh(rec).bl||"—")}</dd>
-        <dt>货物信息</dt><dd style="white-space:pre-wrap">${esc(sh(rec).cargo||"—")}</dd>
-        <dt>ORIGIN</dt><dd>${esc(sh(rec).origin||"—")}</dd>
-        <dt>DESTINATION</dt><dd>${esc(sh(rec).dest||"—")}</dd>
-        <dt>ETD</dt><dd class="mono">${sh(rec).etd?fmtD(sh(rec).etd):"—"}</dd>
-        <dt>ETA</dt><dd class="mono">${sh(rec).eta?fmtD(sh(rec).eta):"—"}${etaLate(rec)?' <span style="color:var(--reject);font-weight:700">已超期</span>':""}</dd>
-        <dt>船名 / 航次</dt><dd class="mono">${esc(sh(rec).vessel||"—")}</dd>
-        <dt>柜号 / 唛头</dt><dd class="mono">${esc(sh(rec).ctnr||"—")}</dd>
-        ${sh(rec).arrived?`<dt>实际到货</dt><dd class="mono">${fmtD(sh(rec).arrived)}</dd>`:""}
-      </dl>
-      <div class="att-sub"><span>物流附件</span><span class="tip">提单、装箱单、到货照片、签收单…</span></div>
-      ${attBlockHTML(rec,"物流")}
-    </div></div>`:""}
+    ${isShipping(rec)?shipSecHTML(rec):""}
 
     <div class="sec" data-sec="时间线"><div class="sec-hd"><span class="fold">▼</span>时间线<span class="sum">${rec.timeline.length} 条 · 最近 ${rec.timeline.length?fmtDT(rec.timeline[rec.timeline.length-1].at).slice(0,10):"—"}</span></div><div class="sec-bd">
       <ul class="tl">${[...rec.timeline].reverse().slice(0,tlFull.has(rec.id)?999:3).map((t,i)=>`<li class="${i===0?"hot":""}">
@@ -2295,15 +2644,66 @@ function openDrawer(id,keep){
   const bEdit=$("#btnEditInfo"); if(bEdit) bEdit.addEventListener("click",()=>openEditInfo(rec.id));
   const bDel=$("#btnDelRec"); if(bDel) bDel.addEventListener("click",e=>{ e.stopPropagation(); deleteRecord(rec.id); });
   const bOrd=$("#btnEditOrder"); if(bOrd) bOrd.addEventListener("click",()=>openEditOrder(rec.id));
-  const bShip=$("#btnEditShip"); if(bShip) bShip.addEventListener("click",()=>openEditShip(rec.id));
+  const bShip=$("#btnEditShip"); if(bShip) bShip.addEventListener("click",()=>openEditShip(rec.id,""));
+  const bAddSh=$("#btnAddShipB"); if(bAddSh) bAddSh.addEventListener("click",e=>{ e.stopPropagation(); openEditShip(rec.id,"__new__"); });
+  $$("[data-shedit]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openEditShip(rec.id,b.dataset.shedit); }));
+  $$("[data-shdel]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); delShipBatch(rec.id,b.dataset.shdel); }));
+  $$(".shb-hd").forEach(hd=>hd.addEventListener("click",e=>{
+    if(e.target.closest("button")||e.target.closest(".hdbtns")) return;
+    const s=hd.parentElement, k=rec.id+"|"+(s.dataset.shb||"1");
+    s.classList.toggle("collapsed");
+    s.classList.contains("collapsed")?shbFold.add(k):shbFold.delete(k);
+  }));
   $$("[data-attopen]").forEach(b=>b.addEventListener("click",()=>{ openAttZones.add(rec.id+"|"+b.dataset.attopen); openDrawer(rec.id,true); }));
   $$("[data-zonesopen]").forEach(b=>b.addEventListener("click",()=>{ attFold.add(rec.id+"|zones"); openDrawer(rec.id,true); }));
+  $$("[data-afgo]").forEach(el=>el.addEventListener("click",e=>{
+    if(e.target.closest("button")) return;
+    e.stopPropagation();
+    const box=el.closest(".att-box"), grid=box&&box.querySelector("[data-attgrid]");
+    const g=(grid&&grid.dataset.attgrid)||(box&&box.querySelector("[data-uplzone]")||{dataset:{}}).dataset.uplzone
+          ||(box&&box.querySelector("[data-attopen]")||{dataset:{}}).dataset.attopen;
+    if(!g) return;
+    attCwd[rec.id+"|"+g]=el.dataset.afgo||"";
+    openAttZones.add(rec.id+"|"+g);
+    openDrawer(rec.id,true);
+  }));
+  $$("[data-afnew]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation();
+    const box=b.closest(".att-box"), grid=box&&box.querySelector("[data-attgrid]");
+    const z=box&&box.querySelector("[data-uplzone]");
+    const g=(grid&&grid.dataset.attgrid)||(z&&z.dataset.uplzone);
+    if(g) afNew(rec.id,g,b.dataset.afnew||"");
+  }));
+  $$("[data-afren]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); afRename(rec.id,b.dataset.afren); }));
+  $$("[data-afdel]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); afDelete(rec.id,b.dataset.afdel); }));
+  $$(".att-item[draggable=true]").forEach(it=>{
+    it.addEventListener("dragstart",e=>{ e.dataTransfer.setData("text/pt-att",it.dataset.attidx); e.dataTransfer.effectAllowed="move"; it.classList.add("dragging"); });
+    it.addEventListener("dragend",()=>it.classList.remove("dragging"));
+  });
+  $$("[data-afdrop]").forEach(el=>{
+    ["dragover","dragenter"].forEach(ev=>el.addEventListener(ev,e=>{
+      if(!e.dataTransfer.types.includes("text/pt-att")) return;
+      e.preventDefault(); el.classList.add("over");
+    }));
+    el.addEventListener("dragleave",()=>el.classList.remove("over"));
+    el.addEventListener("drop",e=>{
+      const idx=e.dataTransfer.getData("text/pt-att");
+      el.classList.remove("over");
+      if(idx==="") return;
+      e.preventDefault(); e.stopPropagation();
+      afMove(rec.id,Number(idx),el.dataset.afdrop||"");
+    });
+  });
   $$("[data-uplzone]").forEach(zone=>{
     const g=zone.dataset.uplzone;
-    zone.addEventListener("click",()=>{ $("#fileInput").onchange=e=>{uploadFiles(rec.id,[...e.target.files],g);e.target.value="";}; $("#fileInput").click(); });
+    const fid=zone.dataset.uplfid||"";
+    zone.addEventListener("click",()=>{ $("#fileInput").onchange=e=>{uploadFiles(rec.id,[...e.target.files],g,fid);e.target.value="";}; $("#fileInput").click(); });
     ["dragover","dragenter"].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add("over")}));
     zone.addEventListener("dragleave",()=>zone.classList.remove("over"));
-    zone.addEventListener("drop",e=>{e.preventDefault();zone.classList.remove("over");uploadFiles(rec.id,[...e.dataTransfer.files],g)});
+    zone.addEventListener("drop",e=>{
+      e.preventDefault(); zone.classList.remove("over");
+      if(e.dataTransfer.files&&e.dataTransfer.files.length) uploadFiles(rec.id,[...e.dataTransfer.files],g,fid);
+    });
   });
   // 缩略图懒加载 + 点击预览/下载
   $$(".att-grid .att-item").forEach(item=>{
@@ -2491,7 +2891,8 @@ function printRecord(id){
   <table style="font-size:13px;border-collapse:collapse">
    ${row("项目号",fullJob(r))}${row("需求人",r.requester)}${row("优先级",r.pri)}${row("需要日期",fmtD(r.neededBy))}${row("说明",r.desc)}${row("Description",r.descEn)}
    ${row("供应商",oi.supplier)}${row("金额",oi.amount)}${row("签订日期",fmtD(r.signed))}${row("交期",etaTxt(r.eta))}${row("合同/PO号",r.po)}
-   ${(r.payments||[]).map(p=>row(p.kind||"付款",`${p.cur||""}${money(p.amount)}　${p.date?fmtD(p.date):""}　${p.note||""}`)).join("")}${row("BL#",sp.bl)}${row("货物信息",sp.cargo)}${row("ORIGIN",sp.origin)}${row("DESTINATION",sp.dest)}${row("ETD",fmtD(sp.etd))}${row("ETA",fmtD(sp.eta))}${row("实际到货",fmtD(sp.arrived))}
+   ${(r.payments||[]).map(p=>row(p.kind||"付款",`${p.cur||""}${money(p.amount)}　${p.date?fmtD(p.date):""}　${p.note||""}`)).join("")}${row("BL#",sp.bl)}${cargoOf(sp).map((l,i)=>row(i?"":"货物信息",[l.desc,l.pcs&&l.pcs+"PCS",l.pkgs&&l.pkgs+"PACKAGES",l.gw&&l.gw+"KGS(毛)",l.nw&&l.nw+"KGS(净)",l.cbm&&l.cbm+"CBM",l.note].filter(Boolean).join(" "))).join("")}${(()=>{const ls=cargoOf(sp);if(ls.length<2)return "";const t=cargoTotals(ls);return row("货物合计",[t.pkgs!=null&&cgFmt(t.pkgs)+"PACKAGES",t.gw!=null&&cgFmt(t.gw)+"KGS(毛)",t.nw!=null&&cgFmt(t.nw)+"KGS(净)",t.cbm!=null&&cgFmt(t.cbm)+"CBM"].filter(Boolean).join(" "));})()}${row("ORIGIN",sp.origin)}${row("DESTINATION",sp.dest)}${row("ETD",fmtD(sp.etd))}${row("ETA",fmtD(sp.eta))}${row("实际到货",fmtD(sp.arrived))}
+   ${shMore(r).map((b,i)=>row(`第 ${i+2} 批`,[b.bl&&"BL "+b.bl,b.etd&&"ETD "+fmtD(b.etd),b.eta&&"ETA "+fmtD(b.eta),b.arrived&&"到货 "+fmtD(b.arrived),b.vessel,b.ctnr,b.origin&&b.dest&&b.origin+"→"+b.dest].filter(Boolean).join("　"))).join("")}
   </table>
   ${(r.quotes||[]).length?`<h3 style="font-size:14px;margin:16px 0 6px">报价对比</h3>
   <table style="font-size:12px;border-collapse:collapse;width:100%">
@@ -2557,6 +2958,7 @@ async function saveBackfill(keepOpen){
   if(sup) parts.push("供应商 "+sup+(price?` ${cur}${money(price)}`:""));
   if(rec.po) parts.push("合同 "+rec.po);
   if(rec.payments.length) parts.push(`付款 ${rec.payments.length} 笔`);
+  migrateCargo(rec.ship);
   if(Object.keys(rec.ship).length) parts.push("物流信息已录");
   log(rec,"补录历史采购（状态 "+status+"）",parts.join("; "));
   state.records.unshift(rec);
@@ -2745,29 +3147,110 @@ function resetOrderFields(){
 }
 
 /* ================= 物流信息 ================= */
-const SHIP_FIELDS={bl:["BL#","shBl"],vessel:["船名/航次","shVessel"],cargo:["货物信息","shCargo"],
+const SHIP_FIELDS={bl:["BL#","shBl"],vessel:["船名/航次","shVessel"],
   origin:["ORIGIN","shOrigin"],dest:["DESTINATION","shDest"],etd:["ETD","shEtd"],eta:["ETA","shEta"],
   ctnr:["柜号/唛头","shCtnr"],arrived:["实际到货","shArrived"]};
-let editingShipId=null;
-function openEditShip(id){
+const SHIP_KEYS=Object.keys(SHIP_FIELDS);
+const shipVals=()=>{ const o={}; Object.entries(SHIP_FIELDS).forEach(([k,[,el]])=>{ o[k]=$("#"+el).value.trim(); }); return o; };
+const cargoSig=lines=>(lines||[]).map(l=>CG_COLS.map(([k])=>String(l[k]||"").trim()).join("|")).join("¦");
+const cargoBrief=lines=>{ if(!(lines||[]).length) return "空";
+  const t=cargoTotals(lines);
+  return `${lines.length} 项`+[["PACKAGES",t.pkgs],["毛重",t.gw],["CBM",t.cbm]].filter(([,v])=>v!=null).map(([k,v])=>` ${k} ${cgFmt(v)}`).join("");
+};
+const shipDesc=b=>SHIP_KEYS.filter(k=>b[k]).map(k=>`${SHIP_FIELDS[k][0]}:${b[k]}`).join("; ");
+/* 货物明细行编辑器 */
+const CG_COLS=[["desc","品名","text"],["pcs","PCS","num"],["pkgs","PACKAGES","num"],
+  ["gw","毛重 KGS","num"],["nw","净重 KGS","num"],["cbm","CBM","num"],["note","备注","text"]];
+function cgRowHTML(l){
+  return `<div class="cg-row">${CG_COLS.map(([k,lab,t])=>
+    `<input class="cg-i cg-${k}" data-cgk="${k}" ${t==="num"?'type="text" inputmode="decimal"':""} placeholder="${esc(lab)}" value="${esc(l&&l[k]!=null?String(l[k]):"")}">`).join("")}
+    <button type="button" class="cg-del" title="删掉这一行">✕</button></div>`;
+}
+function cgRenderRows(lines){
+  const box=$("#shCargoRows");
+  box.innerHTML=`<div class="cg-row cg-head">${CG_COLS.map(([,lab])=>`<span>${esc(lab)}</span>`).join("")}<span></span></div>`
+    +((lines&&lines.length?lines:[null]).map(cgRowHTML).join(""));
+  cgBind(); cgSyncTotals();
+}
+function cgReadRows(){
+  return [...$$("#shCargoRows .cg-row:not(.cg-head)")].map(r=>{
+    const o={};
+    r.querySelectorAll(".cg-i").forEach(i=>o[i.dataset.cgk]=i.value.trim());
+    return o;
+  }).filter(l=>!cargoEmpty(l));
+}
+function cgSyncTotals(){
+  const t=cargoTotals(cgReadRows());
+  const parts=[["PACKAGES",t.pkgs],["毛重",t.gw],["净重",t.nw],["CBM",t.cbm]]
+    .filter(([,v])=>v!=null).map(([k,v])=>`${k} ${cgFmt(v)}`);
+  $("#shCargoTot").textContent=parts.length?"合计  "+parts.join("　"):"";
+}
+function cgBind(){
+  $$("#shCargoRows .cg-i").forEach(i=>{ i.oninput=cgSyncTotals; });
+  $$("#shCargoRows .cg-del").forEach(b=>{ b.onclick=()=>{
+    const rows=$$("#shCargoRows .cg-row:not(.cg-head)");
+    if(rows.length<=1){ b.closest(".cg-row").querySelectorAll(".cg-i").forEach(i=>i.value=""); }
+    else b.closest(".cg-row").remove();
+    cgSyncTotals();
+  };});
+}
+let editingShipId=null, editingBid="";   // ""=第1批  "__new__"=新增  其他=bid
+function openEditShip(id,bid){
   const rec=getRec(id); if(!rec)return;
-  editingShipId=id;
-  const cur=sh(rec);
+  editingShipId=id; editingBid=bid===undefined?"":bid;
+  const cur=(editingBid==="__new__")?{}:(shGet(rec,editingBid)||{});
   Object.entries(SHIP_FIELDS).forEach(([k,[,el]])=>{ $("#"+el).value=cur[k]||""; });
+  cgRenderRows(cargoOf(cur).map(l=>Object.assign({},l)));
+  const bs=shBatches(rec);
+  const n=(editingBid==="__new__")?bs.length+1:bs.findIndex(b=>(b.bid||"")===editingBid)+1;
+  $("#shTitle").textContent=(bs.length>1||editingBid==="__new__")?`物流信息 · 第 ${n} 批`:"物流信息";
   openModal("mShip"); setTimeout(()=>$("#shBl").focus(),50);
 }
 async function saveEditShip(){
   if(isViewer()) return denyRO();
   const rec=getRec(editingShipId); if(!rec)return;
-  const before=sh(rec), after={};
-  Object.entries(SHIP_FIELDS).forEach(([k,[,el]])=>{ after[k]=$("#"+el).value.trim(); });
-  const diff=Object.keys(SHIP_FIELDS).filter(k=>(before[k]||"")!==after[k])
+  const after=shipVals();
+  const lines=cgReadRows();
+  if(editingBid==="__new__"){
+    if(!SHIP_KEYS.some(k=>after[k])&&!lines.length){ closeModal("mShip"); return toast("没填内容，未新增批次"); }
+    if(!Array.isArray(rec.shipMore)) rec.shipMore=[];
+    const nb=Object.assign({bid:newBid(rec)},after);
+    if(lines.length) nb.cargoLines=lines;
+    rec.shipMore.push(nb);
+    const n=shBatches(rec).length;
+    log(rec,`新增第 ${n} 批发货`,shipDesc(after));
+    closeModal("mShip"); render(); openDrawer(editingShipId,true);
+    if(await persist(`${rec.id} 新增第 ${n} 批发货`)) toast(`已新增第 ${n} 批`,"ok");
+    return;
+  }
+  const before=shGet(rec,editingBid)||{};
+  const diff=SHIP_KEYS.filter(k=>(before[k]||"")!==after[k])
     .map(k=>`${SHIP_FIELDS[k][0]}:「${before[k]||"空"}」→「${after[k]||"空"}」`);
+  const oldLines=cargoOf(before);
+  if(cargoSig(oldLines)!==cargoSig(lines)) diff.push(`货物信息:${cargoBrief(oldLines)} → ${cargoBrief(lines)}`);
   if(!diff.length){ closeModal("mShip"); return toast("没有改动"); }
-  rec.ship=after;
-  log(rec,"更新物流信息",diff.join("; "));
+  const bs=shBatches(rec), idx=bs.findIndex(b=>(b.bid||"")===editingBid);
+  const tag=bs.length>1?` · 第 ${idx+1} 批`:"";
+  if(lines.length) after.cargoLines=lines;
+  if(editingBid){ const tgt=shGet(rec,editingBid); delete tgt.cargo; delete tgt.cargoLines; Object.assign(tgt,after); }
+  else { const bid=rec.ship&&rec.ship.bid; rec.ship=after; if(bid) rec.ship.bid=bid; }
+  log(rec,"更新物流信息"+tag,diff.join("; "));
   closeModal("mShip"); render(); openDrawer(editingShipId,true);
-  if(await persist(`${rec.id} 更新物流信息`)) toast("已保存","ok");
+  if(await persist(`${rec.id} 更新物流信息${tag}`)) toast("已保存","ok");
+}
+async function delShipBatch(id,bid){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec||!bid) return;
+  const idx=shMore(rec).findIndex(b=>b.bid===bid); if(idx<0) return;
+  const n=idx+2;
+  const na=(rec.attachments||[]).filter(a=>(a.group||"需求")===shGroup(bid)).length;
+  if(na) return toast(`第 ${n} 批还挂着 ${na} 个附件，请先删除附件`,"err");
+  if(!confirm(`确认删除第 ${n} 批发货记录?`)) return;
+  const b=rec.shipMore.splice(idx,1)[0];
+  shbFold.delete(id+"|"+bid);
+  log(rec,`删除第 ${n} 批发货`,shipDesc(b)||"（空批次）");
+  render(); openDrawer(id,true);
+  if(await persist(`${rec.id} 删除第 ${n} 批发货`)) toast("已删除","ok");
 }
 
 /* ================= 仓库体积 ================= */
@@ -2896,6 +3379,11 @@ async function deleteSupplier(){
 }
 
 /* ================= 弹窗 / 设置 ================= */
+document.addEventListener("click",e=>{
+  const row=e.target.closest("#amvList .mv-row");
+  if(!row||!mvCtx) return;
+  afMove(mvCtx.id,mvCtx.idx,row.dataset.mvto||"");
+});
 function openModal(id){ $("#"+id).classList.add("open"); }
 function closeModal(id){ $("#"+id).classList.remove("open"); }
 $$("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
@@ -2977,6 +3465,12 @@ $("#qeSave").addEventListener("click",saveEditQuote);
 $("#eSave").addEventListener("click",saveEditInfo);
 $("#oSave").addEventListener("click",saveEditOrder);
 $("#shSave").addEventListener("click",saveEditShip);
+$("#shCargoAdd").addEventListener("click",()=>{
+  $("#shCargoRows").insertAdjacentHTML("beforeend",cgRowHTML(null));
+  cgBind(); cgSyncTotals();
+  const rows=$$("#shCargoRows .cg-row:not(.cg-head)");
+  const last=rows[rows.length-1]; if(last) last.querySelector(".cg-i").focus();
+});
 $("#oReset").addEventListener("click",resetOrderFields);
 $("#pAddRow").addEventListener("click",()=>{ const last=[...$$("#pRows .prow")].pop(); const k=last&&last.querySelector(".pkind").value==="预付款"?"尾款":"尾款"; addPayRow({kind:k,cur:$("#oCur").value}); });
 ["oCur","oPrice"].forEach(id=>$("#"+id).addEventListener("input",updatePayHint));
