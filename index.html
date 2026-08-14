@@ -298,7 +298,7 @@ body.readonly .card{cursor:pointer}
 .pay-tb th:nth-child(1),.pay-tb td:nth-child(1){width:24%}
 .pay-tb th:nth-child(2),.pay-tb td:nth-child(2){width:25%}
 .pay-tb th:nth-child(3),.pay-tb td:nth-child(3){width:24%}
-.pay-tb th:nth-child(4),.pay-tb td:nth-child(4){width:27%;word-break:break-word}
+.pay-tb td:nth-child(4){word-break:break-word}
 .pay-tb th{text-align:left;font-size:11px;color:var(--steel);font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding:4px 6px}
 .pay-tb td{padding:6px;border-bottom:1px solid var(--line-soft);vertical-align:top}
 .pay-tb .amt{font-family:var(--mono);white-space:nowrap}
@@ -476,7 +476,7 @@ body.dark .cgrp-hd .pjt{background:#3A4550;color:#E8EAED}
 body.dark .ackb.wait{background:#2E3742;color:var(--steel)}
 body.dark .ack-row{background:#232A32}
 /* 货物明细表(只读) */
-.cg-wrap{overflow-x:auto;margin-top:6px}
+.cg-wrap{overflow-x:auto;overflow-y:hidden;margin-top:6px}
 .cg-tb{width:100%;border-collapse:collapse;font-size:12px;min-width:560px;table-layout:fixed}
 /* 七列定宽平分 */
 .cg-tb th:nth-child(1),.cg-tb td:nth-child(1){width:21%}
@@ -485,7 +485,7 @@ body.dark .ack-row{background:#232A32}
 .cg-tb th:nth-child(4),.cg-tb td:nth-child(4){width:13%}
 .cg-tb th:nth-child(5),.cg-tb td:nth-child(5){width:13%}
 .cg-tb th:nth-child(6),.cg-tb td:nth-child(6){width:11%}
-.cg-tb th:nth-child(7),.cg-tb td:nth-child(7){width:16%;word-break:break-word}
+.cg-tb td:nth-child(7){word-break:break-word}
 .cg-tb th{text-align:left;font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--line);padding:4px 6px;white-space:nowrap}
 .cg-tb th.n,.cg-tb td.n{font-family:var(--mono);white-space:nowrap}
 .cg-tb td{padding:5px 6px;border-bottom:1px solid var(--line-soft);vertical-align:top}
@@ -505,6 +505,90 @@ body.dark .ack-row{background:#232A32}
 .cg-ft{display:flex;align-items:center;gap:12px;margin-top:2px}
 .cg-tot{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-left:auto;text-align:right}
 body.dark .cg-ed{background:rgba(0,0,0,.15)}
+/* ===== 财务:付款总览 ===== */
+.fin-wrap{flex:1;min-height:0;overflow-y:auto;width:100%;max-width:1560px;margin:0 auto;padding:16px 24px 60px;display:flex;flex-direction:column;gap:18px}
+/* 三个纵向滚动视图:内容块一律不许被压缩,超高让外层滚动。
+   否则块被压扁后,带 overflow-x 的表格容器会变成能上下滚的嵌套小窗口 */
+.fin-wrap>*,.proj-wrap>*,.cal-wrap>*{flex:none}
+.fin-bar .hint{font-size:12px;color:var(--steel)}
+.fin-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.fin-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px 12px;box-shadow:var(--shadow);min-width:0}
+.fc-hd{font-family:var(--mono);font-size:16px;color:var(--ink);display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.fc-hd span{font-family:var(--sans);font-size:11px;color:var(--steel)}
+.fin-card dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin:0}
+.fin-card dt{color:var(--steel)}
+.fin-card dd{margin:0}
+.fin-card dd.ok{color:var(--approve)}
+.fin-card dd.left{color:var(--reject)}
+.fin-card .tiny{color:var(--steel);font-size:11px;font-family:var(--sans)}
+.fc-bar{height:6px;border-radius:3px;background:var(--line-soft);overflow:hidden;margin:12px 0 5px}
+.fc-bar i{display:block;height:100%;background:var(--approve)}
+.fc-ft{font-size:11px;color:var(--steel);font-family:var(--mono)}
+.fin-sec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px 16px;box-shadow:var(--shadow);min-width:0}
+.fin-sec h3{margin:0;font-size:12px;letter-spacing:.14em;color:var(--ink);display:flex;align-items:baseline;gap:10px;cursor:pointer;user-select:none}
+.fin-sec h3 .fold{color:var(--steel);font-size:9px;transition:transform .15s;display:inline-block;align-self:center}
+.fin-sec.collapsed h3 .fold{transform:rotate(-90deg)}
+.fin-sec.collapsed h3{margin:0}
+.fin-sec .fin-bd{margin-top:10px;animation:secIn .2s ease-out}
+.fin-sec.collapsed .fin-bd{display:none}
+.fin-more{font-size:12px;color:var(--steel);cursor:pointer;padding:8px 0 2px;margin-top:6px;border-top:1px dashed var(--line-soft);text-align:center}
+.fin-more:hover{color:var(--safety)}
+.fin-sec h3 .sub{font-size:11px;letter-spacing:0;color:var(--steel);font-weight:400}
+/* 桌面不建滚动容器:只要有 overflow-x:auto,溢出半个像素也会画出滚动条 */
+.fin-tb{width:100%;max-width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.fin-tb th{text-align:left;font-size:10px;color:var(--steel);letter-spacing:.04em;border-bottom:1px solid var(--line);padding:5px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fin-tb th.s{cursor:pointer;user-select:none}
+.fin-tb th.s:hover{color:var(--safety)}
+.fin-tb th.on{color:var(--ink)}
+.fin-tb td{padding:7px 6px;border-bottom:1px solid var(--line-soft);vertical-align:top;overflow:hidden;text-overflow:ellipsis}
+.fin-tb tr:last-child td{border-bottom:none}
+.fin-tb .mono{font-family:var(--mono);white-space:nowrap}
+.fin-tb .nm{white-space:nowrap}
+.fin-tb .ok{color:var(--approve)}
+.fin-tb .left{color:var(--reject)}
+.fin-tb .tiny{color:var(--steel);font-size:11px}
+/* 四张表统一:每列都定宽、合计 98% 留余量、没有自动列 —— 自动列会和单元格内容互相依赖,把表撑出卡片 */
+.fin-tb.f-sup th:nth-child(1),.fin-tb.f-sup td:nth-child(1){width:34%}
+.fin-tb.f-sup th:nth-child(2),.fin-tb.f-sup td:nth-child(2),
+.fin-tb.f-sup th:nth-child(3),.fin-tb.f-sup td:nth-child(3),
+.fin-tb.f-sup th:nth-child(4),.fin-tb.f-sup td:nth-child(4),
+.fin-tb.f-sup th:nth-child(5),.fin-tb.f-sup td:nth-child(5){width:16%}
+.fin-tb.f-proj th:nth-child(1),.fin-tb.f-proj td:nth-child(1){width:20%}
+.fin-tb.f-proj th:nth-child(2),.fin-tb.f-proj td:nth-child(2),
+.fin-tb.f-proj th:nth-child(3),.fin-tb.f-proj td:nth-child(3),
+.fin-tb.f-proj th:nth-child(4),.fin-tb.f-proj td:nth-child(4){width:18%}
+.fin-tb.f-proj th:nth-child(5),.fin-tb.f-proj td:nth-child(5){width:24%;white-space:nowrap}
+.fin-tb.f-list th:nth-child(1),.fin-tb.f-list td:nth-child(1){width:12%}
+.fin-tb.f-list th:nth-child(2),.fin-tb.f-list td:nth-child(2){width:16%}
+.fin-tb.f-list th:nth-child(3),.fin-tb.f-list td:nth-child(3){width:18%}
+.fin-tb.f-list th:nth-child(4),.fin-tb.f-list td:nth-child(4){width:8%}
+.fin-tb.f-list th:nth-child(5),.fin-tb.f-list td:nth-child(5),
+.fin-tb.f-list th:nth-child(6),.fin-tb.f-list td:nth-child(6),
+.fin-tb.f-list th:nth-child(7),.fin-tb.f-list td:nth-child(7),
+.fin-tb.f-list th:nth-child(8),.fin-tb.f-list td:nth-child(8){width:11%}
+.fin-tb.f-plan th:nth-child(1),.fin-tb.f-plan td:nth-child(1){width:13%}
+.fin-tb.f-plan th:nth-child(2),.fin-tb.f-plan td:nth-child(2){width:11%}
+.fin-tb.f-plan th:nth-child(3),.fin-tb.f-plan td:nth-child(3){width:20%}
+.fin-tb.f-plan th:nth-child(4),.fin-tb.f-plan td:nth-child(4){width:21%}
+.fin-tb.f-plan th:nth-child(5),.fin-tb.f-plan td:nth-child(5){width:14%}
+.fin-tb.f-plan th:nth-child(6),.fin-tb.f-plan td:nth-child(6){width:12%}
+.fin-tb.f-plan th:nth-child(7),.fin-tb.f-plan td:nth-child(7){width:7%}
+.fin-tb.f-plan tbody tr{cursor:pointer}
+.fin-tb.f-plan tbody tr:hover{background:var(--safety-soft)}
+.fin-tb.f-plan tr.od td:first-child{box-shadow:inset 3px 0 0 var(--reject)}
+.fin-tb.f-plan tr.soon td:first-child{box-shadow:inset 3px 0 0 var(--safety)}
+.fin-tb.f-list tbody tr{cursor:pointer}
+.fin-tb.f-list tbody tr:hover{background:var(--safety-soft)}
+.fin-bar2{display:inline-block;width:120px;height:6px;border-radius:3px;background:var(--line-soft);overflow:hidden;vertical-align:middle;margin-right:6px}
+.fin-bar2 i{display:block;height:100%;background:var(--safety)}
+.fin-bar2 i.done{background:var(--approve)}
+.fin-empty{font-size:12px;color:var(--steel);padding:10px 0}
+@media(max-width:820px){
+  .fin-wrap{padding:12px 10px 40px;gap:12px}
+  .fin-cards{grid-template-columns:1fr}
+  .fin-tb-wrap{overflow-x:auto;overflow-y:hidden}
+  .fin-tb{min-width:640px}
+}
 /* 物流附件文件夹 */
 .afd-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-2px 0 8px}
 .afd-crumb{font-size:12px;color:var(--steel);display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0}
@@ -914,7 +998,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       </div>
     </div>
     <div class="hd-nav">
-      <span class="view-tabs"><button id="tabBoard" class="on">看板</button><button id="tabProj">项目进度</button><button id="tabCal">日历</button></span>
+      <span class="view-tabs"><button id="tabBoard" class="on">看板</button><button id="tabProj">项目进度</button><button id="tabCal">日历</button><button id="tabFin">财务</button></span>
       <button class="btn btn-sm" id="btnSuppliers">供应商</button>
     </div>
     <div class="hd-mid">
@@ -959,6 +1043,14 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
     <span class="cal-lg" id="calLegend"></span>
   </div>
   <div class="cal-grid" id="calGrid"></div>
+</main>
+<main class="fin-wrap" id="finView" style="display:none">
+  <div class="fin-bar"><span class="hint">只统计已下单及之后(已签合同)的记录 · 人民币和美元分开计,不换算</span></div>
+  <div class="fin-cards" id="finCards"></div>
+  <section class="fin-sec" data-fs="plan"><h3><span class="fold">▼</span>付款计划<span class="sub" id="finPlanNote"></span></h3><div class="fin-bd"><div id="finPlan"></div></div></section>
+  <section class="fin-sec" data-fs="list"><h3><span class="fold">▼</span>未付明细<span class="sub" id="finListNote"></span></h3><div class="fin-bd"><div id="finList"></div></div></section>
+  <section class="fin-sec" data-fs="sup"><h3><span class="fold">▼</span>按供应商未付排名<span class="sub" id="finSupNote"></span></h3><div class="fin-bd"><div id="finSup"></div></div></section>
+  <section class="fin-sec" data-fs="proj"><h3><span class="fold">▼</span>按项目付款进度<span class="sub" id="finProjNote"></span></h3><div class="fin-bd"><div id="finProj"></div></div></section>
 </main>
 <main class="proj-wrap" id="projView" style="display:none"><div class="proj-bar"><span class="hint">按项目号分组 · 可批量新建采购需求，之后在看板补细节</span><button class="btn btn-primary" id="btnBulk">＋ 新建项目 / 批量加需求</button></div><div id="projList"></div></main>
 
@@ -1022,6 +1114,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       <div class="row2">
         <div class="fld"><label>分支</label><input id="sBranch" value="main"></div>
         <div class="fld"><label>数据文件路径</label><input id="sPath" value="data/procurement.json"></div>
+        <div class="fld"><label>付款提前天数</label><input id="sPayLead" type="number" min="0" max="180" step="1" placeholder="7"><div class="hint">财务页的付款计划按「交期前 N 天」算应付日。两个账号共用这个值。</div></div>
       </div>
       <div class="fld"><label>Personal Access Token *</label><input id="sToken" type="password" placeholder="ghp_… 或 github_pat_…">
         <div class="hint">建议用 Fine-grained token,只授权此仓库的 Contents 读写。Token 只存在本机浏览器,不会上传。</div>
@@ -1342,7 +1435,7 @@ const storage = (()=>{ // localStorage 保护(某些预览环境不可用)
 })();
 
 let cfg = JSON.parse(storage.getItem("pt_cfg")||"null") || {name:"",owner:"",repo:"",branch:"main",path:"data/procurement.json",token:""};
-let state = {records:[], suppliers:[], sha:null, loaded:false};
+let state = {records:[], suppliers:[], settings:{}, sha:null, loaded:false};
 let currentId = null;
 
 /* ================= 登录鉴权 ================= */
@@ -1525,7 +1618,7 @@ async function loadData(silent){
   try{
     const f=await ghGetJSON(cfg.path);
     if(f===null){ // 首次:创建空数据文件
-      state.records=[]; state.suppliers=[]; state.sha=null; state.loaded=true;
+      state.records=[]; state.suppliers=[]; state.settings={}; state.sha=null; state.loaded=true;
       await persist("init: 创建数据文件");
       toast("已在仓库创建数据文件","ok");
     }else{
@@ -1533,6 +1626,7 @@ async function loadData(silent){
       state.records=normAll((data.records||[]).map(r=>r&&r.status==="到货"?{...r,status:"物流"}:r));
       state.fromCache=false;
       state.suppliers=data.suppliers||[];
+      state.settings=(data.settings&&typeof data.settings==="object")?data.settings:{};
       state.sha=f.sha; state.loaded=true;
     }
     markSynced(); saveCache(); sizeWatch();
@@ -1580,7 +1674,7 @@ async function persist(message){
       state.suppliers=mergeSuppliers(remote_(data.suppliers),state.suppliers);
       toast("检测到同事更新,已自动合并");
     }
-    const payload=JSON.stringify({updatedAt:now(),updatedBy:cfg.name,records:state.records,suppliers:state.suppliers},null,2);
+    const payload=JSON.stringify({updatedAt:now(),updatedBy:cfg.name,settings:state.settings||{},records:state.records,suppliers:state.suppliers},null,2);
     const res=await ghPut(cfg.path,b64encode(payload),`${cfg.name||"匿名"}: ${message}`,f?f.sha:undefined);
     state.sha=res.content.sha;
     setSaving(false); markSynced(); saveCache();
@@ -1669,23 +1763,6 @@ async function closeRecord(id){
     note=(note?note+"; ":"")+(shMore(rec).length?`第 ${noArr.map(x=>x.n).join("/")} 批实际到货日期记为 `:"实际到货日期记为 ")+fmtD(today);
   }
   return changeStatus(id,"完结",note,"确认到货并完结");
-}
-async function saveOrderFields(id,advance){
-  if(isViewer()) return denyRO();
-  const rec=getRec(id); if(!rec)return;
-  const po=($("#poNum")?$("#poNum").value.trim():rec.po||"");
-  const eta=($("#etaInp")?$("#etaInp").value.trim():rec.eta||"");
-  const signed=($("#signedInp")?$("#signedInp").value:rec.signed||"");
-  const diff=[];
-  if((rec.po||"")!==po) diff.push(`合同/PO号:「${rec.po||"空"}」→「${po||"空"}」`);
-  if((rec.signed||"")!==signed) diff.push(`签订日期:「${rec.signed?fmtD(rec.signed):"空"}」→「${signed?fmtD(signed):"空"}」`);
-  if((rec.eta||"")!==eta) diff.push(`交期:「${rec.eta||"空"}」→「${eta||"空"}」`);
-  rec.po=po; rec.eta=eta; rec.signed=signed;
-  if(advance){ if(diff.length) log(rec,"更新订单信息",diff.join("; ")); return changeStatus(id,"物流",window.__note?window.__note():"","进入物流"); }
-  if(!diff.length) return toast("没有改动");
-  log(rec,"更新订单信息",diff.join("; "));
-  openDrawer(id,true);
-  if(await persist(`${rec.id} 更新订单信息`)) toast("已保存","ok");
 }
 async function changeStatus(id,to,note,extraAction){
   if(isViewer()) return denyRO();
@@ -2041,12 +2118,14 @@ function setView(m){
   $("#tabBoard").classList.toggle("on",m==="board");
   $("#tabProj").classList.toggle("on",m==="proj");
   $("#tabCal").classList.toggle("on",m==="cal");
+  $("#tabFin").classList.toggle("on",m==="fin");
   $("#board").style.display=m==="board"?"":"none";
   $("#projView").style.display=m==="proj"?"":"none";
   $("#calView").style.display=m==="cal"?"":"none";
+  $("#finView").style.display=m==="fin"?"":"none";
   render();
   if(changed && !reduceMotion()){
-    const el=m==="cal"?$("#calView"):(m==="board"?$("#board"):$("#projView"));
+    const el={cal:$("#calView"),board:$("#board"),proj:$("#projView"),fin:$("#finView")}[m];
     const cls=m==="board"?"view-anim-l":"view-anim-r";
     el.classList.remove("view-anim-r","view-anim-l");
     void el.offsetWidth;
@@ -2055,6 +2134,163 @@ function setView(m){
   }
 }
 
+/* ================= 财务:付款总览 ================= */
+/* 口径:只算已下单及之后(已签合同的才是真欠款);¥ 和 $ 分开统计,不做汇率换算 */
+const FIN_ST=["下单","物流","完结"];
+let finSort={k:"unpaid",d:-1};
+/* 默认只展开「付款计划」,其余点开再看;每张表先显示 8 行,点「展开全部」看完 */
+const FIN_CAP=8;
+let finFold=new Set(["list","sup","proj"]);
+let finMore=new Set();
+const finCut=(arr,key)=>finMore.has(key)?arr:arr.slice(0,FIN_CAP);
+const finMoreHTML=(arr,key)=>arr.length>FIN_CAP
+  ? `<div class="fin-more" data-finmore="${key}">${finMore.has(key)?"收起":`展开全部 ${arr.length} 条`}</div>` : "";
+/* 付款计划:一般在交期前 N 天付清,N 存在数据文件里两个账号共用,默认 7 天 */
+const PAY_LEAD_DEF=7;
+const payLead=()=>{ const v=Number((state.settings||{}).payLeadDays); return (isFinite(v)&&v>=0&&v<=180)?Math.round(v):PAY_LEAD_DEF; };
+const shiftDays=(iso,n)=>{ if(!isDateStr(iso)) return ""; const d=new Date(iso+"T00:00:00"); d.setDate(d.getDate()-n);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+function payPlan(rows){
+  const today=new Date().toISOString().slice(0,10);
+  return rows.filter(x=>!x.settled&&isDateStr(x.r.eta)).map(x=>{
+    const due=shiftDays(x.r.eta,payLead());
+    return Object.assign({due,days:daysTo(due),late:due<today},x);
+  }).sort((a,b)=>a.due.localeCompare(b.due));
+}
+function finRows(){
+  return state.records.filter(r=>FIN_ST.includes(r.status)&&passFilter(r)).map(r=>{
+    const a=recAmount(r); if(!a||!(a.val>0)) return null;
+    const ps=r.payments||[];
+    const paid=ps.filter(p=>(p.cur||a.cur)===a.cur).reduce((x,p)=>x+(Number(p.amount)||0),0);
+    const unpaid=a.val-paid;
+    return {r,cur:a.cur,total:a.val,paid,unpaid,n:ps.length,
+            pct:Math.max(0,Math.min(100,Math.round(paid/a.val*100))),settled:unpaid<=0.01};
+  }).filter(Boolean);
+}
+function finGroup(rows,keyFn){
+  const map=new Map();
+  rows.forEach(x=>{
+    const k=keyFn(x)||"(未填)";
+    const kk=k+"|"+x.cur;
+    let g=map.get(kk);
+    if(!g) map.set(kk,g={name:k,cur:x.cur,total:0,paid:0,unpaid:0,n:0,open:0});
+    g.total+=x.total; g.paid+=x.paid; g.unpaid+=x.unpaid; g.n++; if(!x.settled) g.open++;
+  });
+  return [...map.values()];
+}
+const finPct=g=>g.total>0?Math.max(0,Math.min(100,Math.round(g.paid/g.total*100))):0;
+function renderFin(){
+  const box=$("#finCards"); if(!box) return;
+  const rows=finRows();
+  const mon=new Date().toISOString().slice(0,7);
+  const cur=new Map();
+  rows.forEach(x=>{
+    let t=cur.get(x.cur);
+    if(!t) cur.set(x.cur,t={cur:x.cur,total:0,paid:0,unpaid:0,n:0,open:0,mAmt:0,mN:0});
+    t.total+=x.total; t.paid+=x.paid; t.unpaid+=x.unpaid; t.n++; if(!x.settled) t.open++;
+    (x.r.payments||[]).forEach(p=>{ if(String(p.date||"").slice(0,7)===mon && (p.cur||x.cur)===x.cur){ t.mAmt+=Number(p.amount)||0; t.mN++; } });
+  });
+  const cs=[...cur.values()].sort((a,b)=>b.total-a.total);
+  box.innerHTML=cs.length?cs.map(t=>`<div class="fin-card">
+      <div class="fc-hd">${esc(t.cur)} <span>${t.n} 笔合同 · ${t.open} 笔未结清</span></div>
+      <dl>
+        <dt>合同总额</dt><dd class="mono">${esc(t.cur)}${money(t.total)}</dd>
+        <dt>已付</dt><dd class="mono ok">${esc(t.cur)}${money(t.paid)}</dd>
+        <dt>未付</dt><dd class="mono ${t.unpaid>0.01?"left":"ok"}">${esc(t.cur)}${money(t.unpaid)}</dd>
+        <dt>本月已付</dt><dd class="mono">${esc(t.cur)}${money(t.mAmt)}<span class="tiny"> · ${t.mN} 笔</span></dd>
+      </dl>
+      <div class="fc-bar"><i style="width:${t.total>0?Math.min(100,Math.round(t.paid/t.total*100)):0}%"></i></div>
+      <div class="fc-ft">已付 ${t.total>0?Math.round(t.paid/t.total*100):0}%</div>
+    </div>`).join(""):`<div class="fin-empty">当前筛选下没有已下单的记录</div>`;
+
+  // 按供应商未付排名
+  const sup=finGroup(rows,x=>orderInfo(x.r).supplier).filter(g=>g.unpaid>0.01).sort((a,b)=>b.unpaid-a.unpaid);
+  $("#finSupNote").textContent=sup.length?`${sup.length} 家有未付`:"";
+  $("#finSup").innerHTML=sup.length?`<div class="fin-tb-wrap"><table class="fin-tb f-sup">
+    <thead><tr><th>供应商</th><th>合同额</th><th>已付</th><th>未付</th><th>笔数</th></tr></thead>
+    <tbody>${finCut(sup,"sup").map(g=>`<tr>
+      <td class="nm">${esc(g.name)}</td>
+      <td class="mono">${esc(g.cur)}${money(g.total)}</td>
+      <td class="mono ok">${esc(g.cur)}${money(g.paid)}</td>
+      <td class="mono left">${esc(g.cur)}${money(g.unpaid)}</td>
+      <td class="mono">${g.open}/${g.n}</td></tr>`).join("")}</tbody>
+  </table></div>${finMoreHTML(sup,"sup")}`:`<div class="fin-empty">没有未付款项</div>`;
+
+  // 按项目付款进度
+  const pj=finGroup(rows,x=>x.r.job).sort((a,b)=>String(b.name).localeCompare(String(a.name),"zh"));
+  $("#finProjNote").textContent=pj.length?`${pj.length} 个项目 · ${pj.filter(g=>g.unpaid>0.01).length} 个未结清`:"";
+  $("#finProj").innerHTML=pj.length?`<div class="fin-tb-wrap"><table class="fin-tb f-proj">
+    <thead><tr><th>项目号</th><th>合同额</th><th>已付</th><th>未付</th><th>进度</th></tr></thead>
+    <tbody>${finCut(pj,"proj").map(g=>`<tr>
+      <td class="nm mono">${esc(g.name)}<span class="tiny"> · ${g.n} 项</span></td>
+      <td class="mono">${esc(g.cur)}${money(g.total)}</td>
+      <td class="mono ok">${esc(g.cur)}${money(g.paid)}</td>
+      <td class="mono ${g.unpaid>0.01?"left":"ok"}">${esc(g.cur)}${money(g.unpaid)}</td>
+      <td><span class="fin-bar2"><i class="${finPct(g)>=100?"done":""}" style="width:${finPct(g)}%"></i></span><span class="tiny">${finPct(g)}%</span></td>
+    </tr>`).join("")}</tbody>
+  </table></div>${finMoreHTML(pj,"proj")}`:`<div class="fin-empty">暂无数据</div>`;
+
+  // 付款计划(交期前 N 天应付)
+  const plan=payPlan(rows);
+  const lateN=plan.filter(p=>p.late).length, soonN=plan.filter(p=>!p.late&&p.days<=14).length;
+  $("#finPlanNote").textContent=plan.length
+    ? `交期前 ${payLead()} 天应付 · 共 ${plan.length} 笔${lateN?` · 已过期 ${lateN}`:""}${soonN?` · 14 天内 ${soonN}`:""}`
+    : `交期前 ${payLead()} 天应付`;
+  $("#finPlan").innerHTML=plan.length?`<div class="fin-tb-wrap"><table class="fin-tb f-plan">
+    <thead><tr><th>应付日</th><th>还有</th><th>品名</th><th>供应商</th><th>应付金额</th><th>交期</th><th>编号</th></tr></thead>
+    <tbody>${finCut(plan,"plan").map(p=>`<tr data-finrec="${p.r.id}" class="${p.late?"od":(p.days<=14?"soon":"")}">
+      <td class="mono">${fmtD(p.due)}</td>
+      <td class="mono ${p.late?"left":""}">${p.late?`逾期 ${Math.abs(p.days)} 天`:(p.days===0?"今天":`${p.days} 天`)}</td>
+      <td class="nm">${esc(p.r.title)}</td>
+      <td class="nm">${esc(orderInfo(p.r).supplier||"—")}</td>
+      <td class="mono left">${esc(p.cur)}${money(p.unpaid)}</td>
+      <td class="mono">${fmtD(p.r.eta)}</td>
+      <td class="mono tiny">${esc(p.r.po||p.r.sub||"—")}</td>
+    </tr>`).join("")}</tbody>
+  </table></div>${finMoreHTML(plan,"plan")}`:`<div class="fin-empty">没有待付款项，或未付的记录还没填交期</div>`;
+
+  // 未付明细
+  const open=rows.filter(x=>!x.settled);
+  const K=finSort.k, D=finSort.d;
+  const val=x=>K==="title"?x.r.title:K==="sup"?(orderInfo(x.r).supplier||""):K==="signed"?(x.r.signed||""):K==="no"?(x.r.po||x.r.sub||""):x[K];
+  open.sort((a,b)=>{ const x=val(a),y=val(b);
+    if(typeof x==="number"&&typeof y==="number") return (x-y)*D;
+    return String(x).localeCompare(String(y),"zh")*D; });
+  $("#finListNote").textContent=open.length?`${open.length} 笔未结清`:"";
+  const th=(k,lab)=>`<th data-finsort="${k}" class="s${finSort.k===k?" on":""}">${lab}${finSort.k===k?(finSort.d<0?" ↓":" ↑"):""}</th>`;
+  $("#finList").innerHTML=open.length?`<div class="fin-tb-wrap"><table class="fin-tb f-list">
+    <thead><tr>${th("no","编号")}${th("title","品名")}${th("sup","供应商")}<th>状态</th>${th("total","合同额")}${th("paid","已付")}${th("unpaid","未付")}${th("signed","签订日期")}</tr></thead>
+    <tbody>${finCut(open,"list").map(x=>`<tr data-finrec="${x.r.id}">
+      <td class="mono">${esc(x.r.po||x.r.sub||"—")}</td>
+      <td class="nm">${esc(x.r.title)}</td>
+      <td class="nm">${esc(orderInfo(x.r).supplier||"—")}</td>
+      <td><span class="st ${x.r.status}">${x.r.status}</span></td>
+      <td class="mono">${esc(x.cur)}${money(x.total)}</td>
+      <td class="mono ok">${x.paid>0?esc(x.cur)+money(x.paid):"—"}</td>
+      <td class="mono left">${esc(x.cur)}${money(x.unpaid)}</td>
+      <td class="mono">${x.r.signed?fmtD(x.r.signed):"—"}</td>
+    </tr>`).join("")}</tbody>
+  </table></div>${finMoreHTML(open,"list")}`:`<div class="fin-empty">全部结清 ✓</div>`;
+  $$("[data-finsort]").forEach(t=>t.addEventListener("click",()=>{
+    const k=t.dataset.finsort;
+    finSort=(finSort.k===k)?{k,d:-finSort.d}:{k,d:(k==="unpaid"||k==="total"||k==="paid")?-1:1};
+    renderFin();
+  }));
+  $$("[data-finrec]").forEach(tr=>tr.addEventListener("click",()=>openDrawer(tr.dataset.finrec)));
+  $$("#finView .fin-sec").forEach(sec=>{
+    const k=sec.dataset.fs;
+    sec.classList.toggle("collapsed",finFold.has(k));
+    sec.querySelector("h3").onclick=()=>{
+      finFold.has(k)?finFold.delete(k):finFold.add(k);
+      sec.classList.toggle("collapsed",finFold.has(k));
+    };
+  });
+  $$("[data-finmore]").forEach(b=>b.addEventListener("click",()=>{
+    const k=b.dataset.finmore;
+    finMore.has(k)?finMore.delete(k):finMore.add(k);
+    renderFin();
+  }));
+}
 /* ================= 渲染:日历 ================= */
 const CAL_TYPES=[
   {k:"need",lab:"需求交期",cls:"t-need",col:"#2563EB",tag:"需",get:r=>r.neededBy},
@@ -2278,7 +2514,7 @@ function render(){
       }).join(""):`<div class="empty">暂无</div>`}</div>
     </section>`;
     bindBoardEvents();
-    renderProjects(); renderCal(); renderAlert();
+    renderProjects(); renderCal(); renderFin(); renderAlert();
     $("#countNote").textContent=`${st} ${items.length} 条 / 共 ${state.records.length} 条`;
     return;
   }
@@ -2297,6 +2533,7 @@ function render(){
   $("#countNote").textContent=`显示 ${filtered.filter(r=>cols.includes(r.status)).length} / 共 ${state.records.length} 条`;
   renderProjects();
   renderCal();
+  renderFin();
   renderAlert();
   // 事件
   bindBoardEvents();
@@ -2639,14 +2876,14 @@ function attFolderBlockHTML(rec,group){
 }
 let tlFull=new Set();
 let secFold={};   // {区块名:true/false} 用户手动折叠状态
+/* 需求阶段还没开始询价,不显示报价对比;但退回需求或已取消时若已有报价,仍要留着(当参考价) */
+const showQuoteSec=r=>((r.quotes||[]).length>0)||(r.status!=="需求"&&r.status!=="已取消");
+/* 只展开当前阶段那一块,其余默认折叠(用户手动展开的以 secFold 为准) */
+const STAGE_SEC={"需求":"基本信息","报价":"报价对比","审批":"报价对比","下单":"订单信息","物流":"物流信息"};
 function defaultFold(rec,name){
   if(name in secFold) return secFold[name];
-  const done=rec.status==="完结"||rec.status==="已取消";
-  const shipping=rec.status==="物流";
   if(name==="时间线") return true;
-  if(name==="报价对比") return done||shipping||rec.status==="下单";
-  if(name==="基本信息") return done;
-  return false;
+  return name!==STAGE_SEC[rec.status];        // 完结/已取消 没有进行中的阶段 → 全部折叠
 }
 function openDrawer(id,keep){
   const rec=getRec(id); if(!rec)return;
@@ -2674,7 +2911,7 @@ function openDrawer(id,keep){
     </div></div>
 
 
-    <div class="sec" data-sec="报价对比"><div class="sec-hd"><span class="fold">▼</span>报价对比</div><div class="sec-bd">
+    ${showQuoteSec(rec)?`<div class="sec" data-sec="报价对比"><div class="sec-hd"><span class="fold">▼</span>报价对比</div><div class="sec-bd">
       ${rec.quotes.length?`<table class="qt"><thead><tr><th>供应商</th><th>价格</th><th>货期</th><th>备注</th><th></th></tr></thead><tbody>
         ${rec.quotes.map((q,i)=>`<tr class="${q.selected?"sel":""}">
           <td>${q.selected?'<span class="pick">✓ 选定</span><br>':""}${esc(q.supplier)}</td>
@@ -2699,7 +2936,7 @@ function openDrawer(id,keep){
       <div style="margin-top:8px;text-align:right"><button class="btn btn-ink btn-sm" onclick="addQuote('${rec.id}')">＋ 添加报价</button></div>`
       :`<div class="hint" style="font-size:12px;color:var(--steel);margin-top:10px">${rec.status==="需求"?"提示:请先在上方点「开始询价 →」,之后才能录入报价":"当前阶段不能再添加报价"}</div>`}
       ${canQuote(rec)?`<div class="att-sub"><span>报价单 / 附件</span><span class="tip">报价单、规格书、形式发票…</span></div>${attBlockHTML(rec,"报价")}`:""}
-    </div></div>
+    </div></div>`:""}
 
     ${isOrdered(rec)?`<div class="sec" data-sec="订单信息"><div class="sec-hd"><span class="fold">▼</span>订单信息<span class="hdbtns"><button class="btn btn-sm" id="btnEditOrder">✎ 编辑</button></span></div><div class="sec-bd">
       <dl class="kv">
@@ -2858,14 +3095,11 @@ function actionsHTML(r){
     case "审批": return `<div class="actions">
         <button class="btn" style="background:var(--approve);border-color:var(--approve);color:#fff" onclick="changeStatus('${r.id}','下单',__note(),'审批通过')">✓ 批准 →</button>
         <button class="btn btn-danger" onclick="changeStatus('${r.id}','报价',__note()||'审批驳回','审批驳回')">✕ 驳回至报价</button>
+        <button class="btn btn-danger" onclick="if(confirm('确定取消此采购?\\n已录入的报价会保留，以后可以翻出来当参考价。'))changeStatus('${r.id}','已取消',__note(),'取消采购')">取消采购</button>
       </div>${noteBox}`;
-    case "下单": return `<div class="actions" style="align-items:center;flex-wrap:wrap">
-        <input id="poNum" placeholder="合同 / PO号" value="${esc(r.po||"")}" style="width:180px">
-        <input id="signedInp" type="date" title="签订日期" value="${esc(r.signed||"")}" style="width:170px">
-        <input id="etaInp" type="date" title="交期" value="${esc(isDateStr(r.eta)?r.eta:"")}" style="width:170px">
+    case "下单": return `<div class="actions">
+        <button class="btn btn-primary" onclick="changeStatus('${r.id}','物流',__note(),'进入物流')">进入物流 →</button>
         <button class="btn btn-sm" onclick="changeStatus('${r.id}','审批',__note()||'退回审批','← 退回审批')">← 退回审批</button>
-        <button class="btn btn-sm" onclick="saveOrderFields('${r.id}',false)">保存订单信息</button>
-        <button class="btn btn-primary" onclick="saveOrderFields('${r.id}',true)">进入物流 →</button>
       </div>${noteBox}`;
     case "物流": return `<div class="actions">
         <button class="btn btn-sm" onclick="changeStatus('${r.id}','下单',__note(),'退回下单')">← 退回下单</button>
@@ -3548,6 +3782,7 @@ $$("#userMenu button").forEach(b=>b.addEventListener("click",()=>{
 $("#tabBoard").addEventListener("click",()=>setView("board"));
 $("#tabProj").addEventListener("click",()=>setView("proj"));
 $("#tabCal").addEventListener("click",()=>setView("cal"));
+$("#tabFin").addEventListener("click",()=>setView("fin"));
 $("#calPrev").addEventListener("click",()=>calShift(-1));
 $("#calNext").addEventListener("click",()=>calShift(1));
 $("#calToday").addEventListener("click",()=>{ calMon=calKey(new Date()); renderCal(); });
@@ -3600,6 +3835,7 @@ $("#spDelete").addEventListener("click",deleteSupplier);
 function openSettings(){
   $("#sOwner").value=cfg.owner; $("#sRepo").value=cfg.repo;
   $("#sBranch").value=cfg.branch; $("#sPath").value=cfg.path; $("#sToken").value=cfg.token;
+  $("#sPayLead").value=payLead();
   try{
     const c=JSON.parse(storage.getItem("pt_size")||"null");
     if(c) $("#sSizeInfo").innerHTML=`上次查询：<b style="font-family:var(--mono)">${fmtMB(c.kb)}</b> / 10 GB（${fmtDT(c.at).slice(0,16)}）— 点「查询」刷新`;
@@ -3614,9 +3850,16 @@ $("#sSave").addEventListener("click",async()=>{
   if(!cfg.owner||!cfg.repo||!cfg.token) return toast("带 * 的必填","err");
   const save={...cfg}; if(!$("#sRemember").checked) save.token="";
   storage.setItem("pt_cfg",JSON.stringify(save));
+  const lead=Math.round(Number($("#sPayLead").value));
   closeModal("mSettings");
   await loadData(true);
-  if(state.loaded) toast("连接成功","ok");
+  if(state.loaded){
+    if(isFinite(lead)&&lead>=0&&lead<=180&&lead!==payLead()&&!isViewer()){
+      state.settings=state.settings||{}; state.settings.payLeadDays=lead;
+      render();
+      if(await persist(`付款提前天数改为 ${lead} 天`)) toast(`已连接 · 付款提前天数 ${lead} 天`,"ok");
+    }else toast("连接成功","ok");
+  }
 });
 
 /* ================= 启动 ================= */
@@ -3638,7 +3881,7 @@ async function sizeWatch(){
   }catch(e){}
 }
 function saveCache(){
-  try{ storage.setItem("pt_cache",JSON.stringify({records:state.records,suppliers:state.suppliers,at:now()})); }catch(e){}
+  try{ storage.setItem("pt_cache",JSON.stringify({records:state.records,suppliers:state.suppliers,settings:state.settings||{},at:now()})); }catch(e){}
 }
 function startApp(){
   if(!ghReady()){ render(); setTimeout(()=>{ toast("首次使用:点右上角用户名 → 数据仓库设置，连接 GitHub 仓库"); openSettings(); },400); return; }
@@ -3646,7 +3889,7 @@ function startApp(){
   try{
     const c=JSON.parse(storage.getItem("pt_cache")||"null");
     if(c && (c.records||[]).length){
-      state.records=normAll(c.records); state.suppliers=c.suppliers||[]; state.fromCache=true;
+      state.records=normAll(c.records); state.suppliers=c.suppliers||[]; state.settings=c.settings||{}; state.fromCache=true;
       render(); painted=true;
       setConn(null,"同步中…","正在与仓库同步最新数据");
     }
@@ -3664,7 +3907,7 @@ function startApp(){
   // 每3分钟自动刷新,避免同事更新看不到
   setInterval(()=>{ if(authUser() && ghReady() && !document.hidden && !currentId) loadData(true).catch(()=>{}); },180000);
 })();
-window.deleteRecord=deleteRecord; window.printRecord=printRecord; window.closeRecord=closeRecord; window.saveOrderFields=saveOrderFields; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
+window.deleteRecord=deleteRecord; window.printRecord=printRecord; window.closeRecord=closeRecord; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
 window.changeStatus=changeStatus; window.removeAttachment=removeAttachment;
 window.getRec=getRec; window.log=log; window.openDrawer=openDrawer; window.persist=persist;
 </script>
