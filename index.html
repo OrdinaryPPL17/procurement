@@ -693,7 +693,6 @@ body.readonly .att-item .mv,body.readonly .afd-acts,body.readonly .afd-b{display
   /* 顶栏:压成两行 */
   .only-mobile{display:block}
   .only-mobile-ib{display:inline-flex}
-  #btnSuppliers{display:none}
   .hd{flex-wrap:wrap;row-gap:0;align-items:center}
   .hd-title{order:1;flex:1;width:auto;border-bottom:none;padding:7px 0 7px 12px}
   .hd-title .sub{display:none}
@@ -999,7 +998,6 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
     </div>
     <div class="hd-nav">
       <span class="view-tabs"><button id="tabBoard" class="on">看板</button><button id="tabProj">项目进度</button><button id="tabCal">日历</button><button id="tabFin">财务</button></span>
-      <button class="btn btn-sm" id="btnSuppliers">供应商</button>
     </div>
     <div class="hd-mid">
       <span class="chip alert" id="alertChip" style="display:none" title="点击只看预警项"></span>
@@ -1013,7 +1011,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
         <span class="user-wrap">
           <button class="chip" id="userChip" title="账户菜单">👤 未设置 <span class="cv">▾</span></button>
           <div class="user-menu" id="userMenu">
-            <button data-um="suppliers" class="only-mobile"><span class="ic">🏢</span>供应商库</button>
+            <button data-um="suppliers" title="供应商名称、银行信息、产品清单"><span class="ic">🏢</span>供应商库</button>
           <button data-um="backfill" title="一屏录入历史采购，直接生成到指定状态"><span class="ic">⤓</span>补录历史采购</button>
           <button data-um="theme" id="umTheme"><span class="ic">🌙</span>深色模式</button>
           <button data-um="settings"><span class="ic">⚙</span>数据仓库设置</button>
@@ -3774,7 +3772,7 @@ $$("#userMenu button").forEach(b=>b.addEventListener("click",()=>{
   $(".user-wrap").classList.remove("open");
   const a=b.dataset.um;
   if(a==="settings") openSettings();
-  else if(a==="suppliers") $("#btnSuppliers").click();
+  else if(a==="suppliers") openSupList();
   else if(a==="backfill") openBackfill("");
   else if(a==="theme") $("#btnTheme").click();
   else { sessionUser=null; storage.removeItem("pt_auth"); storage.removeItem("pt_cache"); location.reload(); }
@@ -3788,7 +3786,7 @@ $("#calNext").addEventListener("click",()=>calShift(1));
 $("#calToday").addEventListener("click",()=>{ calMon=calKey(new Date()); renderCal(); });
 $("#alertChip").addEventListener("click",()=>{ alertOnly=!alertOnly; render(); });
 $("#dwPrint").addEventListener("click",()=>{ if(currentId) printRecord(currentId); });
-$("#btnSuppliers").addEventListener("click",()=>{ $("#supSearch").value=""; openSups.clear(); renderSuppliers(); openModal("mSupList"); });
+function openSupList(){ $("#supSearch").value=""; openSups.clear(); renderSuppliers(); openModal("mSupList"); }
 $("#supAddBtn").addEventListener("click",()=>openSupEdit(null));
 $("#supSearch").addEventListener("input",renderSuppliers);
 $("#spProdAdd").addEventListener("click",addDraftProd);
