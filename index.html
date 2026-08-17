@@ -236,7 +236,8 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 .shb-bd .att-sub{margin-top:10px}
 body.dark .shb-hd{background:#232A32}
 @keyframes secIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.kv{display:grid;grid-template-columns:88px 1fr;gap:6px 12px;font-size:13px}
+/* 抽屉内统一 12 等分网格：标签列=2格，值列从第2格起；付款表/货物表的列也落在同一批格线上 */
+.kv{display:grid;grid-template-columns:16.6667% 1fr;gap:6px 12px;font-size:13px}
 .kv dt{color:var(--steel)}
 .kv dd{font-weight:500}
 .kv dd.mono{font-family:var(--mono)}
@@ -295,9 +296,9 @@ body.readonly .card{cursor:pointer}
 .ro-tag{background:var(--steel);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;margin-left:6px;letter-spacing:.05em}
 .pay-tb{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;table-layout:fixed}
 /* 四列定宽平分,免得金额和备注挤在右边 */
-.pay-tb th:nth-child(1),.pay-tb td:nth-child(1){width:24%}
-.pay-tb th:nth-child(2),.pay-tb td:nth-child(2){width:25%}
-.pay-tb th:nth-child(3),.pay-tb td:nth-child(3){width:24%}
+.pay-tb th:nth-child(1),.pay-tb td:nth-child(1){width:16.6667%}
+.pay-tb th:nth-child(2),.pay-tb td:nth-child(2){width:33.3333%}
+.pay-tb th:nth-child(3),.pay-tb td:nth-child(3){width:33.3333%}
 .pay-tb td:nth-child(4){word-break:break-word}
 .pay-tb th{text-align:left;font-size:11px;color:var(--steel);font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding:4px 6px}
 .pay-tb td{padding:6px;border-bottom:1px solid var(--line-soft);vertical-align:top}
@@ -479,12 +480,12 @@ body.dark .ack-row{background:#232A32}
 .cg-wrap{overflow-x:auto;overflow-y:hidden;margin-top:6px}
 .cg-tb{width:100%;border-collapse:collapse;font-size:12px;min-width:560px;table-layout:fixed}
 /* 七列定宽平分 */
-.cg-tb th:nth-child(1),.cg-tb td:nth-child(1){width:21%}
-.cg-tb th:nth-child(2),.cg-tb td:nth-child(2){width:11%}
-.cg-tb th:nth-child(3),.cg-tb td:nth-child(3){width:15%}
-.cg-tb th:nth-child(4),.cg-tb td:nth-child(4){width:13%}
-.cg-tb th:nth-child(5),.cg-tb td:nth-child(5){width:13%}
-.cg-tb th:nth-child(6),.cg-tb td:nth-child(6){width:11%}
+.cg-tb th:nth-child(1),.cg-tb td:nth-child(1){width:16.6667%}
+.cg-tb th:nth-child(2),.cg-tb td:nth-child(2){width:16.6667%}
+.cg-tb th:nth-child(3),.cg-tb td:nth-child(3){width:16.6667%}
+.cg-tb th:nth-child(4),.cg-tb td:nth-child(4){width:16.6667%}
+.cg-tb th:nth-child(5),.cg-tb td:nth-child(5){width:16.6667%}
+.cg-tb th:nth-child(6),.cg-tb td:nth-child(6){width:8.3333%}
 .cg-tb td:nth-child(7){word-break:break-word}
 .cg-tb th{text-align:left;font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--line);padding:4px 6px;white-space:nowrap}
 .cg-tb th.n,.cg-tb td.n{font-family:var(--mono);white-space:nowrap}
@@ -601,6 +602,12 @@ body.dark .cg-ed{background:rgba(0,0,0,.15)}
 .afd{display:flex;align-items:center;gap:8px;padding:7px 9px;margin-bottom:5px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;transition:border-color .14s,background .14s}
 .afd:hover{border-color:var(--safety);background:var(--safety-soft)}
 .afd.over{border-color:var(--safety);background:var(--safety-soft);border-style:dashed}
+.afd.dragging{opacity:.4}
+.afd.ins-before{box-shadow:inset 0 3px 0 var(--safety)}
+.afd.ins-after{box-shadow:inset 0 -3px 0 var(--safety)}
+.afd-h{color:var(--line);font-size:11px;cursor:grab;flex-shrink:0;letter-spacing:-1px}
+.afd:hover .afd-h{color:var(--steel)}
+.afd[draggable=true]:active{cursor:grabbing}
 .afd.up{background:transparent;border-style:dashed}
 .afd-ic{font-size:13px;line-height:1;flex-shrink:0}
 .afd-nm{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -1063,6 +1070,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
     <div class="dw-tools">
       <span class="stamp" id="dwStamp"></span>
       <button class="btn btn-sm" id="dwPrint" title="打印 / 导出PDF">🖨 打印</button>
+      <button class="btn btn-sm" id="dwZip" title="打包成 zip：一份 PDF + 全部附件">📦 导出</button>
       <button class="btn btn-sm" id="dwClose">✕ 关闭</button>
     </div>
   </div>
@@ -1908,6 +1916,20 @@ function openAttMove(id,idx){
     <div class="mv-row${a.fid?"":" on"}" data-mvto="" style="padding-left:12px">📄 ${esc(attLabel(group))}（根层）</div>`
     +(rowsFor("",1)||`<div class="afd-empty">还没有文件夹，先在附件区点「＋ 新建文件夹」</div>`);
   openModal("mAttMove");
+}
+async function afReorder(id,fid,tid,after){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec||!fid||fid===tid) return;
+  const A=rec.attFolders||[];
+  const f=A.find(x=>x.fid===fid), t=A.find(x=>x.fid===tid);
+  if(!f||!t) return;
+  if(f.group!==t.group||(f.parent||"")!==(t.parent||"")) return toast("只能在同一层里排序","err");
+  A.splice(A.indexOf(f),1);
+  const ti=A.indexOf(t);
+  A.splice(after?ti+1:ti,0,f);
+  log(rec,"调整文件夹顺序",`「${f.name}」移到「${t.name}」${after?"后面":"前面"}`);
+  openDrawer(id,true);
+  if(await persist(`${rec.id} 文件夹排序`)) toast("已调整顺序","ok");
 }
 async function afMove(id,idx,fid){
   if(isViewer()) return denyRO();
@@ -2863,8 +2885,8 @@ function attFolderBlockHTML(rec,group){
     <span class="afd-crumb"><a data-afgo="" class="${cwd?"":"on"}" title="回到根层">${esc(attLabel(group))}</a>${path.map((f,i)=>` <span class="sep">/</span> <a data-afgo="${f.fid}" class="${i===path.length-1?"on":""}">${esc(f.name)}</a>`).join("")}</span>
     ${isViewer()?"":`<span class="afd-acts"><button class="btn btn-sm" data-afnew="${cwd}">＋ 新建文件夹</button>${cwd?`<button class="btn btn-sm" data-afren="${cwd}" title="重命名当前文件夹">✎ 改名</button><button class="btn btn-sm" data-afdel="${cwd}" title="删除当前文件夹">🗑</button>`:""}</span>`}
   </div>`;
-  const rows=subs.map(f=>`<div class="afd" data-afgo="${f.fid}"${isViewer()?"":` data-afdrop="${f.fid}"`}>
-      <span class="afd-ic">📁</span><span class="afd-nm">${esc(f.name)}</span>
+  const rows=subs.map(f=>`<div class="afd" data-afgo="${f.fid}"${isViewer()?"":` data-afdrop="${f.fid}" data-afdrag="${f.fid}" draggable="true"`}>
+      ${isViewer()?"":`<span class="afd-h" title="拖动调整顺序">⠿</span>`}<span class="afd-ic">📁</span><span class="afd-nm">${esc(f.name)}</span>
       <span class="afd-cnt">${afCount(rec,group,f.fid)} 个文件${afSubCount(rec,f.fid)?` · ${afSubCount(rec,f.fid)} 个子文件夹`:""}</span>
       ${isViewer()?"":`<span class="afd-b"><button class="btn btn-sm" data-afren="${f.fid}" title="重命名">✎</button><button class="btn btn-sm" data-afdel="${f.fid}" title="删除">🗑</button></span>`}
     </div>`).join("");
@@ -3023,15 +3045,42 @@ function openDrawer(id,keep){
     it.addEventListener("dragstart",e=>{ e.dataTransfer.setData("text/pt-att",it.dataset.attidx); e.dataTransfer.effectAllowed="move"; it.classList.add("dragging"); });
     it.addEventListener("dragend",()=>it.classList.remove("dragging"));
   });
+  const clearIns=()=>$$(".afd").forEach(x=>x.classList.remove("ins-before","ins-after","over"));
+  $$("[data-afdrag]").forEach(el=>{
+    el.addEventListener("dragstart",e=>{
+      e.stopPropagation();
+      e.dataTransfer.setData("text/pt-folder",el.dataset.afdrag);
+      e.dataTransfer.effectAllowed="move";
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend",()=>{ el.classList.remove("dragging"); clearIns(); });
+  });
   $$("[data-afdrop]").forEach(el=>{
     ["dragover","dragenter"].forEach(ev=>el.addEventListener(ev,e=>{
-      if(!e.dataTransfer.types.includes("text/pt-att")) return;
+      const t=e.dataTransfer.types;
+      if(t.includes("text/pt-folder")){
+        if(!el.dataset.afdrag) return;                 // 「上一层」那行不参与排序
+        e.preventDefault();
+        const r=el.getBoundingClientRect(), after=(e.clientY-r.top)>r.height/2;
+        el.classList.toggle("ins-after",after);
+        el.classList.toggle("ins-before",!after);
+        return;
+      }
+      if(!t.includes("text/pt-att")) return;
       e.preventDefault(); el.classList.add("over");
     }));
-    el.addEventListener("dragleave",()=>el.classList.remove("over"));
+    el.addEventListener("dragleave",()=>el.classList.remove("over","ins-before","ins-after"));
     el.addEventListener("drop",e=>{
+      const fid=e.dataTransfer.getData("text/pt-folder");
+      if(fid){
+        e.preventDefault(); e.stopPropagation();
+        const r=el.getBoundingClientRect(), after=(e.clientY-r.top)>r.height/2;
+        clearIns();
+        if(el.dataset.afdrag) afReorder(rec.id,fid,el.dataset.afdrag,after);
+        return;
+      }
       const idx=e.dataTransfer.getData("text/pt-att");
-      el.classList.remove("over");
+      clearIns();
       if(idx==="") return;
       e.preventDefault(); e.stopPropagation();
       afMove(rec.id,Number(idx),el.dataset.afdrop||"");
@@ -3237,34 +3286,221 @@ function supLinkHTML(sp){
     ${list.length>12?`<div style="font-size:11px;color:var(--steel);padding:2px 6px">… 另有 ${list.length-12} 项</div>`:""}
   </div>`;
 }
+/* ================= 打包导出 =================
+   zip 里放：<单号>.pdf（信息汇总） + 各分类文件夹下的全部附件（保留自建子文件夹和顺序）。
+   zip 用自写的 store 模式打包器(不压缩,附件本身多是 jpg/pdf 已压缩),不引第三方库。
+   PDF 用 html2canvas + jsPDF,**点导出时才从 CDN 加载**,所以 index.html 体积不变。 */
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_T[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipStore(files){          // files: [{name, data:Uint8Array}]
+  const enc=new TextEncoder(), chunks=[], dir=[]; let off=0;
+  const u16=n=>[n&0xFF,(n>>>8)&0xFF], u32=n=>[n&0xFF,(n>>>8)&0xFF,(n>>>16)&0xFF,(n>>>24)&0xFF];
+  files.forEach(f=>{
+    const nm=enc.encode(f.name), crc=crc32(f.data), sz=f.data.length;
+    const local=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),
+      ...u32(crc),...u32(sz),...u32(sz),...u16(nm.length),...u16(0)]);
+    chunks.push(local,nm,f.data);
+    dir.push({nm,crc,sz,off});
+    off+=local.length+nm.length+sz;
+  });
+  const cstart=off; const cd=[];
+  dir.forEach(d=>{
+    const c=new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),
+      ...u32(d.crc),...u32(d.sz),...u32(d.sz),...u16(d.nm.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(d.off)]);
+    cd.push(c,d.nm); off+=c.length+d.nm.length;
+  });
+  const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(dir.length),...u16(dir.length),
+    ...u32(off-cstart),...u32(cstart),...u16(0)]);
+  return new Blob([...chunks,...cd,end],{type:"application/zip"});
+}
+const zipSafe=s=>String(s||"").replace(/[\\/:*?"<>|]+/g,"_").replace(/^\.+|\s+$/g,"").slice(0,90)||"未命名";
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    if([...document.scripts].some(s=>s.src===src)) return res();
+    const s=document.createElement("script"); s.src=src; s.onload=res;
+    s.onerror=()=>rej(new Error("加载失败(需要联网)")); document.head.appendChild(s);
+  });
+}
+async function recordPDF(rec){
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+  const box=document.createElement("div");
+  box.style.cssText="position:fixed;left:-9999px;top:0;width:794px;background:#fff;color:#111;padding:36px 40px;"+
+    "font-family:Helvetica,Arial,'Microsoft YaHei','PingFang SC',sans-serif";
+  box.innerHTML=printHTML(rec);
+  document.body.appendChild(box);
+  try{
+    const cv=await html2canvas(box,{scale:2,backgroundColor:"#fff",logging:false});
+    const {jsPDF}=window.jspdf, pdf=new jsPDF({unit:"mm",format:"a4"});
+    const pw=210, ph=297, m=10, iw=pw-m*2;
+    const ih=cv.height*iw/cv.width;                 // 整图按宽度缩放后的高度(mm)
+    const pxPerMm=cv.width/iw, pageH=Math.floor((ph-m*2)*pxPerMm);
+    let y=0, first=true;
+    while(y<cv.height){
+      const hPx=Math.min(pageH,cv.height-y);
+      const part=document.createElement("canvas");
+      part.width=cv.width; part.height=hPx;
+      part.getContext("2d").drawImage(cv,0,y,cv.width,hPx,0,0,cv.width,hPx);
+      if(!first) pdf.addPage();
+      pdf.addImage(part.toDataURL("image/jpeg",0.92),"JPEG",m,m,iw,hPx/pxPerMm);
+      first=false; y+=hPx;
+    }
+    return pdf.output("blob");
+  } finally { box.remove(); }
+}
+async function exportRecordZip(id){
+  const rec=getRec(id); if(!rec) return;
+  const btn=$("#dwZip"); const back=btn?btn.textContent:"";
+  const say=t=>{ if(btn) btn.textContent=t; };
+  try{
+    if(btn) btn.disabled=true;
+    say("生成 PDF…");
+    const files=[];
+    const base=zipSafe([rec.po||fullJob(rec)||rec.id,rec.title].filter(Boolean).join("_"));
+    files.push({name:base+"/"+zipSafe(rec.id+" "+rec.title)+".pdf",
+                data:new Uint8Array(await (await recordPDF(rec)).arrayBuffer())});
+    const atts=(rec.attachments||[]).filter(a=>a&&a.path);
+    const used=new Set();
+    for(let i=0;i<atts.length;i++){
+      const a=atts[i];
+      say(`附件 ${i+1}/${atts.length}…`);
+      const seg=[base];
+      const g=a.group||"需求";
+      const m=String(g).match(/^物流#(.+)$/);
+      if(m){ const bs=shBatches(rec), bi=bs.findIndex(b=>b.bid===m[1]);
+             seg.push("物流附件",`第 ${bi<0?"?":bi+1} 批`); }
+      else seg.push(attLabel(g));
+      afPath(rec,a.fid||"").forEach(f=>seg.push(zipSafe(f.name)));
+      let nm=seg.map(zipSafe).join("/")+"/"+zipSafe(a.name);
+      let k=1; while(used.has(nm)){ nm=nm.replace(/(\.[^.]+)?$/,(e)=>"("+(++k)+")"+(e||"")); }
+      used.add(nm);
+      try{
+        const url=await ghGetBlob(a.path,a.name);
+        files.push({name:nm,data:new Uint8Array(await (await fetch(url)).arrayBuffer())});
+      }catch(e){ files.push({name:seg.map(zipSafe).join("/")+"/【取不到】"+zipSafe(a.name)+".txt",
+                             data:new TextEncoder().encode("附件下载失败："+(e.message||e)+"\n仓库路径："+a.path)}); }
+    }
+    say("打包…");
+    const url=URL.createObjectURL(zipStore(files));
+    const el=document.createElement("a"); el.href=url; el.download=base+".zip"; el.click();
+    setTimeout(()=>URL.revokeObjectURL(url),8000);
+    toast(`已导出 ${files.length} 个文件`,"ok");
+  }catch(e){ toast("导出失败："+(e.message||e),"err"); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=back; } }
+}
 /* 打印单据 */
+function printHTML(r){
+  const oi=orderInfo(r), sp=r.ship||{};
+  const E=esc;
+  /* 统一网格：所有区块左边缘对齐到 0、右边缘对齐到 100%；
+     标签列固定 92px；两列组的第二组固定从 50% 起。单元格左侧不留 padding，靠列宽定位。 */
+  const TD='padding:4.5px 10px 4.5px 0;vertical-align:top', LAST='padding:4.5px 0 4.5px 0;vertical-align:top';
+  const U=n=>(n*100/12).toFixed(4)+"%";   // 全篇 12 等分网格，所有列宽都是格子的整数倍，跨区块列位置一致
+  const LB='font-size:11px;color:#888;'+TD;
+  const H=(t,sub)=>`<div style="margin:18px 0 6px;border-bottom:1.2px solid #111;padding-bottom:3px;display:flex;align-items:baseline;justify-content:space-between">
+      <span style="font-size:12px;font-weight:700;letter-spacing:.12em">${E(t)}</span>
+      <span style="font-size:10px;color:#888">${E(sub||"")}</span></div>`;
+  const KV=pairs=>{ const ps=pairs.filter(p=>p&&p[1]!==""&&p[1]!=null); if(!ps.length) return "";
+    let out='<table style="width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed">'
+      +`<colgroup><col style="width:${U(2)}"><col style="width:${U(4)}"><col style="width:${U(2)}"><col style="width:${U(4)}"></colgroup><tbody>`;
+    for(let i=0;i<ps.length;i++){
+      const a=ps[i];
+      if(a[2]){ out+=`<tr><td style="${LB}">${E(a[0])}</td><td colspan="3" style="${LAST}">${a[1]}</td></tr>`; continue; }
+      const b=(ps[i+1]&&!ps[i+1][2])?ps[++i]:null;
+      out+=`<tr><td style="${LB}">${E(a[0])}</td><td style="${TD}">${E(a[1])}</td>`
+        +(b?`<td style="${LB}">${E(b[0])}</td><td style="${LAST}">${E(b[1])}</td>`:'<td></td><td></td>')+`</tr>`;
+    }
+    return out+"</tbody></table>"; };
+  /* cols: [标题, 宽度, 是否右对齐] */
+  const TB=(cols,rows,foot)=>{ if(!rows.length) return "";
+    const cg='<colgroup>'+cols.map(c=>`<col${c[1]?` style="width:${c[1]}"`:""}>`).join("")+'</colgroup>';
+    const cell=(v,i,base,extra)=>{ const last=i===cols.length-1;
+      return `<td style="${last?LAST:TD};${base}${extra||""}">${v==null||v===""?"—":E(v)}</td>`; };
+    const th=cols.map((c,i)=>`<th style="${i===cols.length-1?LAST:TD};text-align:left;font-size:10px;color:#888;font-weight:700;letter-spacing:.03em;border-bottom:1px solid #bbb;white-space:nowrap">${E(c[0])}</th>`).join("");
+    const tr=rows.map(rw=>`<tr>${rw.map((v,i)=>cell(v,i,"font-size:11px;border-bottom:1px solid #eee;word-break:break-word;")).join("")}</tr>`).join("");
+    const tf=foot?`<tr>${foot.map((v,i)=>cell(v===""?" ":v,i,"font-size:11px;border-top:1px solid #111;padding-top:5px;")).join("")}</tr>`:"";
+    return `<table style="width:100%;border-collapse:collapse;table-layout:fixed">${cg}<thead><tr>${th}</tr></thead><tbody>${tr}</tbody>${tf?`<tfoot>${tf}</tfoot>`:""}</table>`; };
+
+  /* ── 抬头：标题左、打印时间右，同一行基线 ── */
+  let out=`<div style="border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:2px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+    <div style="min-width:0">
+      <div style="font-size:18px;font-weight:800;line-height:1.3">${E(r.title)}</div>
+      ${r.titleEn?`<div style="font-size:11.5px;color:#666;margin-top:2px">${E(r.titleEn)}</div>`:""}
+      <div style="font-family:monospace;font-size:10.5px;color:#444;margin-top:5px">
+        ${E(r.po||"")}${r.po?" · ":""}${E(fullJob(r)||"")} · ${E(r.id)} · 状态 ${E(r.status)}</div>
+    </div>
+    <div style="font-size:10px;color:#888;white-space:nowrap">打印 ${E(fmtDT(now()))}</div></div>`;
+
+  out+=H("基本信息")+KV([
+    ["项目号",fullJob(r)||"—"],["需求人",r.requester||"—"],
+    ["优先级",r.pri||"—"],["需要日期",fmtD(r.neededBy)||"—"],
+    r.desc?["说明",`<span style="white-space:pre-wrap">${E(r.desc)}</span>`,1]:null,
+    r.descEn?["Description",`<span style="white-space:pre-wrap">${E(r.descEn)}</span>`,1]:null]);
+
+  if((r.quotes||[]).length)
+    out+=H("报价对比",`${r.quotes.length} 家`)+TB(
+      [["供应商",U(6)],["货期",U(2)],["价格",U(2)],["备注",U(2)]],
+      r.quotes.map(q=>[(q.selected?"✓ ":"")+(q.supplier||""),q.lead||"",`${q.currency||""}${money(q.price)}`,q.note||""]));
+
+  if(isOrdered(r)){
+    out+=H("订单与付款")+KV([
+      ["供应商",oi.supplier||"—"],["金额",oi.amount||"—"],
+      ["签订日期",fmtD(r.signed)||"—"],["交期",etaTxt(r.eta)||"—"],
+      ["合同/PO号",r.po||"—"]]);
+    const ps=r.payments||[];
+    if(ps.length){
+      const cur=(ps[0].cur||oi.cur||"¥");
+      const paid=ps.reduce((a,p)=>a+(Number(p.amount)||0),0);
+      const tot=(oi.price==null||isNaN(oi.price))?null:Number(oi.price);
+      out+=`<div style="height:9px"></div>`+TB(
+        [["付款类型",U(2)],["付款日期",U(4)],["金额",U(4)],["备注",U(2)]],
+        ps.map(p=>[p.kind||"付款",fmtD(p.date),`${p.cur||cur}${money(p.amount)}`,p.note||""]),
+        [`已付 ${ps.length} 笔`,"",`${cur}${money(paid)}`,tot==null?"":(paid>=tot-0.01?"✓ 已结清":`未付 ${cur}${money(tot-paid)}`)]);
+    }
+  }
+
+  if(isShipping(r)) shBatches(r).forEach((b,i,arr)=>{
+    out+=H(arr.length>1?`物流信息 · 第 ${i+1} 批`:"物流信息",b.arrived?"已到货":"")+KV([
+      ["BL#",b.bl||"—"],["船名/航次",b.vessel||"—"],
+      ["ORIGIN",b.origin||"—"],["DESTINATION",b.dest||"—"],
+      ["ETD",fmtD(b.etd)||"—"],["ETA",fmtD(b.eta)||"—"],
+      ["柜号/唛头",b.ctnr||"—"],["实际到货",fmtD(b.arrived)||"—"]]);
+    const ls=cargoOf(b);
+    if(ls.length){
+      const t=cargoTotals(ls);
+      out+=`<div style="height:9px"></div>`+TB(
+        [["品名",U(2)],["PCS",U(2)],["PACKAGES",U(2)],["毛重 KGS",U(2)],["净重 KGS",U(2)],["CBM",U(1)],["备注",U(1)]],
+        ls.map(l=>[l.desc||"",cgFmt(cgNum(l.pcs)),cgFmt(cgNum(l.pkgs)),cgFmt(cgNum(l.gw)),cgFmt(cgNum(l.nw)),cgFmt(cgNum(l.cbm)),l.note||""]),
+        ls.length>1?[`合计 ${ls.length} 项`,cgFmt(t.pcs),cgFmt(t.pkgs),cgFmt(t.gw),cgFmt(t.nw),cgFmt(t.cbm),""]:null);
+    }
+  });
+
+  const atts=r.attachments||[];
+  if(atts.length){
+    const by={}; atts.forEach(a=>{ const g=attLabel(a.group||"需求"); (by[g]=by[g]||[]).push(a.name); });
+    out+=H("附件清单",`${atts.length} 个`)+TB(
+      [["分类",U(2)],["数量",U(2)],["文件",U(8)]],
+      Object.keys(by).map(g=>[g,String(by[g].length),by[g].join("、")]));
+  }
+
+  if((r.timeline||[]).length)
+    out+=H("时间线",`${r.timeline.length} 条`)+TB(
+      [["时间",U(2)],["操作人",U(2)],["动作",U(4)],["备注",U(4)]],
+      [...r.timeline].reverse().map(t=>[fmtDT(t.at),t.by||"",t.action||"",t.note||""]));
+
+  out+=`<div style="margin-top:30px;padding-top:10px;border-top:1px solid #ccc;font-size:11.5px;color:#444;display:flex;gap:48px">
+    <span>审批签字：________________________</span><span>日期：________________________</span></div>`;
+  return out;
+}
 function printRecord(id){
   const r=getRec(id); if(!r) return;
-  const oi=orderInfo(r), sp=r.ship||{};
-  const row=(k,v)=>v?`<tr><td style="color:#666;padding:3px 10px 3px 0;white-space:nowrap">${k}</td><td style="padding:3px 0">${esc(v)}</td></tr>`:"";
-  const html=`<h2 style="margin:0 0 2px">${esc(r.title)}</h2>
-  <div style="color:#666;font-size:13px;margin-bottom:10px">${esc(r.titleEn||"")}</div>
-  <div style="font-family:monospace;font-size:12px;margin-bottom:12px">${r.id} · ${esc(fullJob(r))} · 状态 ${r.status} · 打印 ${fmtDT(now())}</div>
-  <table style="font-size:13px;border-collapse:collapse">
-   ${row("项目号",fullJob(r))}${row("需求人",r.requester)}${row("优先级",r.pri)}${row("需要日期",fmtD(r.neededBy))}${row("说明",r.desc)}${row("Description",r.descEn)}
-   ${row("供应商",oi.supplier)}${row("金额",oi.amount)}${row("签订日期",fmtD(r.signed))}${row("交期",etaTxt(r.eta))}${row("合同/PO号",r.po)}
-   ${(r.payments||[]).map(p=>row(p.kind||"付款",`${p.cur||""}${money(p.amount)}　${p.date?fmtD(p.date):""}　${p.note||""}`)).join("")}${row("BL#",sp.bl)}${cargoOf(sp).map((l,i)=>row(i?"":"货物信息",[l.desc,l.pcs&&l.pcs+"PCS",l.pkgs&&l.pkgs+"PACKAGES",l.gw&&l.gw+"KGS(毛)",l.nw&&l.nw+"KGS(净)",l.cbm&&l.cbm+"CBM",l.note].filter(Boolean).join(" "))).join("")}${(()=>{const ls=cargoOf(sp);if(ls.length<2)return "";const t=cargoTotals(ls);return row("货物合计",[t.pkgs!=null&&cgFmt(t.pkgs)+"PACKAGES",t.gw!=null&&cgFmt(t.gw)+"KGS(毛)",t.nw!=null&&cgFmt(t.nw)+"KGS(净)",t.cbm!=null&&cgFmt(t.cbm)+"CBM"].filter(Boolean).join(" "));})()}${row("ORIGIN",sp.origin)}${row("DESTINATION",sp.dest)}${row("ETD",fmtD(sp.etd))}${row("ETA",fmtD(sp.eta))}${row("实际到货",fmtD(sp.arrived))}
-   ${shMore(r).map((b,i)=>row(`第 ${i+2} 批`,[b.bl&&"BL "+b.bl,b.etd&&"ETD "+fmtD(b.etd),b.eta&&"ETA "+fmtD(b.eta),b.arrived&&"到货 "+fmtD(b.arrived),b.vessel,b.ctnr,b.origin&&b.dest&&b.origin+"→"+b.dest].filter(Boolean).join("　"))).join("")}
-  </table>
-  ${(r.quotes||[]).length?`<h3 style="font-size:14px;margin:16px 0 6px">报价对比</h3>
-  <table style="font-size:12px;border-collapse:collapse;width:100%">
-   <tr style="border-bottom:1px solid #999"><th align="left">供应商</th><th align="left">价格</th><th align="left">货期</th><th align="left">备注</th></tr>
-   ${r.quotes.map(q=>`<tr style="border-bottom:1px solid #ddd"><td>${q.selected?"✓ ":""}${esc(q.supplier)}</td><td>${q.currency}${money(q.price)}</td><td>${esc(q.lead||"")}</td><td>${esc(q.note||"")}</td></tr>`).join("")}
-  </table>`:""}
-  <h3 style="font-size:14px;margin:16px 0 6px">时间线</h3>
-  <table style="font-size:12px;border-collapse:collapse">
-   ${[...r.timeline].reverse().map(t=>`<tr><td style="color:#666;white-space:nowrap;padding-right:10px">${fmtDT(t.at)} · ${esc(t.by)}</td><td>${esc(t.action)}${t.note?" — "+esc(t.note):""}</td></tr>`).join("")}
-  </table>
-  <div style="margin-top:40px;font-size:13px">审批签字：______________　　日期：______________</div>`;
+  const html=printHTML(r);
   const w=window.open("","_blank","width=900,height=700");
   if(!w) return toast("浏览器拦截了打印窗口","err");
   w.document.write(`<html><head><meta charset="utf-8"><title>${esc(r.po||r.id)} ${esc(r.title)}</title>
-    <style>body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans SC","Noto Sans SC","思源黑体","PingFang SC","Microsoft YaHei",sans-serif;padding:28px;color:#111}h2,h3{margin:0}@media print{img{max-height:400px}}</style></head><body>${html}</body></html>`);
+    <style>body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans SC","Noto Sans SC","思源黑体","PingFang SC","Microsoft YaHei",sans-serif;padding:26px 30px;color:#111;-webkit-print-color-adjust:exact}
+    table{page-break-inside:auto}tr{page-break-inside:avoid}
+    @page{size:A4;margin:14mm}</style></head><body>${html}</body></html>`);
   w.document.close(); setTimeout(()=>{ w.focus(); w.print(); },400);
 }
 
@@ -3791,6 +4027,7 @@ $("#calNext").addEventListener("click",()=>calShift(1));
 $("#calToday").addEventListener("click",()=>{ calMon=calKey(new Date()); renderCal(); });
 $("#alertChip").addEventListener("click",()=>{ alertOnly=!alertOnly; render(); });
 $("#dwPrint").addEventListener("click",()=>{ if(currentId) printRecord(currentId); });
+$("#dwZip").addEventListener("click",()=>{ if(currentId) exportRecordZip(currentId); });
 function openSupList(){ $("#supSearch").value=""; openSups.clear(); renderSuppliers(); openModal("mSupList"); }
 $("#supAddBtn").addEventListener("click",()=>openSupEdit(null));
 $("#supSearch").addEventListener("input",renderSuppliers);
