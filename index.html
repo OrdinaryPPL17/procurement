@@ -179,6 +179,8 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 .card .foot .rno{font-family:var(--mono);font-size:11px;color:var(--steel)}
 .tag{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--line-soft);color:var(--ink-soft);font-family:var(--mono)}
 .tag.job{background:var(--ink);color:#fff}
+.tag.dest{background:var(--line-soft);color:var(--ink-soft);font-family:var(--sans);letter-spacing:.02em}
+body.dark .tag.dest{background:#2E3742;color:var(--ink-soft)}
 .pri{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700}
 .pri.高{background:var(--reject-soft);color:var(--reject)}
 .pri.中{background:var(--safety-soft);color:var(--safety)}
@@ -1033,6 +1035,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   <input type="search" id="fSearch" placeholder="搜索标题 / 单号 / 供应商…">
   <button class="btn btn-sm only-mobile-ib" id="btnFilterToggle">筛选 ▾</button>
   <select id="fJob"><option value="">全部项目</option></select>
+  <select id="fDestSel"><option value="">全部目的地</option></select>
   <select id="fPerson"><option value="">全部负责人</option></select>
   <select id="fPri"><option value="">全部优先级</option><option>高</option><option>中</option><option>低</option></select>
   <label class="f-done"><input type="checkbox" id="fDone">显示已完结 / 已取消</label>
@@ -1091,7 +1094,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       </div>
       <div class="row2">
         <div class="fld"><label>优先级</label><select id="nPri"><option>中</option><option>高</option><option>低</option></select></div>
-        <div class="fld"></div>
+        <div class="fld"><label>目的地</label><input id="nDest" list="destList" placeholder="例:HONOLULU / MAUI / 上海仓"><datalist id="destList"></datalist></div>
       </div>
       <div class="row2">
         <div class="fld"><label>需求人</label><input id="nReq" placeholder="默认当前用户"></div>
@@ -1149,7 +1152,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       </div>
       <div class="row2">
         <div class="fld"><label>优先级</label><select id="ePri"><option>中</option><option>高</option><option>低</option></select></div>
-        <div class="fld"></div>
+        <div class="fld"><label>目的地</label><input id="eDest" list="destList"></div>
       </div>
       <div class="row2">
         <div class="fld"><label>需求人</label><input id="eReq"></div>
@@ -1300,6 +1303,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       <div class="row2">
         <div class="fld"><label>签订日期</label><input type="date" id="oSigned"></div>
         <div class="fld"><label>合同 / PO 号</label><input id="oPo" placeholder="合同号或PO号"></div>
+        <div class="fld"><label>目的地</label><input id="oDest" list="destList" placeholder="货最终去哪"></div>
       </div>
       <div class="fld"><label>付款信息</label>
         <div class="phead"><span>类型</span><span>付款日期</span><span>币种</span><span>金额</span><span>备注</span><span></span></div>
@@ -1732,6 +1736,7 @@ function normRec(r){
   if(!r.updatedAt) r.updatedAt=r.createdAt;
   if(!r.id) r.id="R"+Math.random().toString(36).slice(2,8).toUpperCase();
   if(typeof r.job!=="string") r.job=r.job==null?"":String(r.job);
+  if(r.dest!=null&&typeof r.dest!=="string") r.dest=String(r.dest);
   return r;
 }
 const normAll=a=>(Array.isArray(a)?a:[]).map(normRec);
@@ -1744,6 +1749,7 @@ async function createRecord(){
   const rec={
     id:uid(), title,
     job:$("#nJob").value.trim(), sub:$("#nSub").value.trim(), pri:$("#nPri").value,
+    dest:$("#nDest").value.trim(),
     requester:$("#nReq").value.trim()||cfg.name||"", neededBy:$("#nDue").value||"",
     titleEn:$("#nTitleEn").value.trim(),
     desc:$("#nDesc").value.trim(), descEn:$("#nDescEn").value.trim(),
@@ -2424,6 +2430,7 @@ function passFilter(r){
   const q=$("#fSearch").value.trim().toLowerCase();
   if(q){ const hay=(r.title+" "+(r.titleEn||"")+" "+(r.descEn||"")+" "+r.id+" "+r.job+" "+(r.sub||"")+" "+(r.quotes||[]).map(x=>x.supplier).join(" ")).toLowerCase(); if(!hay.includes(q))return false; }
   if($("#fJob").value && r.job!==$("#fJob").value) return false;
+  if($("#fDestSel").value && (r.dest||"")!==$("#fDestSel").value) return false;
   if($("#fPerson").value && r.requester!==$("#fPerson").value) return false;
   if($("#fPri").value && r.pri!==$("#fPri").value) return false;
   if(alertOnly && !alertLevel(r) && !ackPending(r)) return false;
@@ -2468,7 +2475,7 @@ function cardHTML(r){
     <input type="checkbox" class="pick" ${selectedIds.has(r.id)?"checked":""} title="选择">
     <div class="rid">${(()=>{const showPo=r.po&&(r.status==="下单"||r.status==="物流"||r.status==="完结");
       return showPo?`<span class="tag job" title="合同/PO号 · 项目 ${esc(fullJob(r))}">${hl(r.po)}</span>`
-        :(r.job||r.sub?`<span class="tag job" title="项目号">${hl(fullJob(r))}</span>`:`<span></span>`);})()}${dt?`<span class="due-t ${dt.late?"overdue":""}" title="${esc(dt.tip)}${dt.late?" · 已逾期":""}">${dt.label} ${esc(shortD(dt.text))}</span>`:""}<span class="pri ${r.pri}" title="优先级 ${esc(r.pri||"")}">${r.pri}</span></div>
+        :(r.job||r.sub?`<span class="tag job" title="项目号">${hl(fullJob(r))}</span>`:`<span></span>`);})()}${r.dest?`<span class="tag dest" title="目的地 ${esc(r.dest)}">${hl(r.dest)}</span>`:""}${dt?`<span class="due-t ${dt.late?"overdue":""}" title="${esc(dt.tip)}${dt.late?" · 已逾期":""}">${dt.label} ${esc(shortD(dt.text))}</span>`:""}<span class="pri ${r.pri}" title="优先级 ${esc(r.pri||"")}">${r.pri}</span></div>
     <h3>${hl(r.title)}</h3>
     ${r.titleEn?`<div class="ten-sm">${hl(r.titleEn)}</div>`:""}
     ${railHTML(r)}
@@ -2592,8 +2599,10 @@ function render(){
   // 填充筛选选项
   const jobs=[...new Set(state.records.map(r=>r.job).filter(Boolean))].sort();
   const ppl=[...new Set(state.records.map(r=>r.requester).filter(Boolean))].sort();
-  fillSelect("#fJob",jobs,"全部项目"); fillSelect("#fPerson",ppl,"全部负责人");
+  const dests=[...new Set(state.records.map(r=>r.dest).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"zh"));
+  fillSelect("#fJob",jobs,"全部项目"); fillSelect("#fPerson",ppl,"全部负责人"); fillSelect("#fDestSel",dests,"全部目的地");
   $("#jobList").innerHTML=jobs.map(j=>`<option value="${esc(j)}">`).join("");
+  $("#destList").innerHTML=dests.map(x=>`<option value="${esc(x)}">`).join("");
   $("#countNote").textContent=`显示 ${filtered.filter(r=>cols.includes(r.status)).length} / 共 ${state.records.length} 条`;
   renderProjects();
   renderCal();
@@ -2967,6 +2976,7 @@ function openDrawer(id,keep){
     <div class="sec" data-sec="基本信息"><div class="sec-hd"><span class="fold">▼</span>基本信息<span class="hdbtns"><button class="btn btn-sm" id="btnEditInfo">✎ 编辑</button><button class="btn btn-sm btn-danger" id="btnDelRec" title="删除这条采购记录">🗑 删除</button></span></div><div class="sec-bd">
       <dl class="kv">
         <dt>项目号</dt><dd class="mono">${esc(fullJob(rec)||"—")}</dd>
+        <dt>目的地</dt><dd>${esc(rec.dest||"—")}</dd>
         <dt>需求人</dt><dd>${esc(rec.requester||"—")}</dd>
         <dt>优先级</dt><dd><span class="pri ${rec.pri}">${rec.pri}</span></dd>
         <dt>需要日期</dt><dd class="mono">${fmtD(rec.neededBy)||"—"}</dd>
@@ -3224,7 +3234,7 @@ function openEditInfo(id){
   const rec=getRec(id); if(!rec)return;
   editingRecId=id;
   $("#eTitle").value=rec.title||""; $("#eTitleEn").value=rec.titleEn||""; $("#eDescEn").value=rec.descEn||""; $("#eJob").value=rec.job||""; $("#eSub").value=rec.sub||"";
-  $("#ePri").value=rec.pri||"中"; $("#eReq").value=rec.requester||"";
+  $("#ePri").value=rec.pri||"中"; $("#eDest").value=rec.dest||""; $("#eReq").value=rec.requester||"";
   $("#eDue").value=rec.neededBy||""; $("#eDesc").value=rec.desc||"";
   $("#ePo").value=rec.po||""; $("#eEta").value=isDateStr(rec.eta)?rec.eta:""; $("#eSigned").value=rec.signed||"";
   openModal("mEdit"); setTimeout(()=>$("#eTitle").focus(),50);
@@ -3234,10 +3244,10 @@ async function saveEditInfo(){
   const rec=getRec(editingRecId); if(!rec)return;
   const title=$("#eTitle").value.trim();
   if(!title) return toast("标题必填","err");
-  const before={title:rec.title,titleEn:rec.titleEn,descEn:rec.descEn,job:rec.job,sub:rec.sub,pri:rec.pri,requester:rec.requester,neededBy:rec.neededBy,desc:rec.desc,po:rec.po,eta:rec.eta,signed:rec.signed};
-  const after={title,titleEn:$("#eTitleEn").value.trim(),descEn:$("#eDescEn").value.trim(),job:$("#eJob").value.trim(),sub:$("#eSub").value.trim(),pri:$("#ePri").value,requester:$("#eReq").value.trim(),
+  const before={title:rec.title,titleEn:rec.titleEn,descEn:rec.descEn,job:rec.job,sub:rec.sub,pri:rec.pri,dest:rec.dest,requester:rec.requester,neededBy:rec.neededBy,desc:rec.desc,po:rec.po,eta:rec.eta,signed:rec.signed};
+  const after={title,titleEn:$("#eTitleEn").value.trim(),descEn:$("#eDescEn").value.trim(),job:$("#eJob").value.trim(),sub:$("#eSub").value.trim(),pri:$("#ePri").value,dest:$("#eDest").value.trim(),requester:$("#eReq").value.trim(),
                neededBy:$("#eDue").value||"",desc:$("#eDesc").value.trim(),po:$("#ePo").value.trim(),eta:$("#eEta").value.trim(),signed:$("#eSigned").value||""};
-  const labels={title:"标题",titleEn:"英文标题",descEn:"英文说明",job:"项目号",sub:"二级项目号",pri:"优先级",requester:"需求人",neededBy:"需要日期",desc:"说明",po:"合同/PO号",eta:"交期",signed:"签订日期"};
+  const labels={title:"标题",titleEn:"英文标题",descEn:"英文说明",job:"项目号",sub:"二级项目号",pri:"优先级",dest:"目的地",requester:"需求人",neededBy:"需要日期",desc:"说明",po:"合同/PO号",eta:"交期",signed:"签订日期"};
   const diff=Object.keys(after).filter(k=>(before[k]||"")!==(after[k]||""))
                    .map(k=>`${labels[k]}:「${before[k]||"空"}」→「${after[k]||"空"}」`);
   if(!diff.length){ closeModal("mEdit"); return toast("没有改动"); }
@@ -3288,10 +3298,10 @@ function downloadCSV(name,rows){
 }
 function exportRecords(){
   const list=state.records.filter(passFilter);
-  const head=["单号","项目号","二级项目号","合同/PO号","标题","英文标题","状态","优先级","需求人","需要日期","交期","签订日期","供应商","币种","金额","报价家数","BL#","ORIGIN","DESTINATION","ETD","ETA","实际到货","附件数","说明","创建时间","更新时间"];
+  const head=["单号","项目号","二级项目号","合同/PO号","标题","英文标题","状态","优先级","目的地","需求人","需要日期","交期","签订日期","供应商","币种","金额","报价家数","BL#","ORIGIN","DESTINATION","ETD","ETA","实际到货","附件数","说明","创建时间","更新时间"];
   const rows=[head].concat(list.map(r=>{
     const oi=orderInfo(r), sp=r.ship||{}, a=recAmount(r);
-    return [r.id,r.job||"",r.sub||"",r.po||"",r.title||"",r.titleEn||"",r.status,r.pri,r.requester||"",fmtD(r.neededBy),r.eta||"",fmtD(r.signed),
+    return [r.id,r.job||"",r.sub||"",r.po||"",r.title||"",r.titleEn||"",r.status,r.pri,r.dest||"",r.requester||"",fmtD(r.neededBy),r.eta||"",fmtD(r.signed),
       oi.supplier||"",a?a.cur:"",a?a.val:"",(r.quotes||[]).length,sp.bl||"",sp.origin||"",sp.dest||"",fmtD(sp.etd),fmtD(sp.eta),fmtD(sp.arrived),
       (r.attachments||[]).length,(r.desc||"").replace(/\n/g," "),fmtDT(r.createdAt),fmtDT(r.updatedAt)];
   }));
@@ -3483,7 +3493,8 @@ function printHTML(r){
 
   out+=H("基本信息")+KV([
     ["项目号",fullJob(r)||"—"],["需求人",r.requester||"—"],
-    ["优先级",r.pri||"—"],["需要日期",fmtD(r.neededBy)||"—"],
+    ["优先级",r.pri||"—"],["目的地",r.dest||"—"],
+    ["需要日期",fmtD(r.neededBy)||"—"],
     r.desc?["说明",`<span style="white-space:pre-wrap">${E(r.desc)}</span>`,1]:null,
     r.descEn?["Description",`<span style="white-space:pre-wrap">${E(r.descEn)}</span>`,1]:null]);
 
@@ -3745,7 +3756,7 @@ function openEditOrder(id){
   $("#oPrice").value=(rec.oPrice!==undefined&&rec.oPrice!=="")?rec.oPrice:(oi.quotePrice!==undefined?oi.quotePrice:"");
   $("#oEta").value=isDateStr(rec.eta)?rec.eta:""; $("#oEtaHint").textContent=(rec.eta&&!isDateStr(rec.eta))?("原填写:"+rec.eta+" · 保存后将被日期替换"):"";
   $("#oSigned").value=rec.signed||"";
-  $("#oPo").value=rec.po||"";
+  $("#oPo").value=rec.po||""; $("#oDest").value=rec.dest||"";
   $("#oSupHint").textContent=oi.quoteSupplier?`已选定报价:${oi.quoteSupplier}`:"未选定报价";
   $("#oPriceHint").textContent=(oi.quotePrice!==undefined&&oi.quoteSupplier)?`已选定报价:${oi.quoteCur}${money(oi.quotePrice)}`:"";
   const dl=$("#supListData2"); if(dl) dl.innerHTML=supAll().map(sp=>`<option value="${esc(sp.name)}">${esc(sp.nameEn||"")}</option>`).join("");
@@ -3757,14 +3768,14 @@ async function saveEditOrder(){
   const rec=getRec(editingOrderId); if(!rec)return;
   const q=(rec.quotes||[]).find(x=>x.selected)||{};
   const sup=$("#oSup").value.trim(), cur=$("#oCur").value, priceRaw=$("#oPrice").value.trim();
-  const before={oSupplier:rec.oSupplier||"",oCur:rec.oCur||"",oPrice:rec.oPrice===undefined?"":String(rec.oPrice),eta:rec.eta||"",signed:rec.signed||"",po:rec.po||""};
+  const before={oSupplier:rec.oSupplier||"",oCur:rec.oCur||"",oPrice:rec.oPrice===undefined?"":String(rec.oPrice),eta:rec.eta||"",signed:rec.signed||"",po:rec.po||"",dest:rec.dest||""};
   const after={
     oSupplier:(sup&&sup!==(q.supplier||""))?sup:"",
     oCur:(cur&&cur!==(q.currency||"$"))?cur:"",
     oPrice:(priceRaw!==""&&Number(priceRaw)!==q.price)?priceRaw:"",
-    eta:$("#oEta").value.trim(), signed:$("#oSigned").value||"", po:$("#oPo").value.trim()
+    eta:$("#oEta").value.trim(), signed:$("#oSigned").value||"", po:$("#oPo").value.trim(), dest:$("#oDest").value.trim()
   };
-  const labels={oSupplier:"供应商",oCur:"币种",oPrice:"金额",eta:"交期",signed:"签订日期",po:"合同/PO号"};
+  const labels={oSupplier:"供应商",oCur:"币种",oPrice:"金额",eta:"交期",signed:"签订日期",po:"合同/PO号",dest:"目的地"};
   const shown=k=>{ const v=k==="oSupplier"?(after[k]||q.supplier||""):k==="oPrice"?(after[k]||(q.price!==undefined?q.price:"")):after[k]; return v===""?"空":v; };
   const shownBefore=k=>{ const v=k==="oSupplier"?(before[k]||q.supplier||""):k==="oPrice"?(before[k]||(q.price!==undefined?q.price:"")):before[k]; return v===""?"空":v; };
   const diff=Object.keys(after).filter(k=>before[k]!==after[k]).map(k=>`${labels[k]}:「${shownBefore(k)}」→「${shown(k)}」`);
@@ -3776,7 +3787,7 @@ async function saveEditOrder(){
     rec.payments=payAfter;
   }
   if(!diff.length){ closeModal("mOrder"); return toast("没有改动"); }
-  rec.oSupplier=after.oSupplier; rec.oCur=after.oCur; rec.oPrice=after.oPrice; rec.eta=after.eta; rec.signed=after.signed; rec.po=after.po;
+  rec.oSupplier=after.oSupplier; rec.oCur=after.oCur; rec.oPrice=after.oPrice; rec.eta=after.eta; rec.signed=after.signed; rec.po=after.po; rec.dest=after.dest;
   log(rec,"修改订单信息",diff.join("; "));
   closeModal("mOrder"); render(); openDrawer(editingOrderId,true);
   if(await persist(`${rec.id} 修改订单信息`)) toast("已保存","ok");
