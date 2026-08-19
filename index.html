@@ -171,15 +171,21 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 /* 列悬停微亮 */
 .col{transition:background .15s,border-color .15s}
 .col:hover{background:rgba(255,255,255,.8)}
-.card .rid{font-family:var(--mono);font-size:11px;color:var(--steel);display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
-.card .rid>:first-child{margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .rid{font-family:var(--mono);font-size:11px;color:var(--steel);display:flex;align-items:center;gap:8px;flex-wrap:nowrap;justify-content:space-between}
+.card .rid-l,.card .rid-r{display:flex;align-items:center;gap:6px;min-width:0}
+.card .rid-r{flex-shrink:0}
+.card .rid-l .tag{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .rid-l .tag.job{flex-shrink:0}
 .card .rid .due-t{white-space:nowrap;flex-shrink:0;font-size:11px;color:var(--steel)}
 .card .rid .due-t.overdue{color:var(--reject);font-weight:700}
-.card h3{font-size:14px;font-weight:700;margin:6px 0 0;line-height:1.35}
+.card .ttl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:6px 0 0}
+.card .ttl h3{margin:0;min-width:0}
+.card .ttl .tag.dest{flex-shrink:0;align-self:center}
+.card h3{font-size:14px;font-weight:700;line-height:1.35}
 .card .foot .rno{font-family:var(--mono);font-size:11px;color:var(--steel)}
 .tag{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--line-soft);color:var(--ink-soft);font-family:var(--mono)}
 .tag.job{background:var(--ink);color:#fff}
-.tag.dest{background:var(--line-soft);color:var(--ink-soft);font-family:var(--sans);letter-spacing:.02em}
+.tag.dest{background:var(--line-soft);color:var(--ink-soft)}
 body.dark .tag.dest{background:#2E3742;color:var(--ink-soft)}
 .pri{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:700}
 .pri.高{background:var(--reject-soft);color:var(--reject)}
@@ -2473,10 +2479,13 @@ function cardHTML(r){
   const dt=cardDate(r);
   return `<article class="card${selectedIds.has(r.id)?" sel":""}" data-id="${r.id}" draggable="true" role="button" tabindex="0" aria-label="${esc(r.title)}">
     <input type="checkbox" class="pick" ${selectedIds.has(r.id)?"checked":""} title="选择">
-    <div class="rid">${(()=>{const showPo=r.po&&(r.status==="下单"||r.status==="物流"||r.status==="完结");
-      return showPo?`<span class="tag job" title="合同/PO号 · 项目 ${esc(fullJob(r))}">${hl(r.po)}</span>`
-        :(r.job||r.sub?`<span class="tag job" title="项目号">${hl(fullJob(r))}</span>`:`<span></span>`);})()}${r.dest?`<span class="tag dest" title="目的地 ${esc(r.dest)}">${hl(r.dest)}</span>`:""}${dt?`<span class="due-t ${dt.late?"overdue":""}" title="${esc(dt.tip)}${dt.late?" · 已逾期":""}">${dt.label} ${esc(shortD(dt.text))}</span>`:""}<span class="pri ${r.pri}" title="优先级 ${esc(r.pri||"")}">${r.pri}</span></div>
-    <h3>${hl(r.title)}</h3>
+    <div class="rid">
+      <span class="rid-l">${(()=>{const showPo=r.po&&(r.status==="下单"||r.status==="物流"||r.status==="完结");
+        return showPo?`<span class="tag job" title="合同/PO号 · 项目 ${esc(fullJob(r))}">${hl(r.po)}</span>`
+          :(r.job||r.sub?`<span class="tag job" title="项目号">${hl(fullJob(r))}</span>`:"");})()}</span>
+      <span class="rid-r">${dt?`<span class="due-t ${dt.late?"overdue":""}" title="${esc(dt.tip)}${dt.late?" · 已逾期":""}">${dt.label} ${esc(shortD(dt.text))}</span>`:""}<span class="pri ${r.pri}" title="优先级 ${esc(r.pri||"")}">${r.pri}</span></span>
+    </div>
+    <div class="ttl"><h3>${hl(r.title)}</h3>${r.dest?`<span class="tag dest" title="目的地 ${esc(r.dest)}">${hl(r.dest)}</span>`:""}</div>
     ${r.titleEn?`<div class="ten-sm">${hl(r.titleEn)}</div>`:""}
     ${railHTML(r)}
     <div class="foot"><span class="who">${avatarHTML(r.requester||"—")}<span class="rno">${hl(r.id)}</span></span><span class="att">${ackBadgeHTML(r)}${(r.attachments||[]).length?"📎"+r.attachments.length:""} ${(r.quotes||[]).length?"💰"+r.quotes.length:""}</span></div>
