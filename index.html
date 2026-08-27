@@ -630,6 +630,8 @@ body.dark .cg-ed{background:rgba(0,0,0,.15)}
 .mv-row:hover{background:var(--safety-soft);color:var(--safety)}
 .mv-row.on{background:var(--line-soft);cursor:default}
 .mv-row .mv-c{margin-left:auto;font-size:11px;color:var(--steel);font-family:var(--mono)}
+.mv-grp{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink);margin:12px 0 4px;padding-top:8px;border-top:1px solid var(--line-soft)}
+.mv-grp:first-of-type{margin-top:4px;padding-top:0;border-top:0}
 body.dark .afd{background:var(--card)}
 body.readonly .att-item .mv,body.readonly .att-item .ren,body.readonly .afd-acts,body.readonly .afd-b{display:none!important}
 .att-more{font-size:12px;color:var(--steel);cursor:pointer;padding:7px 0 2px;margin-top:6px;border-top:1px dashed var(--line-soft)}
@@ -1038,7 +1040,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 </header>
 
 <div class="filters">
-  <input type="search" id="fSearch" placeholder="搜索标题 / 单号 / 供应商…">
+  <input type="search" id="fSearch" placeholder="搜索标题 / PO号 / 项目号 / 供应商 / 目的地…" title="合同PO号、项目号、PR编号、标题、供应商、目的地都能搜;分隔符可省略">
   <button class="btn btn-sm only-mobile-ib" id="btnFilterToggle">筛选 ▾</button>
   <select id="fJob"><option value="">全部项目</option></select>
   <select id="fDestSel"><option value="">全部目的地</option></select>
@@ -1137,6 +1139,11 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
         <label style="display:flex;align-items:center;justify-content:space-between">仓库体积
           <button class="btn btn-sm" id="sSizeBtn">查询</button></label>
         <div id="sSizeInfo" class="hint">GitHub 建议单仓库不超过 10 GB。点「查询」看当前占用。</div>
+      </div>
+      <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
+        <label style="display:flex;align-items:center;justify-content:space-between">批量补建文件夹
+          <button class="btn btn-sm" id="sTplBtn">补建</button></label>
+        <div id="sTplInfo" class="hint">给已有记录按模板补建附件文件夹。只补它已经走到的阶段，已存在的同名文件夹会跳过。</div>
       </div>
     </div>
     <div class="md-ft"><button class="btn" data-close="mSettings">取消</button><button class="btn btn-ink" id="sSave" title="Ctrl+Enter">保存并连接</button></div>
@@ -1804,6 +1811,8 @@ async function changeStatus(id,to,note,extraAction){
   if(to==="报价"){ rec.ackReq=now(); delete rec.ack; }        // 重新进入报价 → 需要重新确认
   else if(from==="报价"){ delete rec.ackReq; }
   log(rec,extraAction||`${from} → ${to}`,note);
+  const made=applyStageTpl(rec,to);
+  if(made.length) log(rec,"自动建文件夹",made.join("、"));
   render(); openDrawer(id,true);
   await persist(`${rec.id} ${from}→${to}`);
 }
@@ -1955,18 +1964,39 @@ async function bulkRenameAtts(id,group,fid){
   if(await persist(`${rec.id} 批量重命名附件`)) toast(`已重命名 ${items.length} 个`,"ok");
 }
 let mvCtx=null;
+/* 这条记录上所有可用的附件分类(物流按发货批次拆开),用于跨分类移动 */
+function attGroupsOf(rec){
+  const out=[["需求",GROUP_SHORT["需求"]],["报价",GROUP_SHORT["报价"]],["合同与付款",GROUP_SHORT["合同与付款"]],["送审",GROUP_SHORT["送审"]]];
+  shBatches(rec).forEach((b,i)=>out.push([shGroup(b.bid),i===0?"物流附件":`第 ${i+1} 批物流附件`]));
+  return out;
+}
+/* 移动目标选择器:列出所有分类的根层和文件夹树。
+   skip = 要排除的文件夹(移动文件夹时排除它自己和它的子孙,否则会把自己塞进自己里)。 */
+function mvPickerHTML(rec,head,curGroup,curFid,skip){
+  const bad=new Set(skip||[]);
+  const rowsFor=(group,parent,depth)=>afList(rec,group,parent).filter(f=>!bad.has(f.fid)).map(f=>
+    `<div class="mv-row${(curGroup===group&&(curFid||"")===f.fid)?" on":""}" data-mvg="${esc(group)}" data-mvto="${f.fid}" style="padding-left:${14+depth*18}px">📁 ${esc(f.name)}<span class="mv-c">${afCount(rec,group,f.fid)} 个文件</span></div>`
+    +rowsFor(group,f.fid,depth+1)).join("");
+  return `<div class="mv-file">${head}</div>`+attGroupsOf(rec).map(([g,label])=>
+    `<div class="mv-grp">${esc(label)}</div>`
+    +`<div class="mv-row${(curGroup===g&&!curFid)?" on":""}" data-mvg="${esc(g)}" data-mvto="" style="padding-left:14px">📂 根层<span class="mv-c">${afCount(rec,g,"")} 个文件</span></div>`
+    +rowsFor(g,"",1)).join("");
+}
 function openAttMove(id,idx){
   if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   const a=rec.attachments[idx]; if(!a)return;
-  const group=a.group||"需求";
-  mvCtx={id,idx};
-  const rowsFor=(parent,depth)=>afList(rec,group,parent).map(f=>
-    `<div class="mv-row${(a.fid||"")===f.fid?" on":""}" data-mvto="${f.fid}" style="padding-left:${12+depth*18}px">📁 ${esc(f.name)}<span class="mv-c">${afCount(rec,group,f.fid)} 个文件</span></div>`
-    +rowsFor(f.fid,depth+1)).join("");
-  $("#amvList").innerHTML=`<div class="mv-file">${esc(a.name)}</div>
-    <div class="mv-row${a.fid?"":" on"}" data-mvto="" style="padding-left:12px">📄 ${esc(attLabel(group))}（根层）</div>`
-    +(rowsFor("",1)||`<div class="afd-empty">还没有文件夹，先在附件区点「＋ 新建文件夹」</div>`);
+  mvCtx={id,idx,kind:"file"};
+  $("#amvList").innerHTML=mvPickerHTML(rec,`📄 ${esc(a.name)}`,a.group||"需求",a.fid||"",null);
+  openModal("mAttMove");
+}
+function openFolderMove(id,fid){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec)return;
+  const f=afGet(rec,fid); if(!f)return;
+  mvCtx={id,fid,kind:"folder"};
+  const n=afCount(rec,f.group,fid), sub=afSubCount(rec,fid);
+  $("#amvList").innerHTML=mvPickerHTML(rec,`📁 ${esc(f.name)}（${n} 个文件${sub?` · ${sub} 个子文件夹`:""}）`,f.group,f.parent||"",[fid,...afDesc(rec,fid)]);
   openModal("mAttMove");
 }
 async function afReorder(id,fid,tid,after){
@@ -1983,17 +2013,79 @@ async function afReorder(id,fid,tid,after){
   openDrawer(id,true);
   if(await persist(`${rec.id} 文件夹排序`)) toast("已调整顺序","ok");
 }
-async function afMove(id,idx,fid){
+/* 目标位置的可读名字:分类 / 文件夹 / 子文件夹 */
+const mvWhere=(rec,group,fid)=>{
+  const label=(attGroupsOf(rec).find(x=>x[0]===group)||[0,attLabel(group)])[1];
+  const path=afPath(rec,fid).map(f=>f.name);
+  return [label,...path].join(" / ");
+};
+async function afMove(id,idx,group,fid){
   if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec)return;
   const a=rec.attachments[idx]; if(!a)return;
-  if((a.fid||"")===(fid||"")){ closeModal("mAttMove"); return; }
+  const from=a.group||"需求", fromFid=a.fid||"";
+  if(from===group&&fromFid===(fid||"")){ closeModal("mAttMove"); return; }
   const to=fid?afGet(rec,fid):null;
-  if(fid&&(!to||to.group!==(a.group||"需求"))){ closeModal("mAttMove"); return toast("目标文件夹不在这个附件分类下","err"); }
-  a.fid=fid||"";
-  log(rec,"移动附件",`${a.name} → ${to?to.name:"根层"}`);
+  if(fid&&(!to||to.group!==group)){ closeModal("mAttMove"); return toast("目标文件夹不存在","err"); }
+  const fromWhere=mvWhere(rec,from,fromFid);
+  a.group=group; a.fid=fid||"";
+  log(rec,"移动附件",`${a.name}：${fromWhere} → ${mvWhere(rec,group,fid)}`);
   closeModal("mAttMove"); openDrawer(id,true);
-  if(await persist(`${rec.id} 移动附件`)) toast(`已移到${to?`「${to.name}」`:"根层"}`,"ok");
+  if(await persist(`${rec.id} 移动附件`)) toast(`已移到 ${mvWhere(rec,group,fid)}`,"ok");
+}
+/* 移动文件夹:整棵子树(含里面的附件)一起换分类/换父级 */
+/* 批量补建:给每条记录补它「已经走到的阶段」+「已经有文件的分类」的模板文件夹 */
+function tplGroupsFor(rec){
+  const idx=STAGES.indexOf(rec.status);
+  const reached=new Set();
+  if(rec.status==="完结"||idx>=STAGES.indexOf("下单")){ reached.add("合同与付款"); reached.add("送审"); }
+  if(rec.status==="完结"||idx>=STAGES.indexOf("物流")) shBatches(rec).forEach(b=>reached.add(shGroup(b.bid)));
+  // 已取消 / 早期阶段:只要某个分类已经有文件,也一起补上
+  (rec.attachments||[]).forEach(a=>{ const g=a.group||"需求"; if(tplFor(g)) reached.add(g); });
+  return [...reached];
+}
+async function backfillFolders(){
+  if(isViewer()) return denyRO();
+  if(!state.loaded) return toast("数据还没加载好","err");
+  const plan=state.records.map(r=>({r,gs:tplGroupsFor(r).filter(g=>tplMissing(r,g))})).filter(x=>x.gs.length);
+  if(!plan.length) return toast("没有需要补建的记录");
+  const nFold=plan.reduce((a,x)=>a+x.gs.reduce((b,g)=>b+tplMissing(x.r,g),0),0);
+  if(!confirm(`给 ${plan.length} 条记录补建 ${nFold} 个文件夹?\n已存在的同名文件夹会跳过。`)) return;
+  plan.forEach(({r,gs})=>{
+    const made=[];
+    gs.forEach(g=>applyFolderTpl(r,g).forEach(n=>made.push(`${attLabel(g)}/${n}`)));
+    if(made.length) log(r,"批量补建文件夹",made.join("、"));
+  });
+  render(); if(currentId) openDrawer(currentId,true);
+  if(await persist(`批量补建文件夹 ${plan.length} 条`)) toast(`已给 ${plan.length} 条补建 ${nFold} 个文件夹`,"ok");
+}
+async function afApplyTpl(id,group){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec)return;
+  const made=applyFolderTpl(rec,group);
+  if(!made.length) return toast("模板里的文件夹都已经有了");
+  log(rec,"套用文件夹模板",`${attLabel(group)}：${made.join("、")}`);
+  openDrawer(id,true);
+  if(await persist(`${rec.id} 套用文件夹模板`)) toast(`已建 ${made.length} 个文件夹`,"ok");
+}
+async function afMoveFolder(id,fid,group,parent){
+  if(isViewer()) return denyRO();
+  const rec=getRec(id); if(!rec)return;
+  const f=afGet(rec,fid); if(!f)return;
+  const desc=afDesc(rec,fid);
+  if(parent&&(parent===fid||desc.includes(parent))){ closeModal("mAttMove"); return toast("不能移到自己或自己的子文件夹里","err"); }
+  if(f.group===group&&(f.parent||"")===(parent||"")){ closeModal("mAttMove"); return; }
+  const to=parent?afGet(rec,parent):null;
+  if(parent&&(!to||to.group!==group)){ closeModal("mAttMove"); return toast("目标文件夹不存在","err"); }
+  const fromWhere=mvWhere(rec,f.group,f.parent||"");
+  const tree=new Set([fid,...desc]);
+  f.parent=parent||"";
+  tree.forEach(x=>{ const t=afGet(rec,x); if(t) t.group=group; });
+  (rec.attachments||[]).forEach(a=>{ if(a.fid&&tree.has(a.fid)) a.group=group; });
+  attCwd={};   // 当前浏览位置可能已失效
+  log(rec,"移动文件夹",`「${f.name}」：${fromWhere} → ${mvWhere(rec,group,parent)}`);
+  closeModal("mAttMove"); openDrawer(id,true);
+  if(await persist(`${rec.id} 移动文件夹`)) toast(`已移到 ${mvWhere(rec,group,parent)}`,"ok");
 }
 async function removeAttachment(id,idx){
   if(isViewer()) return denyRO();
@@ -2430,9 +2522,25 @@ function renderCal(){
 }
 
 /* ================= 渲染:看板 ================= */
+/* 搜索用的字段清单。合同/PO号、项目号全称、目的地、供应商都能搜。 */
+function searchParts(r){
+  let sup="";
+  try{ sup=orderInfo(r).supplier||""; }catch(e){}
+  return [r.title,r.titleEn,r.desc,r.descEn,r.id,r.job,r.sub,fullJob(r),r.po,r.dest,sup,
+    ...(r.quotes||[]).map(x=>x.supplier)].filter(Boolean).map(String);
+}
+/* 只留字母数字汉字:这样 "HKG26024-NM02" / "hkg26024nm02" / "26024 nm02" 都能命中同一条 */
+const sKey=v=>String(v||"").toLowerCase().replace(/[^0-9a-z\u4e00-\u9fa5]+/g,"");
+function matchSearch(r,q){
+  if(!q) return true;
+  const parts=searchParts(r);
+  if(parts.join(" ").toLowerCase().includes(q)) return true;
+  const k=sKey(q);
+  return !!k && parts.some(p=>sKey(p).includes(k));
+}
 function passFilter(r){
   const q=$("#fSearch").value.trim().toLowerCase();
-  if(q){ const hay=(r.title+" "+(r.titleEn||"")+" "+(r.descEn||"")+" "+r.id+" "+r.job+" "+(r.sub||"")+" "+(r.quotes||[]).map(x=>x.supplier).join(" ")).toLowerCase(); if(!hay.includes(q))return false; }
+  if(q && !matchSearch(r,q)) return false;
   if($("#fJob").value && r.job!==$("#fJob").value) return false;
   if($("#fDestSel").value && (r.dest||"")!==$("#fDestSel").value) return false;
   if(alertOnly && !alertLevel(r) && !ackPending(r)) return false;
@@ -2536,7 +2644,8 @@ async function bulkStatus(to){
   const ids=[...selectedIds]; if(!ids.length) return;
   if(!confirm(`把选中的 ${ids.length} 条采购状态改为「${to}」?`)) return;
   const before=ids.map(id=>{ const r=getRec(id); return r?{id,status:r.status}:null; }).filter(Boolean);
-  ids.forEach(id=>{ const r=getRec(id); if(!r||r.status===to) return; log(r,`${r.status} → ${to}`,"批量操作"); r.status=to; });
+  ids.forEach(id=>{ const r=getRec(id); if(!r||r.status===to) return; log(r,`${r.status} → ${to}`,"批量操作"); r.status=to;
+    const made=applyStageTpl(r,to); if(made.length) log(r,"自动建文件夹",made.join("、")); });
   selectedIds.clear(); renderBulkBar(); render();
   await persist(`批量改状态 ${ids.length} 条 → ${to}`);
   showUndo(`${ids.length} 条已改为「${to}」`,
@@ -2815,7 +2924,7 @@ function shipSecHTML(rec){
     body=shipKvHTML(bs[0],bLate(bs[0]))
       +`<div class="att-sub"><span>货物信息</span><span class="tip">按明细行填，合计自动算</span></div>`
       +cargoTableHTML(bs[0])
-      +`<div class="att-sub"><span>物流附件</span><span class="tip">提单、装箱单、到货照片、签收单…</span></div>`
+      +`<div class="att-sub"><span>物流附件</span><span class="tip">打包装箱、清关文件</span></div>`
       +attBlockHTML(rec,"物流");
   }else{
     body=bs.map((b,i)=>{
@@ -2829,7 +2938,7 @@ function shipSecHTML(rec){
         <div class="shb-bd">${shipKvHTML(b,bLate(b))}
           <div class="att-sub"><span>货物信息</span><span class="tip">按明细行填，合计自动算</span></div>
           ${cargoTableHTML(b)}
-          <div class="att-sub"><span>第 ${i+1} 批物流附件</span><span class="tip">提单、装箱单、到货照片、签收单…</span></div>
+          <div class="att-sub"><span>第 ${i+1} 批物流附件</span><span class="tip">打包装箱、清关文件</span></div>
           ${attBlockHTML(rec,shGroup(b.bid))}
         </div></section>`;
     }).join("");
@@ -2872,6 +2981,44 @@ const afDesc=(rec,fid)=>{ const out=[]; const walk=p=>(rec.attFolders||[]).filte
 const afCount=(rec,group,fid)=>{ const set=new Set([fid,...afDesc(rec,fid)]); return (rec.attachments||[]).filter(a=>(a.group||"需求")===group&&set.has(a.fid||"")).length; };
 const afSubCount=(rec,fid)=>(rec.attFolders||[]).filter(f=>(f.parent||"")===fid).length;
 const newFid=rec=>{ const used=new Set((rec.attFolders||[]).map(f=>f.fid)); let s; do{ s="f"+Math.random().toString(36).slice(2,6); }while(used.has(s)); return s; };
+/* ── 文件夹模板 ──
+   进到对应阶段时自动在该分类根层建好这几个文件夹(已存在同名的跳过)。
+   需求/报价两类不给模板,保持平铺。模板可用 settings.folderTpl 覆盖。 */
+const FOLDER_TPL_DEF={
+  "合同与付款":["1. 采购合同","2. 对账单","3. 请款单","4. 汇款凭证","5. 发票"],
+  "送审":["1. 产品信息","2. 质检照片","3. 报关资料"],
+  "物流":["1. 打包装箱","2. 清关文件"]
+};
+const folderTpl=()=>Object.assign({},FOLDER_TPL_DEF,((state.settings||{}).folderTpl)||{});
+/* 物流的每个发货批次是独立的一棵树,都套同一份物流模板 */
+const tplFor=group=>folderTpl()[/^物流#/.test(group)?"物流":group]||null;
+/* 返回新建的文件夹名字数组(没建就是空数组)。不落盘,由调用方 persist。 */
+function applyFolderTpl(rec,group){
+  const names=tplFor(group); if(!names||!names.length) return [];
+  if(!Array.isArray(rec.attFolders)) rec.attFolders=[];
+  const have=new Set(afList(rec,group,"").map(f=>f.name));
+  const made=[];
+  names.forEach(n=>{
+    if(have.has(n)) return;
+    rec.attFolders.push({fid:newFid(rec),group,name:n,parent:""});
+    have.add(n); made.push(n);
+  });
+  return made;
+}
+/* 进入某阶段该建哪些分类的文件夹 */
+const STAGE_TPL={"下单":["合同与付款","送审"],"物流":["物流"]};
+function applyStageTpl(rec,status){
+  const gs=STAGE_TPL[status]||[];
+  const made=[];
+  gs.forEach(g=>applyFolderTpl(rec,g).forEach(n=>made.push(`${attLabel(g)}/${n}`)));
+  return made;
+}
+/* 这个分类还差几个模板文件夹(给「套用模板」按钮判断要不要显示) */
+function tplMissing(rec,group){
+  const names=tplFor(group); if(!names) return 0;
+  const have=new Set(afList(rec,group,"").map(f=>f.name));
+  return names.filter(n=>!have.has(n)).length;
+}
 let attCwd={};   // 当前所在文件夹:rec.id+"|"+group -> fid
 const attLabel=g=>GROUP_SHORT[g]||(/^物流#/.test(g)?"物流附件":g);
 /* 附件分类。「合同/预付款/尾款」已合并成「合同与付款」,旧值在 normRec 里自动迁移 */
@@ -2886,13 +3033,13 @@ function attZonesHTML(rec,zones){
   const key=rec.id+"|zones";
   if(total===0 && !attFold.has(key)){
     if(isViewer()) return `<div class="att-sub"><span>附件</span></div><div style="font-size:12px;color:var(--steel);padding:2px 0 6px">无</div>`;
-    return `<div class="att-sub"><span>附件</span><span class="tip">合同、水单、送审、报关</span></div>
+    return `<div class="att-sub"><span>附件</span><span class="tip">合同与付款、送审文件</span></div>
       <div class="att-add" data-zonesopen="1">＋ 添加附件 ▾</div>`;
   }
   if(!attFold.has(key)){
     // 有附件但默认收起:只显示一行清单,主要是备份用,不占地方
     const brief=zones.filter(z=>cnt(z[0])).map(([g,label])=>`${esc(label)} ${cnt(g)}`).join(" · ");
-    return `<div class="att-sub"><span>附件 <span class="cnum">${total}</span></span><span class="tip">水单、合同、送审、报关</span></div>
+    return `<div class="att-sub"><span>附件 <span class="cnum">${total}</span></span><span class="tip">合同与付款、送审文件</span></div>
       <div class="att-more" data-zonesopen="1">▸ ${brief}</div>`;
   }
   return zones.map(([g,label,tip])=>{
@@ -2909,7 +3056,7 @@ function attBlockHTML(rec,group){
   const key=rec.id+"|"+group;
   const compact=(rec.status==="完结"||rec.status==="已取消") && !openAttZones.has(key) && !isViewer();
   return `<div class="att-box"><div class="att-grid" data-attgrid="${group}">
-    ${items.map(({a,i})=>attItemHTML(rec,a,i,false)).join("")}
+    ${items.map(({a,i})=>attItemHTML(rec,a,i,true)).join("")}
   </div>
   ${isViewer()?"":(compact
     ? `<button class="att-add" data-attopen="${group}" style="margin-top:2px">＋ 添加</button>`
@@ -2942,12 +3089,12 @@ function attFolderBlockHTML(rec,group){
   const cur=cwd?afGet(rec,cwd):null;
   const crumb=`<div class="afd-bar">
     <span class="afd-crumb"><a data-afgo="" class="${cwd?"":"on"}" title="回到根层">${esc(attLabel(group))}</a>${path.map((f,i)=>` <span class="sep">/</span> <a data-afgo="${f.fid}" class="${i===path.length-1?"on":""}">${esc(f.name)}</a>`).join("")}</span>
-    ${isViewer()?"":`<span class="afd-acts"><button class="btn btn-sm" data-afnew="${cwd}">＋ 新建文件夹</button>${items.length>1?`<button class="btn btn-sm" data-afbulk="${cwd}" title="把这一层的文件统一改成「前缀_01」这样">✎ 批量改名</button>`:""}${cwd?`<button class="btn btn-sm" data-afren="${cwd}" title="重命名当前文件夹">✎ 改名</button><button class="btn btn-sm" data-afdel="${cwd}" title="删除当前文件夹">🗑</button>`:""}</span>`}
+    ${isViewer()?"":`<span class="afd-acts">${(!cwd&&tplMissing(rec,group))?`<button class="btn btn-sm" data-aftpl="${esc(group)}" title="按模板补建：${esc((tplFor(group)||[]).join("、"))}">⇩ 套用模板</button>`:""}<button class="btn btn-sm" data-afnew="${cwd}">＋ 新建文件夹</button>${items.length>1?`<button class="btn btn-sm" data-afbulk="${cwd}" title="把这一层的文件统一改成「前缀_01」这样">✎ 批量改名</button>`:""}${cwd?`<button class="btn btn-sm" data-afren="${cwd}" title="重命名当前文件夹">✎ 改名</button><button class="btn btn-sm" data-afmv="${cwd}" title="把当前文件夹移到别的分类/文件夹">⤴ 移动</button><button class="btn btn-sm" data-afdel="${cwd}" title="删除当前文件夹">🗑</button>`:""}</span>`}
   </div>`;
   const rows=subs.map(f=>`<div class="afd" data-afgo="${f.fid}"${isViewer()?"":` data-afdrop="${f.fid}" data-afdrag="${f.fid}" draggable="true"`}>
       ${isViewer()?"":`<span class="afd-h" title="拖动调整顺序">⠿</span>`}<span class="afd-ic">📁</span><span class="afd-nm">${esc(f.name)}</span>
       <span class="afd-cnt">${afCount(rec,group,f.fid)} 个文件${afSubCount(rec,f.fid)?` · ${afSubCount(rec,f.fid)} 个子文件夹`:""}</span>
-      ${isViewer()?"":`<span class="afd-b"><button class="btn btn-sm" data-afren="${f.fid}" title="重命名">✎</button><button class="btn btn-sm" data-afdel="${f.fid}" title="删除">🗑</button></span>`}
+      ${isViewer()?"":`<span class="afd-b"><button class="btn btn-sm" data-afren="${f.fid}" title="重命名">✎</button><button class="btn btn-sm" data-afmv="${f.fid}" title="移动到别的分类/文件夹">⤴</button><button class="btn btn-sm" data-afdel="${f.fid}" title="删除">🗑</button></span>`}
     </div>`).join("");
   const upRow=cwd?`<div class="afd up" data-afgo="${esc(cur.parent||"")}"${isViewer()?"":` data-afdrop="${esc(cur.parent||"")}"`}><span class="afd-ic">⬅</span><span class="afd-nm">上一层</span></div>`:"";
   const compact=(rec.status==="完结"||rec.status==="已取消")&&!openAttZones.has(key)&&!isViewer();
@@ -3035,7 +3182,7 @@ function openDrawer(id,keep){
         return empty.length?`<div class="kv-empty">未填:${empty.join(" · ")}<span class="tip">点右上角「编辑」补充</span></div>`:"";})()}
       <div class="att-sub"><span>付款信息</span><span class="tip">预付款 / 尾款</span></div>
       ${payHTML(rec)}
-      ${attZonesHTML(rec,[["合同与付款","合同与付款","采购合同、订单确认书、银行回单、汇款凭证"],["送审","送审文件","审批单、请款单、发票、装箱单、提单、报关单…"]])}
+      ${attZonesHTML(rec,[["合同与付款","合同与付款","采购合同、对账单、请款单、汇款凭证、发票"],["送审","送审文件","产品信息、质检照片、报关资料"]])}
     </div></div>`:""}
 
     ${isShipping(rec)?shipSecHTML(rec):""}
@@ -3100,6 +3247,8 @@ function openDrawer(id,keep){
     if(g) afNew(rec.id,g,b.dataset.afnew||"");
   }));
   $$("[data-afren]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); afRename(rec.id,b.dataset.afren); }));
+  $$("[data-afmv]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openFolderMove(rec.id,b.dataset.afmv); }));
+  $$("[data-aftpl]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); afApplyTpl(rec.id,b.dataset.aftpl); }));
   $$("[data-afbulk]").forEach(b=>b.addEventListener("click",e=>{
     e.stopPropagation();
     const box=b.closest(".att-box"), grid=box&&box.querySelector("[data-attgrid]");
@@ -3880,6 +4029,8 @@ async function saveEditShip(){
     rec.shipMore.push(nb);
     const n=shBatches(rec).length;
     log(rec,`新增第 ${n} 批发货`,shipDesc(after));
+    const madeB=applyFolderTpl(rec,shGroup(nb.bid));
+    if(madeB.length) log(rec,"自动建文件夹",`第 ${n} 批：${madeB.join("、")}`);
     closeModal("mShip"); render(); openDrawer(editingShipId,true);
     if(await persist(`${rec.id} 新增第 ${n} 批发货`)) toast(`已新增第 ${n} 批`,"ok");
     return;
@@ -4043,11 +4194,14 @@ async function deleteSupplier(){
 document.addEventListener("click",e=>{
   const row=e.target.closest("#amvList .mv-row");
   if(!row||!mvCtx) return;
-  afMove(mvCtx.id,mvCtx.idx,row.dataset.mvto||"");
+  const g=row.dataset.mvg, to=row.dataset.mvto||"";
+  if(mvCtx.kind==="folder") afMoveFolder(mvCtx.id,mvCtx.fid,g,to);
+  else afMove(mvCtx.id,mvCtx.idx,g,to);
 });
 function openModal(id){ $("#"+id).classList.add("open"); }
 function closeModal(id){ $("#"+id).classList.remove("open"); }
 $$("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
+$("#sTplBtn").addEventListener("click",backfillFolders);
 $$(".modal-mask").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
 
 $("#btnNew").addEventListener("click",()=>{ $("#nReq").value=cfg.name||""; $("#nSub").value=""; $("#nTitleEn").value=""; $("#nDescEn").value=""; pendingFiles=[]; renderPendingAtt(); openModal("mNew"); setTimeout(()=>$("#nTitle").focus(),50); });
