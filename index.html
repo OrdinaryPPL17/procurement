@@ -1145,6 +1145,17 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
           <button class="btn btn-sm" id="sTplBtn">补建</button></label>
         <div id="sTplInfo" class="hint">给已有记录按模板补建附件文件夹。只补它已经走到的阶段，已存在的同名文件夹会跳过。</div>
       </div>
+      <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
+        <label style="display:flex;align-items:center;justify-content:space-between">数据体积
+          <button class="btn btn-sm" id="sDataBtn">查看</button></label>
+        <div id="sDataInfo" class="hint">超过 1MB 后 GitHub 接口要改用 raw 方式读取（已支持），但每次保存都要整个文件重传，仓库历史也会变大。</div>
+      </div>
+      <div class="fld">
+        <label style="display:flex;align-items:center;justify-content:space-between">精简时间线
+          <span style="display:flex;gap:6px;align-items:center"><input id="sTlKeep" type="number" min="10" max="500" step="10" placeholder="60" style="width:78px">
+          <button class="btn btn-sm" id="sTlBtn">精简</button></span></label>
+        <div class="hint">每条记录只保留最近 N 条时间线，更早的合并成一条摘要（保留条数和最早时间，具体内容不可恢复）。</div>
+      </div>
     </div>
     <div class="md-ft"><button class="btn" data-close="mSettings">取消</button><button class="btn btn-ink" id="sSave" title="Ctrl+Enter">保存并连接</button></div>
   </div>
@@ -1709,7 +1720,8 @@ async function persist(message){
       state.suppliers=mergeSuppliers(remote_(data.suppliers),state.suppliers);
       toast("检测到同事更新,已自动合并");
     }
-    const payload=JSON.stringify({updatedAt:now(),updatedBy:cfg.name,settings:state.settings||{},records:state.records,suppliers:state.suppliers},null,2);
+    /* 不缩进:同样的数据能省 38% 体积。数据文件是机器读写的,没人看 diff。 */
+    const payload=JSON.stringify({updatedAt:now(),updatedBy:cfg.name,settings:state.settings||{},records:state.records,suppliers:state.suppliers});
     const res=await ghPut(cfg.path,b64encode(payload),`${cfg.name||"匿名"}: ${message}`,f?f.sha:undefined);
     state.sha=res.content.sha;
     setSaving(false); markSynced(); saveCache();
@@ -1752,6 +1764,47 @@ function normRec(r){
 }
 const normAll=a=>(Array.isArray(a)?a:[]).map(normRec);
 function log(rec,action,note){ rec.timeline.push({at:now(),by:cfg.name||"匿名",action,note:note||""}); rec.updatedAt=now(); }
+/* ── 时间线精简 ──
+   只保留最近 N 条,更早的合并成一条摘要(记住条数和最早时间),不是无声丢弃。
+   手动触发,不在 log() 里自动跑,免得悄悄吃掉审计记录。 */
+const TL_KEEP_DEF=60;
+const tlKeep=()=>{ const v=Number((state.settings||{}).tlKeep); return (isFinite(v)&&v>=10&&v<=500)?Math.round(v):TL_KEEP_DEF; };
+function trimTimeline(rec,keep){
+  const tl=rec.timeline||[];
+  const old=tl.filter(e=>e.action!=="更早记录已精简");
+  if(old.length<=keep) return 0;
+  const cut=old.slice(0,old.length-keep);
+  const prev=tl.find(e=>e.action==="更早记录已精简");
+  const n=cut.length+(prev?(prev.n||0):0);
+  const first=(prev&&prev.at)||cut[0].at;
+  rec.timeline=[{at:first,by:"系统",action:"更早记录已精简",note:`${n} 条更早的记录已合并（最早 ${fmtDT(first)}）`,n}].concat(old.slice(old.length-keep));
+  return cut.length;
+}
+async function compactTimelines(){
+  if(isViewer()) return denyRO();
+  if(!state.loaded) return toast("数据还没加载好","err");
+  const keep=tlKeep();
+  const hit=state.records.filter(r=>(r.timeline||[]).filter(e=>e.action!=="更早记录已精简").length>keep);
+  if(!hit.length) return toast(`没有超过 ${keep} 条的时间线`);
+  const n=hit.reduce((a,r)=>a+(r.timeline||[]).filter(e=>e.action!=="更早记录已精简").length-keep,0);
+  if(!confirm(`把 ${hit.length} 条记录的时间线压到最近 ${keep} 条?\n共精简 ${n} 条，更早的会合并成一条摘要（条数和最早时间还留着，但具体内容不可恢复）。`)) return;
+  hit.forEach(r=>trimTimeline(r,keep));
+  render(); if(currentId) openDrawer(currentId,true);
+  if(await persist(`精简时间线 ${hit.length} 条记录`)) toast(`已精简 ${n} 条`,"ok");
+}
+/* 数据体积明细,给设置页显示 */
+function dataSize(){
+  const J=v=>JSON.stringify(v===undefined?"":v).length;
+  const sum=f=>state.records.reduce((a,r)=>a+f(r),0);
+  return {
+    total:JSON.stringify({settings:state.settings||{},records:state.records,suppliers:state.suppliers}).length,
+    时间线:sum(r=>J(r.timeline)),
+    附件条目:sum(r=>J(r.attachments)),
+    文件夹:sum(r=>J(r.attFolders)),
+    报价付款:sum(r=>J(r.quotes)+J(r.payments)),
+    供应商:J(state.suppliers)
+  };
+}
 
 async function createRecord(){
   if(isViewer()) return denyRO();
@@ -4202,6 +4255,12 @@ function openModal(id){ $("#"+id).classList.add("open"); }
 function closeModal(id){ $("#"+id).classList.remove("open"); }
 $$("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
 $("#sTplBtn").addEventListener("click",backfillFolders);
+$("#sTlBtn").addEventListener("click",compactTimelines);
+$("#sDataBtn").addEventListener("click",()=>{
+  const d=dataSize(), KB=n=>Math.round(n/1024)+"KB";
+  $("#sDataInfo").innerHTML=`合计 <b>${KB(d.total)}</b> · 时间线 ${KB(d.时间线)} · 附件条目 ${KB(d.附件条目)} · 文件夹 ${KB(d.文件夹)} · 报价付款 ${KB(d.报价付款)} · 供应商 ${KB(d.供应商)}`
+    +`<br>${d.total>1048576?"⚠️ 已超过 1MB：读取会自动改用 raw 方式（本版已支持），旧版页面需强刷":"离 1MB 还有 "+KB(1048576-d.total)}`;
+});
 $$(".modal-mask").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
 
 $("#btnNew").addEventListener("click",()=>{ $("#nReq").value=cfg.name||""; $("#nSub").value=""; $("#nTitleEn").value=""; $("#nDescEn").value=""; pendingFiles=[]; renderPendingAtt(); openModal("mNew"); setTimeout(()=>$("#nTitle").focus(),50); });
@@ -4319,6 +4378,7 @@ function openSettings(){
     const c=JSON.parse(storage.getItem("pt_size")||"null");
     if(c) $("#sSizeInfo").innerHTML=`上次查询：<b style="font-family:var(--mono)">${fmtMB(c.kb)}</b> / 10 GB（${fmtDT(c.at).slice(0,16)}）— 点「查询」刷新`;
   }catch(e){}
+  $("#sTlKeep").value=(state.settings||{}).tlKeep||"";
   openModal("mSettings");
 }
 $("#sSizeBtn").addEventListener("click",checkRepoSize);
@@ -4330,13 +4390,20 @@ $("#sSave").addEventListener("click",async()=>{
   const save={...cfg}; if(!$("#sRemember").checked) save.token="";
   storage.setItem("pt_cfg",JSON.stringify(save));
   const lead=Math.round(Number($("#sPayLead").value));
+  const keepIn=$("#sTlKeep").value.trim(), keep=keepIn===""?null:Math.round(Number(keepIn));
   closeModal("mSettings");
   await loadData(true);
   if(state.loaded){
+    const chg=[];
     if(isFinite(lead)&&lead>=0&&lead<=180&&lead!==payLead()&&!isViewer()){
-      state.settings=state.settings||{}; state.settings.payLeadDays=lead;
+      state.settings=state.settings||{}; state.settings.payLeadDays=lead; chg.push(`付款提前 ${lead} 天`);
+    }
+    if(keep!==null&&isFinite(keep)&&keep>=10&&keep<=500&&keep!==tlKeep()&&!isViewer()){
+      state.settings=state.settings||{}; state.settings.tlKeep=keep; chg.push(`时间线保留 ${keep} 条`);
+    }
+    if(chg.length){
       render();
-      if(await persist(`付款提前天数改为 ${lead} 天`)) toast(`已连接 · 付款提前天数 ${lead} 天`,"ok");
+      if(await persist(chg.join("、"))) toast(`已连接 · ${chg.join("、")}`,"ok");
     }else toast("连接成功","ok");
   }
 });
