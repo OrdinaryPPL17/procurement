@@ -1478,8 +1478,10 @@ const ACCOUNTS={
   "Viewer":"726d9a8a6ca31e7807a4cd7c65146a95f94f391982b4bf1a0da7915486f736b8"
 };
 const READONLY_USERS=["Viewer"];
-const isViewer=()=>READONLY_USERS.includes(authUser()||"");
-function denyRO(){ toast("只读账号，无法修改数据","err"); return false; }
+/* 未登录 = 无写权限。以前写成 READONLY_USERS.includes(authUser()||"") ,
+   未登录时 "" 不在名单里,返回 false,等于"不是只读用户",权限比 Viewer 还大。 */
+const isViewer=()=>{ const u=authUser(); return !u || READONLY_USERS.includes(u); };
+function denyRO(){ toast(authUser()?"只读账号，无法修改数据":"请先登录","err"); return false; }
 function sha256(ascii){
  function rightRotate(v,a){return (v>>>a)|(v<<(32-a));}
  var mathPow=Math.pow, maxWord=mathPow(2,32), result='';
@@ -1597,7 +1599,8 @@ const b64encode=str=>{ const bytes=new TextEncoder().encode(str); let bin=""; by
 const b64decode=b64=>{ const bin=atob(b64.replace(/\n/g,"")); const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0)); return new TextDecoder().decode(bytes); };
 
 /* ================= GitHub API ================= */
-const ghReady=()=>cfg.owner&&cfg.repo&&cfg.token;
+/* 必须返回布尔值:以前是 && 链,末项是 token,谁 console.log 一下就把 token 打出来了 */
+const ghReady=()=>!!(cfg.owner&&cfg.repo&&cfg.token);
 const apiBase=()=>`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/`;
 const ghHeaders=(extra={})=>({Authorization:"Bearer "+cfg.token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28",...extra});
 
@@ -1708,6 +1711,7 @@ function setSaving(on){
 }
 async function persist(message){
   if(state.fromCache){ toast("正在同步最新数据，请稍候再操作","err"); return false; }
+  if(!authUser()){ toast("请先登录再保存","err"); return false; }   // 登录界面拦不住控制台,这里才拦得住
   if(isViewer()){ toast("只读账号，改动不会保存","err"); return false; }
   if(!ghReady()){ toast("请先在用户名菜单 → 数据仓库设置里配置","err"); return false; }
   setSaving(true);
