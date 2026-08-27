@@ -1794,10 +1794,13 @@ async function compactTimelines(){
 }
 /* 数据体积明细,给设置页显示 */
 function dataSize(){
-  const J=v=>JSON.stringify(v===undefined?"":v).length;
+  /* GitHub 的 1MB 是字节数,不是字符数。中文一个字 UTF-8 占 3 字节,
+     按 .length 算会低估 20% 左右,"离 1MB 还有多远"就成了假安全。 */
+  const _enc=new TextEncoder(), B=s=>_enc.encode(s).length;
+  const J=v=>B(JSON.stringify(v===undefined?"":v));
   const sum=f=>state.records.reduce((a,r)=>a+f(r),0);
   return {
-    total:JSON.stringify({settings:state.settings||{},records:state.records,suppliers:state.suppliers}).length,
+    total:B(JSON.stringify({settings:state.settings||{},records:state.records,suppliers:state.suppliers})),
     时间线:sum(r=>J(r.timeline)),
     附件条目:sum(r=>J(r.attachments)),
     文件夹:sum(r=>J(r.attFolders)),
