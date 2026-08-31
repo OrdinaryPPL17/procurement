@@ -304,9 +304,13 @@ body.readonly .card{cursor:pointer}
 .ro-tag{background:var(--steel);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px;margin-left:6px;letter-spacing:.05em}
 .pay-tb{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;table-layout:fixed}
 /* 四列定宽平分,免得金额和备注挤在右边 */
-.pay-tb th:nth-child(1),.pay-tb td:nth-child(1){width:16.6667%}
-.pay-tb th:nth-child(2),.pay-tb td:nth-child(2){width:33.3333%}
-.pay-tb th:nth-child(3),.pay-tb td:nth-child(3){width:33.3333%}
+.pay-tb th:nth-child(1),.pay-tb td:nth-child(1){width:14%}
+.pay-tb th:nth-child(2),.pay-tb td:nth-child(2){width:18%}
+.pay-tb th:nth-child(3),.pay-tb td:nth-child(3){width:18%}
+.pay-tb th:nth-child(5),.pay-tb td:nth-child(5){width:24%}
+.pay-tb .prq{text-align:right;white-space:nowrap;padding-right:0}
+.pay-tb .prq .btn-xs+.btn-xs{margin-left:5px}
+.btn-xs{font-size:11px;padding:2px 8px;line-height:1.6;border-radius:5px}
 .pay-tb td:nth-child(4){word-break:break-word}
 .pay-tb th{text-align:left;font-size:11px;color:var(--steel);font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding:4px 6px}
 .pay-tb td{padding:6px;border-bottom:1px solid var(--line-soft);vertical-align:top}
@@ -1150,6 +1154,14 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
           <button class="btn btn-sm" id="sDataBtn">查看</button></label>
         <div id="sDataInfo" class="hint">超过 1MB 后 GitHub 接口要改用 raw 方式读取（已支持），但每次保存都要整个文件重传，仓库历史也会变大。</div>
       </div>
+      <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
+        <label>请款单署名（只影响你自己的账号）</label>
+        <span style="display:flex;gap:8px;margin-top:4px">
+          <input id="sPrName" type="text" placeholder="姓名，如 Lynne Liu" style="flex:1">
+          <input id="sPrDept" type="text" placeholder="部门，如 操作部" style="flex:1">
+        </span>
+        <div class="hint">付款表每笔右边的「请款单」按钮会用这里的姓名和部门。留空就用登录账号名。</div>
+      </div>
       <div class="fld">
         <label style="display:flex;align-items:center;justify-content:space-between">精简时间线
           <span style="display:flex;gap:6px;align-items:center"><input id="sTlKeep" type="number" min="10" max="500" step="10" placeholder="60" style="width:78px">
@@ -1309,6 +1321,26 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   </div>
 </div>
 
+<!-- 对账单:开单前确认变更项 -->
+<div class="modal-mask" id="mStmt">
+  <div class="modal" style="max-width:520px">
+    <div class="md-hd"><h2>生成对账单</h2><button class="btn btn-sm" data-close="mStmt">✕</button></div>
+    <div class="md-bd">
+      <div class="hint" id="stHead" style="margin-bottom:10px"></div>
+      <div class="row2">
+        <div class="fld"><label>变更项</label>
+          <div style="display:flex;gap:6px;align-items:center"><span id="stCur" class="hint" style="width:14px"></span>
+          <input id="stAdj" type="number" step="0.01" value="0" placeholder="0"></div>
+        </div>
+        <div class="fld"><label>变更备注</label><input id="stAdjNote" placeholder="如 增加配件 / 折让"></div>
+      </div>
+      <div class="hint" style="margin:-4px 0 10px">没有变更就留 0。可以填负数（折让）。这一项不存进数据，只影响这次出的单。</div>
+      <table class="pay-tb" id="stPrev"></table>
+    </div>
+    <div class="md-ft"><button class="btn" data-close="mStmt">取消</button><button class="btn btn-ink" id="stGo" title="Ctrl+Enter">生成并打印</button></div>
+  </div>
+</div>
+
 <!-- 编辑订单信息 -->
 <div class="modal-mask" id="mOrder">
   <div class="modal">
@@ -1406,6 +1438,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
         <div class="fld"><label>中文名称 *</label><input id="spName" placeholder="例:某某进出口有限公司"></div>
         <div class="fld"><label>英文名称</label><input id="spNameEn" placeholder="例:ABC Trading Co., Ltd."></div>
       </div>
+      <div class="fld"><label>简称</label><input id="spShort" placeholder="请款单文件名用，留空自动取中文名前 4 个字"></div>
       <div class="fld"><label>地址</label><input id="spAddr" placeholder="注册 / 办公地址"></div>
       <div class="row2">
         <div class="fld"><label>电话</label><input id="spTel" placeholder="联系电话"></div>
@@ -3005,6 +3038,312 @@ function shipSecHTML(rec){
   }
   return `<div class="sec" data-sec="物流信息"><div class="sec-hd"><span class="fold">▼</span>物流信息<span class="hdbtns">${multi||isViewer()?"":`<button class="btn btn-sm" id="btnEditShip">✎ 编辑</button>`}${addBtn}</span></div><div class="sec-bd">${body}</div></div>`;
 }
+/* ================= 付款请款单 =================
+   模板对照:北京鸿坤环宇贸易咨询有限责任公司 PAYMENT REQUEST。
+   除了请款人姓名/部门/截止日期,其余字段全部从记录和供应商库自动带入。
+   logo 是仓库根目录的 logo.png(不内嵌 base64,省 index.html 体积)。 */
+/* logo 内嵌成 dataURL。打印窗口是 window.open("") 出来的 about:blank,
+   加载不了外部图片(file:// 下必裂,线上也不保险),所以不能用 <img src="logo.png">。
+   代价 19KB,换来部署只需要传 index.html 一个文件。源图在项目文件夹的 logo.png。 */
+const PR_LOGO="data:image/png;base64,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";
+const PR_PAYER="北京鸿坤环宇贸易咨询有限责任公司";
+
+/* 供应商简称:自己填的优先,没填就取中文名前 4 个字 */
+function supShort(sp){
+  if(!sp) return "";
+  const t=String(sp.short||"").trim();
+  if(t) return t;
+  return String(sp.name||"").trim().slice(0,4);
+}
+
+/* 项目号全称。记录里 job 存的是 "26-016",但单据上要写 "HKG26-016"。
+   优先从 PO 号解析(HKG26016-NM10 → HKG26-016),解析不出来才回落,不硬编前缀免得猜错。 */
+function jobFullNo(r){
+  const m=String((r&&r.po)||"").trim().match(/^([A-Za-z]+)(\d{2})(\d{3})/);
+  if(m) return m[1].toUpperCase()+m[2]+"-"+m[3];
+  return String((r&&r.job)||"").trim();
+}
+
+/* 请款单 PDF 的文件名 = 打印窗口的 title。Chrome 的「另存为 PDF」会拿它当默认文件名
+   (系统的 Microsoft Print to PDF 不认 title,那个只能手填)。
+   格式照用户手工命名的习惯:HKG26016NM10 上海西斯 易燃品安全柜30预付款申请 */
+function payReqFileName(d,suffix){
+  const po=String(d.po||"").replace(/[^0-9A-Za-z]+/g,"");
+  const kind=String(d.kind||"").trim();
+  let note=String(d.note||"").replace(/%/g,"").trim();
+  if(kind && note.indexOf(kind)>=0) note=note.replace(kind,"").trim();   /* 备注里已经写了"预付款"就不重复 */
+  const tail=[d.title||"",note,kind,suffix||"申请"].filter(Boolean).join("");
+  return [po,d.supShort||"",tail].filter(Boolean).join(" ")
+         .replace(/[\\/:*?"<>|]+/g,"")   /* Windows 文件名非法字符 */
+         .trim();
+}
+
+/* 人民币金额大写。95160 → 玖万伍仟壹佰陆拾元整 */
+function rmbUpper(n){
+  n=Number(n);
+  if(!isFinite(n)) return "";
+  const neg=n<0; n=Math.abs(n);
+  let cents=Math.round(n*100);
+  if(cents===0) return "零元整";
+  const D="零壹贰叁肆伍陆柒捌玖".split("");
+  const U=["","拾","佰","仟"];
+  const G=["","万","亿","万亿"];
+  let yuan=Math.floor(cents/100);
+  const hasYuan=yuan>0;               /* 下面的主循环会把 yuan 减到 0,先记住 */
+  const jiao=Math.floor(cents%100/10), fen=cents%10;
+  let s="";
+  if(yuan>0){
+    let gi=0, prevPart=null;
+    while(yuan>0){
+      const part=yuan%10000;
+      let seg="", p=part, ui=0;
+      while(p>0){
+        const d=p%10;
+        if(d===0){ if(seg && seg[0]!=="零") seg="零"+seg; }
+        else seg=D[d]+U[ui]+seg;
+        p=Math.floor(p/10); ui++;
+      }
+      if(part>0){
+        /* 低一级那组不满四位就要补零:壹亿[零]壹万、壹万[零]壹 */
+        const pre=(prevPart!==null&&prevPart>0&&prevPart<1000)?"零":"";
+        s=seg+G[gi]+pre+s;
+      }else if(s && s[0]!=="零") s="零"+s;
+      prevPart=part;
+      yuan=Math.floor(yuan/10000); gi++;
+    }
+    s=s.replace(/零+/g,"零").replace(/^零/,"").replace(/零$/,"");
+    s+="元";
+  }
+  if(jiao===0 && fen===0) return (neg?"负":"")+s+"整";
+  let tail="";
+  if(jiao>0) tail+=D[jiao]+"角";
+  else if(hasYuan && fen>0) tail+="零";   /* 壹拾元[零]伍分 */
+  if(fen>0) tail+=D[fen]+"分";
+  return (neg?"负":"")+(s||"")+tail;
+}
+
+/* 当前登录账号在请款单上显示的姓名/部门,存 settings.payReq[账号名] */
+function payReqWho(){
+  const u=authUser()||"";
+  const m=((state.settings||{}).payReq||{})[u]||{};
+  return {name:m.name||u, dept:m.dept||""};
+}
+
+/* 收集一张请款单需要的全部字段 */
+function payReqData(rec,idx){
+  const oi=orderInfo(rec);
+  const pay=(rec.payments||[])[idx]||{};
+  const sp=state.suppliers.find(x=>x.name===oi.supplier)||{};
+  const who=payReqWho();
+  const cur=pay.cur||oi.cur||"¥";
+  const isRMB=cur==="¥"||cur==="￥"||cur==="CNY";
+  const total=(oi.price===null||oi.price===undefined||isNaN(oi.price))?null:Number(oi.price);
+  const amt=Number(pay.amount)||0;
+  /* 用途:预付款/尾款都算货款,其余按备注关键词猜 */
+  const note=String(pay.note||"");
+  let use="货款";
+  if(/海运|运费|freight/i.test(note)) use="海运费";
+  else if(/港杂|港口|清关/.test(note)) use="港杂费";
+  return {
+    payer:PR_PAYER,
+    reqName:who.name, reqDept:who.dept,
+    applyDate:new Date(), dueDate:pay.date||"",
+    supName:sp.name||oi.supplier||"", supAcct:sp.acct||"", supBank:sp.bank||"",
+    job:jobFullNo(rec), po:rec.po||"", title:rec.title||"",
+    supShort:supShort(sp), kind:pay.kind||"", note:String(pay.note||""),
+    curLabel:isRMB?"人民币":(cur==="$"?"美元":cur),
+    cur, isRMB, total, amt,
+    totalUp:(isRMB&&total!==null)?rmbUpper(total):"",
+    amtUp:isRMB?rmbUpper(amt):"",
+    use, useNote1:rec.po||"", useNote2:[sp.name||oi.supplier||"",rec.title||""].filter(Boolean).join("-"),
+    useNote3:note||(pay.kind||"")
+  };
+}
+
+function payReqHTML(d){
+  const f=n=>(n===null||n===undefined||n==="")?"":Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const dt=x=>{ if(!x) return ""; const t=(x instanceof Date)?x:new Date(x+"T00:00:00");
+    return isNaN(t)?"":`${t.getFullYear()}/${t.getMonth()+1}/${t.getDate()}`; };
+  const box=on=>on?"☑":"☐";
+  return `<div class="pr-hd"><img class="pr-logo" src="${PR_LOGO}" alt=""><div class="pr-ttl">PAYMENT REQUEST 付 款 请 款 单</div></div>
+<table class="pr-tb">
+  <colgroup><col style="width:15%"><col style="width:19%"><col style="width:22%"><col style="width:14%"><col style="width:30%"></colgroup>
+  <tr><td class="lb">付款单位</td><td class="ctr" colspan="4">${esc(d.payer)}</td></tr>
+  <tr><td class="lb" rowspan="2">请款人</td><td class="lb2">姓名</td><td>${esc(d.reqName)}</td><td class="lb2">申请日期</td><td>${dt(d.applyDate)}</td></tr>
+  <tr><td class="lb2">所属部门</td><td>${esc(d.reqDept)}</td><td class="lb2">截止日期</td><td>${dt(d.dueDate)}</td></tr>
+  <tr><td class="lb" rowspan="3">收款单位</td><td class="lb2">姓名/公司名称</td><td colspan="3">${esc(d.supName)}</td></tr>
+  <tr><td class="lb2">账号</td><td colspan="3" class="mono">${esc(d.supAcct)}</td></tr>
+  <tr><td class="lb2">开户行</td><td colspan="3">${esc(d.supBank)}</td></tr>
+  <tr><td class="lb" colspan="2">订单编号&amp;名称</td><td colspan="3">${esc(d.job)}</td></tr>
+  <tr><td class="lb" colspan="2">采购编号 (PO)</td><td colspan="3">${esc(d.po)}</td></tr>
+  <tr><td class="lb">订单总金额</td><td class="lb2">${esc(d.curLabel)}</td><td class="mono">${d.total===null?"":esc(d.cur)+f(d.total)}</td><td class="lb2">大写</td><td>${esc(d.totalUp)}</td></tr>
+  <tr><td class="lb">请款金额</td><td class="lb2">${esc(d.curLabel)}</td><td class="mono">${esc(d.cur)}${f(d.amt)}</td><td class="lb2">大写</td><td>${esc(d.amtUp)}</td></tr>
+  <tr><td class="lb" rowspan="3">用途</td><td class="lb2">海运费</td><td class="ctr">${box(d.use==="海运费")}</td><td colspan="2">${esc(d.useNote1)}</td></tr>
+  <tr><td class="lb2">港杂费</td><td class="ctr">${box(d.use==="港杂费")}</td><td colspan="2">${esc(d.useNote2)}</td></tr>
+  <tr><td class="lb2">货款</td><td class="ctr">${box(d.use==="货款")}</td><td colspan="2">${esc(d.useNote3)}</td></tr>
+</table>
+<div class="pr-sign"><div><div class="en">AUTHORIZED BY</div><div class="cn">批准人：</div></div><div><div class="en">REVIEWED BY</div><div class="cn">复核人：</div></div></div>`;
+}
+
+const PR_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:#000;padding:0;margin:0;-webkit-print-color-adjust:exact}
+.pr-wrap{padding:15mm 20mm}
+.pr-hd{position:relative;margin-bottom:16px;min-height:46px}
+.pr-logo{height:38px;position:absolute;left:0;top:0}
+.pr-ttl{text-align:center;font-size:15px;font-weight:700;letter-spacing:1px;text-decoration:underline;padding-top:10px}
+.pr-tb{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+.pr-tb td{border:1px solid #000;padding:6px 8px;height:46px;vertical-align:middle;word-break:break-all}
+.pr-tb tr{page-break-inside:avoid}
+.pr-tb .lb,.pr-tb .lb2{text-align:center;font-weight:500}
+.pr-tb .ctr{text-align:center}
+.pr-tb .mono{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+.pr-sign{display:flex;gap:80px;margin-top:60px;font-size:13px}
+.pr-sign>div{flex:1}
+.pr-sign .en{margin-bottom:18px}
+@page{size:A4;margin:0}`;
+
+/* ================= 对账单 =================
+   发给供应商的,抬头是供应商公司名。表格逻辑跟用户给的模板一致:
+   (3)总金额=(1)合同款+(2)变更项;(4)累计已付=这笔之前的付款合计(不含本次);
+   (6)剩余尾款=(3)-(4)-(5)。变更项没有数据源,开单时填,不存进数据。 */
+function stmtData(rec,idx,adj,adjNote){
+  const oi=orderInfo(rec);
+  const ps=rec.payments||[];
+  const pay=ps[idx]||{};
+  const sp=state.suppliers.find(x=>x.name===oi.supplier)||{};
+  const cur=pay.cur||oi.cur||"¥";
+  const base=(oi.price===null||oi.price===undefined||isNaN(oi.price))?0:Number(oi.price);
+  const adjust=Number(adj)||0;
+  const total=base+adjust;
+  /* 累计已付:同币种、排在这笔之前的 */
+  const paidBefore=ps.slice(0,idx).filter(x=>(x.cur||cur)===cur).reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const amt=Number(pay.amount)||0;
+  const pct=(String(pay.note||"").match(/\d+(?:\.\d+)?%/)||[])[0]||"";
+  return {
+    supName:sp.name||oi.supplier||"", supAcct:sp.acct||"", supBank:sp.bank||"",
+    po:rec.po||"", title:rec.title||"", today:new Date(),
+    cur, base, adjust, adjNote:String(adjNote||""), total, paidBefore, amt, pct,
+    rest:total-paidBefore-amt,
+    kind:pay.kind||"", note:String(pay.note||""), supShort:supShort(sp)
+  };
+}
+
+function stmtHTML(d){
+  const f=n=>(d.cur||"¥")+Number(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const t=d.today, dt=`${t.getFullYear()}/${t.getMonth()+1}/${t.getDate()}`;
+  return `<div class="st-hd"><div class="st-co">${esc(d.supName)}</div><div class="st-kind">对账单</div></div>
+<div class="st-meta">
+  <div class="st-l">
+    <div><span>合同编号:</span>${esc(d.po)}</div>
+    <div><span>供应商:</span>${esc(d.supName)}</div>
+    <div><span>合同内容:</span>${esc(d.title)}</div>
+  </div>
+  <div class="st-r">
+    <div><span>对账日期:</span>${dt}</div>
+    <div><span>截止日期:</span>${dt}</div>
+  </div>
+</div>
+<table class="st-tb">
+  <colgroup><col style="width:9%"><col style="width:24%"><col style="width:16%"><col style="width:11%"><col style="width:22%"><col style="width:18%"></colgroup>
+  <thead><tr><th>序号</th><th>名称</th><th>明细</th><th>数量</th><th>总价</th><th>备注</th></tr></thead>
+  <tbody>
+    <tr><td class="c">1</td><td class="c">合同款</td><td></td><td></td><td class="m">${f(d.base)}</td><td></td></tr>
+    <tr><td class="c">2</td><td class="c">变更项</td><td></td><td></td><td class="m">${f(d.adjust)}</td><td>${esc(d.adjNote)}</td></tr>
+    <tr><td class="c">3</td><td class="c">总金额</td><td class="c">(1)+(2)</td><td></td><td class="m">${f(d.total)}</td><td></td></tr>
+    <tr><td class="c">4</td><td class="c">累计已付</td><td></td><td></td><td class="m">${f(d.paidBefore)}</td><td></td></tr>
+    <tr><td class="c">5</td><td class="c">本次对账金额</td><td class="c">(3)</td><td class="c">${esc(d.pct)}</td><td class="m">${f(d.amt)}</td><td></td></tr>
+    <tr><td class="c">6</td><td class="c">剩余尾款</td><td class="c">(3)-(4)-(5)</td><td></td><td class="m">${f(d.rest)}</td><td></td></tr>
+    <tr><td class="c b" colspan="4">本期应付金额</td><td class="m b" colspan="2">${f(d.amt)}</td></tr>
+    <tr><td class="st-remit" colspan="6">
+      <div class="st-rt">汇款信息</div>
+      <div class="st-rl"><span>姓名/公司名称</span>${esc(d.supName)}</div>
+      <div class="st-rl"><span>账号</span>${esc(d.supAcct)}</div>
+      <div class="st-rl"><span>开户行</span>${esc(d.supBank)}</div>
+    </td></tr>
+  </tbody>
+</table>
+<div class="st-ft">如有任何疑问，请与我们联系</div>`;
+}
+
+const ST_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:#000;padding:0;margin:0;-webkit-print-color-adjust:exact}
+.st-wrap{padding:18mm 20mm}
+.st-hd{position:relative;text-align:center;margin-bottom:26px}
+.st-co{font-size:17px;font-weight:700;letter-spacing:.5px}
+.st-kind{position:absolute;right:0;top:2px;font-size:13px}
+.st-meta{display:flex;font-size:13px;line-height:2.2;margin-bottom:24px}
+.st-meta .st-l{flex:1.5}
+.st-meta .st-r{flex:1}
+.st-meta span{display:inline-block;min-width:74px}
+.st-meta .st-r span{min-width:76px}
+.st-tb{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+.st-tb th,.st-tb td{border:1px solid #000;padding:6px 8px;height:40px;vertical-align:middle;word-break:break-all}
+.st-tb th{font-weight:500;text-align:center}
+.st-tb .c{text-align:center}
+.st-tb .m{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+.st-tb .b{font-weight:600}
+.st-tb tr{page-break-inside:avoid}
+.st-remit{height:auto;padding:10px 12px 14px;line-height:2}
+.st-rt{margin-bottom:2px}
+.st-rl{padding-left:14px}
+.st-rl span{display:inline-block;min-width:104px}
+.st-ft{text-align:center;font-size:13px;margin-top:56px}
+@page{size:A4;margin:0}`;
+
+/* 弹窗:确认变更项再出单 */
+let stmtCtx=null;
+function openStmt(id,idx){
+  const rec=getRec(id); if(!rec) return;
+  if(!((rec.payments||[])[idx])) return toast("找不到这笔付款","err");
+  stmtCtx={id,idx};
+  const d=stmtData(rec,idx,0,"");
+  if(!d.supAcct||!d.supBank) toast("供应商还没填账号或开户行,汇款信息会空着","err");
+  $("#stHead").innerHTML=`${esc(d.po||rec.id)} · ${esc(d.title)} · ${esc(d.supName)}`;
+  $("#stCur").textContent=d.cur;
+  $("#stAdj").value="0"; $("#stAdjNote").value="";
+  stmtPreview();
+  openModal("mStmt"); setTimeout(()=>$("#stAdj").select(),50);
+}
+function stmtPreview(){
+  if(!stmtCtx) return;
+  const rec=getRec(stmtCtx.id); if(!rec) return;
+  const d=stmtData(rec,stmtCtx.idx,$("#stAdj").value,$("#stAdjNote").value);
+  const f=n=>(d.cur||"¥")+money(n);
+  $("#stPrev").innerHTML=`<tbody>
+    <tr><td class="kind">总金额</td><td class="amt">${f(d.total)}</td></tr>
+    <tr><td class="kind">累计已付</td><td class="amt done">${f(d.paidBefore)}</td></tr>
+    <tr><td class="kind">本次对账</td><td class="amt">${f(d.amt)}</td></tr>
+    <tr><td class="kind">剩余尾款</td><td class="amt ${d.rest>0.001?"left":"done"}">${f(d.rest)}</td></tr>
+  </tbody>`;
+}
+function doStmt(){
+  if(!stmtCtx) return;
+  const rec=getRec(stmtCtx.id); if(!rec) return;
+  const d=stmtData(rec,stmtCtx.idx,$("#stAdj").value,$("#stAdjNote").value);
+  closeModal("mStmt");
+  const w=window.open("","_blank","width=900,height=1000");
+  if(!w) return toast("浏览器拦截了打印窗口","err");
+  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(payReqFileName(d,"对账单")||("对账单 "+(d.po||rec.id)))}</title>
+<style>${ST_CSS}</style></head><body><div class="st-wrap">${stmtHTML(d)}</div>
+<script>setTimeout(function(){window.focus();window.print();},250);<\/script></body></html>`);
+  w.document.close();
+}
+
+/* 打开请款单打印窗口。等 logo 加载完再唤起打印,不然可能印出空白图 */
+function openPayReq(id,idx){
+  const rec=getRec(id); if(!rec) return;
+  const ps=rec.payments||[];
+  if(!ps[idx]) return toast("找不到这笔付款","err");
+  const d=payReqData(rec,idx);
+  if(!d.supAcct||!d.supBank) toast("供应商还没填账号或开户行,请款单上会空着","err");
+  const w=window.open("","_blank","width=900,height=1000");
+  if(!w) return toast("浏览器拦截了打印窗口","err");
+  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(payReqFileName(d)||("请款单 "+(d.po||rec.id)))}</title>
+<style>${PR_CSS}</style></head><body><div class="pr-wrap">${payReqHTML(d)}</div>
+<script>(function(){var i=document.querySelector(".pr-logo");
+function go(){setTimeout(function(){window.focus();window.print();},250);}
+if(!i||i.complete)go();else{i.onload=go;i.onerror=go;}})();<\/script></body></html>`);
+  w.document.close();
+}
+
 function payHTML(rec){
   const ps=rec.payments||[];
   const oi=orderInfo(rec);
@@ -3014,16 +3353,17 @@ function payHTML(rec){
   const left=(total===null)?null:total-paid;
   if(!ps.length) return `<div style="font-size:12px;color:var(--steel);padding:6px 0">还没有付款记录，点右上角「✎ 编辑」添加</div>`;
   return `<table class="pay-tb">
-    <thead><tr><th>类型</th><th>付款日期</th><th>金额</th><th>备注</th></tr></thead>
-    <tbody>${ps.map(p=>`<tr>
+    <thead><tr><th>类型</th><th>付款日期</th><th>金额</th><th>备注</th><th class="prq"></th></tr></thead>
+    <tbody>${ps.map((p,i)=>`<tr>
       <td class="kind">${esc(p.kind||"付款")}</td>
       <td class="amt">${p.date?fmtD(p.date):"—"}</td>
       <td class="amt">${esc(p.cur||cur)}${money(p.amount)}</td>
-      <td>${esc(p.note||"")}</td></tr>`).join("")}</tbody>
+      <td>${esc(p.note||"")}</td>
+      <td class="prq">${isViewer()?"":`<button class="btn btn-xs" onclick="openPayReq('${rec.id}',${i})" title="内部走流程用。生成后打印，目标选 Chrome 的「另存为 PDF」">请款单</button><button class="btn btn-xs" onclick="openStmt('${rec.id}',${i})" title="发给供应商的对账单">对账单</button>`}</td></tr>`).join("")}</tbody>
     <tfoot>
-      <tr><td class="kind">已付 ${ps.length} 笔</td><td></td><td class="amt done">${cur}${money(paid)}</td><td></td></tr>
-      ${total!==null?`<tr><td class="kind">订单金额</td><td></td><td class="amt">${cur}${money(total)}</td><td></td></tr>
-      <tr><td class="kind">未付</td><td></td><td class="amt ${left>0.001?"left":"done"}">${cur}${money(left)}</td><td class="clr">${left<=0.001?"✓ 已结清":""}</td></tr>`:""}
+      <tr><td class="kind">已付 ${ps.length} 笔</td><td></td><td class="amt done">${cur}${money(paid)}</td><td></td><td class="prq"></td></tr>
+      ${total!==null?`<tr><td class="kind">订单金额</td><td></td><td class="amt">${cur}${money(total)}</td><td></td><td class="prq"></td></tr>
+      <tr><td class="kind">未付</td><td></td><td class="amt ${left>0.001?"left":"done"}">${cur}${money(left)}</td><td class="clr">${left<=0.001?"✓ 已结清":""}</td><td class="prq"></td></tr>`:""}
     </tfoot>
   </table>`;
 }
@@ -3525,11 +3865,11 @@ function exportRecords(){
   toast(`已导出 ${list.length} 条采购记录`,"ok");
 }
 function exportSuppliers(){
-  const head=["名称","英文名称","地址","电话","纳税人识别号","开户行","银行账户","产品","备注","关联采购数","累计金额","创建人","更新时间"];
+  const head=["名称","英文名称","简称","地址","电话","纳税人识别号","开户行","银行账户","产品","备注","关联采购数","累计金额","创建人","更新时间"];
   const rows=[head].concat(supAll().map(sp=>{
     const lk=supplierRecords(sp), sums={};
     lk.forEach(r=>{ const a=recAmount(r); if(a&&r.status!=="已取消") sums[a.cur]=(sums[a.cur]||0)+a.val; });
-    return [sp.name,sp.nameEn||"",sp.addr||"",sp.tel||"",sp.tax||"",sp.bank||"",sp.acct||"",
+    return [sp.name,sp.nameEn||"",supShort(sp),sp.addr||"",sp.tel||"",sp.tax||"",sp.bank||"",sp.acct||"",
       (sp.products||[]).map(p=>p.name+(p.spec?"("+p.spec+")":"")).join("；"),sp.note||"",lk.length,
       Object.entries(sums).map(([c,v])=>c+money(v)).join(" "),sp.createdBy||"",fmtDT(sp.updatedAt)];
   }));
@@ -4216,6 +4556,7 @@ function openSupEdit(id){
   $("#spProdName").value=""; $("#spProdSpec").value=""; renderDraftProds();
   $("#supEditTitle").textContent=sp?"编辑供应商":"新增供应商";
   $("#spName").value=sp?sp.name||"":""; $("#spNameEn").value=sp?sp.nameEn||"":"";
+  $("#spShort").value=sp?sp.short||"":"";
   $("#spAddr").value=sp?sp.addr||"":""; $("#spTel").value=sp?sp.tel||"":"";
   $("#spTax").value=sp?sp.tax||"":""; $("#spBank").value=sp?sp.bank||"":"";
   $("#spAcct").value=sp?sp.acct||"":""; $("#spNote").value=sp?sp.note||"":"";
@@ -4226,7 +4567,7 @@ async function saveSupplier(){
   if(isViewer()) return denyRO();
   const name=$("#spName").value.trim();
   if(!name) return toast("中文名称必填","err");
-  const data={name,nameEn:$("#spNameEn").value.trim(),addr:$("#spAddr").value.trim(),tel:$("#spTel").value.trim(),
+  const data={name,nameEn:$("#spNameEn").value.trim(),short:$("#spShort").value.trim(),addr:$("#spAddr").value.trim(),tel:$("#spTel").value.trim(),
               tax:$("#spTax").value.trim(),bank:$("#spBank").value.trim(),acct:$("#spAcct").value.trim(),
               note:$("#spNote").value.trim(),products:draftProds.slice(),updatedAt:now(),updatedBy:cfg.name};
   if(editingSupId){
@@ -4261,6 +4602,9 @@ document.addEventListener("click",e=>{
 function openModal(id){ $("#"+id).classList.add("open"); }
 function closeModal(id){ $("#"+id).classList.remove("open"); }
 $$("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
+$("#stGo").addEventListener("click",doStmt);
+$("#stAdj").addEventListener("input",stmtPreview);
+$("#stAdjNote").addEventListener("input",stmtPreview);
 $("#sTplBtn").addEventListener("click",backfillFolders);
 $("#sTlBtn").addEventListener("click",compactTimelines);
 $("#sDataBtn").addEventListener("click",()=>{
@@ -4386,6 +4730,8 @@ function openSettings(){
     if(c) $("#sSizeInfo").innerHTML=`上次查询：<b style="font-family:var(--mono)">${fmtMB(c.kb)}</b> / 10 GB（${fmtDT(c.at).slice(0,16)}）— 点「查询」刷新`;
   }catch(e){}
   $("#sTlKeep").value=(state.settings||{}).tlKeep||"";
+  {const w=((state.settings||{}).payReq||{})[authUser()||""]||{};
+   $("#sPrName").value=w.name||""; $("#sPrDept").value=w.dept||"";}
   openModal("mSettings");
 }
 $("#sSizeBtn").addEventListener("click",checkRepoSize);
@@ -4408,6 +4754,14 @@ $("#sSave").addEventListener("click",async()=>{
     if(keep!==null&&isFinite(keep)&&keep>=10&&keep<=500&&keep!==tlKeep()&&!isViewer()){
       state.settings=state.settings||{}; state.settings.tlKeep=keep; chg.push(`时间线保留 ${keep} 条`);
     }
+    {const u=authUser()||"", prN=$("#sPrName").value.trim(), prD=$("#sPrDept").value.trim();
+     const cur=((state.settings||{}).payReq||{})[u]||{};
+     if(u&&!isViewer()&&(prN!==(cur.name||"")||prD!==(cur.dept||""))){
+       state.settings=state.settings||{}; state.settings.payReq=state.settings.payReq||{};
+       if(prN||prD) state.settings.payReq[u]={name:prN,dept:prD};
+       else delete state.settings.payReq[u];
+       chg.push("请款单署名");
+     }}
     if(chg.length){
       render();
       if(await persist(chg.join("、"))) toast(`已连接 · ${chg.join("、")}`,"ok");
@@ -4460,7 +4814,7 @@ function startApp(){
   // 每3分钟自动刷新,避免同事更新看不到
   setInterval(()=>{ if(authUser() && ghReady() && !document.hidden && !currentId) loadData(true).catch(()=>{}); },180000);
 })();
-window.deleteRecord=deleteRecord; window.printRecord=printRecord; window.closeRecord=closeRecord; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
+window.openPayReq=openPayReq; window.openStmt=openStmt; window.deleteRecord=deleteRecord; window.printRecord=printRecord; window.closeRecord=closeRecord; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
 window.changeStatus=changeStatus; window.removeAttachment=removeAttachment;
 window.getRec=getRec; window.log=log; window.openDrawer=openDrawer; window.persist=persist;
 </script>
