@@ -3147,7 +3147,7 @@ function payReqData(rec,idx){
   return {
     payer:PR_PAYER,
     reqName:who.name, reqDept:who.dept,
-    applyDate:new Date(), dueDate:pay.date||"",
+    applyDate:new Date(), dueDate:new Date(),   /* 截止日期跟申请日期一样都是当天 */
     supName:sp.name||oi.supplier||"", supAcct:sp.acct||"", supBank:sp.bank||"",
     job:jobFullNo(rec), po:rec.po||"", title:rec.title||"",
     supShort:supShort(sp), kind:pay.kind||"", note:String(pay.note||""),
