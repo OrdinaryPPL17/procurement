@@ -516,7 +516,7 @@ body.dark .ack-row{background:#232A32}
 /* 货物明细行编辑器 */
 .cg-ed{border:1px solid var(--line);border-radius:6px;padding:8px;background:rgba(255,255,255,.5)}
 .cg-grid{min-width:640px}
-.cg-row{display:grid;grid-template-columns:1.6fr .7fr .9fr .9fr .9fr .7fr 1.1fr 24px;gap:5px;align-items:center;margin-bottom:5px}
+.cg-row{display:grid;grid-template-columns:1.6fr .6fr .8fr .8fr .8fr .6fr .8fr 1fr 24px;gap:5px;align-items:center;margin-bottom:5px}
 .cg-row.cg-head{margin-bottom:4px}
 .cg-row.cg-head span{font-size:10px;font-weight:700;color:var(--steel);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cg-i{width:100%;min-width:0;font-size:12px;padding:5px 6px}
@@ -676,6 +676,7 @@ body.readonly .att-item .mv,body.readonly .att-item .ren,body.readonly .afd-acts
 @keyframes maskIn{from{opacity:0}to{opacity:1}}
 .modal{background:var(--paper);border-radius:10px;width:min(560px,100%);box-shadow:var(--shadow-lg);border-top:4px solid var(--safety)}
 #mOrder .modal{width:min(680px,100%)}   /* 付款行 6 列,560px 下金额框只剩 67px,填不进 5795.60 */
+#mMbl .modal{width:min(760px,100%)}     /* 选订单列表要放得下 编号+标题+供应商+金额 */
 .modal-mask.open .modal{animation:modalIn .24s cubic-bezier(.2,.9,.3,1)}
 @keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
 .md-hd{padding:16px 20px 0;display:flex;justify-content:space-between;align-items:center}
@@ -863,6 +864,128 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 .sup-prods{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
 .sup-prods span{font-size:12px;background:var(--safety-soft);color:var(--safety);border-radius:4px;padding:2px 8px}
 @media(max-width:560px){.prod-add{grid-template-columns:1fr}}
+/* ===== 发货(MBL 拼柜)视图 ===== */
+/* 跟日历/财务完全同宽同边距:1560px 居中 */
+.ship-wrap{flex:1;min-height:0;overflow-y:auto;width:100%;max-width:1560px;margin:0 auto;
+  padding:16px 24px 60px;display:flex;flex-direction:column;gap:10px}
+.ship-wrap>*{flex:none;width:100%}
+.ship-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ship-only{font-size:12px;color:var(--steel);display:flex;align-items:center;gap:6px;white-space:nowrap}
+#shipList{border:1px solid var(--line);border-radius:10px;background:var(--paper);overflow:hidden}
+.mbl{border-bottom:1px solid var(--line-soft)}
+.mbl:last-child{border-bottom:none}
+/* 展开的那一组是焦点:浮起来 + 左边一条色条 */
+.mbl.open{background:var(--line-soft);box-shadow:0 1px 0 var(--line),0 -1px 0 var(--line);position:relative}
+.mbl.open>.mbl-hd{box-shadow:inset 3px 0 0 var(--safety);background:transparent}
+.mbl.open>.mbl-hd .mbl-no{color:var(--safety)}
+/* 组头按固定列宽排,同类数值才对得齐。字段数不齐的行(没 ETA / 没到货标记)靠空格子占位。 */
+/* 末尾那个 1fr 专门吃多余空间,不让 MBL# 列被撑开 */
+/* 按比例分配,整行均匀撑满。用固定 px 的话多余空间会全被 MBL# 那列吃掉,
+   号码孤零零在最左、数值挤在右边,眼睛又要横跨一大段 */
+.mbl-cols{display:grid;
+  grid-template-columns:12px minmax(190px,3fr) minmax(44px,1fr) minmax(120px,2.2fr) minmax(66px,1.2fr)
+    minmax(76px,1.4fr) minmax(56px,1fr) minmax(84px,1.5fr) minmax(84px,1.5fr) minmax(60px,1.2fr);
+  gap:0 12px;align-items:center}
+.mbl-head{padding:0 14px 7px;font-size:10px;font-weight:700;color:var(--steel);letter-spacing:.08em;opacity:.75}
+.mbl-head>span{white-space:nowrap;overflow:hidden}
+.mbl-hd{padding:10px 14px;cursor:pointer}
+.mbl-hd:hover{background:var(--line-soft)}
+.mbl-hd>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbl-fold{color:var(--line);font-size:10px}
+.mbl-hd:hover .mbl-fold{color:var(--steel)}
+/* 层次:号码 > 金额 > 其余。CBM/毛重/件数是细节,压淡压小 */
+.mbl-no{font-family:var(--mono);font-weight:700;font-size:13.5px;color:var(--ink)}
+.mbl-no.none{color:var(--steel);font-weight:600;font-family:inherit;font-size:13px}
+.mbl-n{font-size:12px;color:var(--steel);text-align:right;font-family:var(--mono)}
+.mbl-amt{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);text-align:right}
+.mbl-sub{font-family:var(--mono);font-size:11px;color:var(--steel);text-align:right}
+.mbl-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-align:right}
+.mbl-ok{text-align:right}
+/* 绿色变量叫 --approve,没有 --ok —— 写错名字的话颜色和边框会静默失效 */
+.mbl-ok i{font-style:normal;font-size:10px;color:var(--approve);background:var(--approve-soft);border-radius:999px;padding:2px 7px;white-space:nowrap}
+@media(max-width:1100px){
+  .mbl-cols{grid-template-columns:12px minmax(120px,1fr) repeat(4,auto);gap:4px 10px}
+  .mbl-head{display:none}
+}
+/* 展开区:米白底,里面每一块纯白卡片浮起来 —— 不然共享字段和几个订单的明细糊成一片。
+   ⚠️ --paper(#F7F6F2) 是页面底色,--card(#FFFFFF) 才是白卡片。写反了就完全同色分不出来。 */
+.mbl-bd{border-top:1px solid var(--line);padding:14px;background:var(--paper)}
+.mbl-blk{background:var(--card);border:1px solid var(--line);border-radius:8px;
+  box-shadow:0 1px 2px rgba(27,42,58,.05)}
+.mbl-share{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:12px 14px 4px}
+/* 共享区是「整柜」层级,下面每块是「单个订单」层级 —— 用底色和色条把两层分开,
+   不然都是白卡片,看着像同一类东西 */
+.mbl-share-blk{margin-bottom:16px;background:var(--safety-soft);border-color:var(--safety);
+  box-shadow:inset 3px 0 0 var(--safety)}
+.mbl-share-blk .mbl-blk-t{color:var(--safety)}
+.mbl-share-blk input{background:var(--card)}
+.mbl-blk-t{font-size:11px;font-weight:700;color:var(--steel);letter-spacing:.06em;padding:10px 14px 0}
+.mbl-share .fld{margin:0}
+.mbl-share label{font-size:11px;color:var(--steel);font-weight:700;letter-spacing:.04em;display:block;margin-bottom:3px}
+.mbl-share input{width:100%;padding:6px 8px;font-size:13px}
+.mbl-nofld input{font-family:var(--mono);font-weight:700;border-color:var(--safety)}
+.mbl-act{display:flex;gap:8px;align-items:center;padding:4px 14px 12px;flex-wrap:wrap}
+.mbl-act .hint{margin:0}
+/* 订单块比整柜共享区低一级,左边缩进一点。右边界保持对齐,靠变窄体现从属 */
+.mbl-item{margin:0 0 12px 22px;overflow:hidden}
+.mbl-item:last-of-type{margin-bottom:0}
+@media(max-width:900px){.mbl-item{margin-left:10px}}
+.mbl-ihd{display:flex;align-items:baseline;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.mbl-ihd .ti{font-size:13px}
+.mbl-go{cursor:pointer;border-radius:4px;padding:1px 4px;margin-left:-4px}
+.mbl-go:hover{color:var(--safety);background:var(--safety-soft)}
+.mbl-go:hover b{color:var(--safety)}
+.mbl-ihd .ti b{font-family:var(--mono);font-weight:700}
+.mbl-ihd .sup{font-size:12px;color:var(--steel)}
+.mbl-ihd .amt{margin-left:auto;font-family:var(--mono);font-size:12px}
+.mbl-ihd .bn{font-size:11px;color:var(--safety);font-weight:700}
+.mbl-ibd{padding:10px 14px 12px}
+.mbl-itot{font-size:11px;color:var(--steel);font-family:var(--mono);margin-top:4px}
+.mbl-foot{display:flex;align-items:center;gap:14px;margin-top:14px;padding:12px 14px;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 1px 2px rgba(27,42,58,.05)}
+.mbl-foot .tot{font-size:12px;display:flex;gap:16px;flex-wrap:wrap}
+.mbl-foot .tot b{font-family:var(--mono)}
+.mbl-foot .btn-ink{margin-left:auto}
+.ship-empty{color:var(--steel);font-size:13px;padding:24px;text-align:center}
+.mbl-pk-bar{display:flex;gap:10px;align-items:center;margin:10px 0 8px}
+.mbl-pk-bar input[type=text],.mbl-pk-bar #mblSearch{flex:1}
+.mbl-pk-list{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.mbl-pk{display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--line-soft);font-size:13px;cursor:pointer}
+.mbl-pk:last-child{border-bottom:none}
+.mbl-pk:hover{background:var(--line-soft)}
+/* 全局 input 是 width:100%,不覆盖的话这个 checkbox 会撑到 498px 把整行吃光 */
+.mbl-pk input[type=checkbox]{flex:none;width:auto;min-width:0;margin:0}
+.mbl-pk .ti b{font-family:var(--mono);font-weight:700}
+/* flex 项一定要给 flex 值:overflow:hidden 会把 min-width 变成 0,
+   再碰上 .amt 的 margin-left:auto 抢空间,标题和供应商会被压成 0 宽直接消失 */
+.mbl-pk .ti{flex:1 1 auto;min-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbl-pk .sup{flex:0 1 auto;min-width:0;max-width:190px;color:var(--steel);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbl-pk .bn{font-size:11px;color:var(--safety);font-weight:700;flex:none}
+.mbl-pk .now{font-size:11px;font-family:var(--mono);color:var(--safety);flex:none}
+/* 不能用 margin-left:auto —— flex 里 auto margin 吃剩余空间的优先级高于 flex-grow,
+   会把 .ti 压到 min-width。靠 .ti 的 flex:1 撑开就能把金额顶到右边 */
+.mbl-pk .amt{font-family:var(--mono);font-size:12px;flex:none}
+.mbl-pk-empty{padding:20px;text-align:center;color:var(--steel);font-size:13px}
+.gd-bar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.gd-bar input{flex:1}
+.gd-list{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--paper)}
+.gd-row{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:8px}
+.gd-row:last-child{margin-bottom:0}
+.gd-l1{display:grid;grid-template-columns:1.5fr .6fr 1fr 1fr .8fr 24px;gap:6px;align-items:center}
+.gd-l1 input{padding:5px 7px;font-size:12px}
+.gd-l1 .gd-en{font-weight:600}
+.gd-l1 .gd-hs{font-family:var(--mono)}
+.gd-row textarea{width:100%;margin-top:6px;font-size:12px;padding:5px 7px;min-height:44px;resize:vertical;font-family:inherit}
+.gd-del{color:var(--steel);font-size:13px;padding:4px;border-radius:4px;text-align:center;cursor:pointer;background:none;border:none}
+.gd-del:hover{color:#fff;background:var(--reject)}
+.gd-new{box-shadow:inset 3px 0 0 var(--safety)}
+.gd-empty{padding:24px;text-align:center;color:var(--steel);font-size:13px}
+.cs-warn{background:var(--safety-soft);border:1px solid var(--safety);border-radius:7px;padding:9px 11px;margin-bottom:10px;font-size:12.5px}
+.cs-warn b{color:var(--safety)}
+.cs-warn .miss{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);margin-top:4px;line-height:1.7}
+.mbl-rm{font-size:11px;color:var(--steel);padding:2px 7px;border-radius:5px;border:1px solid var(--line);background:none;cursor:pointer;flex:none}
+.mbl-rm:hover{color:#fff;background:var(--reject);border-color:var(--reject)}
+@media(max-width:640px){.ship-wrap{padding:10px 10px 40px}}
 /* ===== 项目进度视图 ===== */
 .view-tabs{display:flex;gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .view-tabs button{white-space:nowrap;padding:6px 15px;background:var(--card);color:var(--ink-soft);font-weight:700;font-size:13px;border-right:1px solid var(--line)}
@@ -1027,7 +1150,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       </div>
     </div>
     <div class="hd-nav">
-      <span class="view-tabs"><button id="tabBoard" class="on">看板</button><button id="tabProj">项目进度</button><button id="tabCal">日历</button><button id="tabFin">财务</button></span>
+      <span class="view-tabs"><button id="tabBoard" class="on">看板</button><button id="tabProj">项目进度</button><button id="tabCal">日历</button><button id="tabFin">财务</button><button id="tabShip">发货</button></span>
     </div>
     <div class="hd-mid">
       <span class="chip alert" id="alertChip" style="display:none" title="点击只看预警项"></span>
@@ -1078,6 +1201,17 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   <section class="fin-sec" data-fs="list"><h3><span class="fold">▼</span>未付明细<span class="sub" id="finListNote"></span></h3><div class="fin-bd"><div id="finList"></div></div></section>
   <section class="fin-sec" data-fs="sup"><h3><span class="fold">▼</span>按供应商未付排名<span class="sub" id="finSupNote"></span></h3><div class="fin-bd"><div id="finSup"></div></div></section>
   <section class="fin-sec" data-fs="proj"><h3><span class="fold">▼</span>按项目付款进度<span class="sub" id="finProjNote"></span></h3><div class="fin-bd"><div id="finProj"></div></div></section>
+</main>
+<main class="ship-wrap" id="shipView" style="display:none">
+  <div class="ship-bar"><span class="hint">按 MBL# 把拼在一个柜里的订单归到一起。同一个柜的船名/ETD/ETA/柜号填一次同步给全部，货物明细每个订单分开填。</span>
+    <span style="display:flex;gap:10px;align-items:center">
+      <label class="ship-only"><input type="checkbox" id="shipHideDone"> 只看未到货</label>
+      <button class="btn btn-primary btn-sm" id="btnNewMbl">＋ 新建 MBL#</button>
+    </span></div>
+  <div class="mbl-head mbl-cols"><span></span><span>MBL#</span><span style="text-align:right">订单</span>
+    <span style="text-align:right">金额</span><span style="text-align:right">CBM</span><span style="text-align:right">毛重</span>
+    <span style="text-align:right">件数</span><span style="text-align:right">ETD</span><span style="text-align:right">ETA</span><span></span></div>
+  <div id="shipList"></div>
 </main>
 <main class="proj-wrap" id="projView" style="display:none"><div class="proj-bar"><span class="hint">按项目号分组 · 可批量新建采购需求，之后在看板补细节</span><button class="btn btn-primary" id="btnBulk">＋ 新建项目 / 批量加需求</button></div><div id="projList"></div></main>
 
@@ -1162,6 +1296,23 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
         <label style="display:flex;align-items:center;justify-content:space-between">数据体积
           <button class="btn btn-sm" id="sDataBtn">查看</button></label>
         <div id="sDataInfo" class="hint">超过 1MB 后 GitHub 接口要改用 raw 方式读取（已支持），但每次保存都要整个文件重传，仓库历史也会变大。</div>
+      </div>
+      <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
+        <label style="display:flex;align-items:center;justify-content:space-between">报关商品库
+          <button class="btn btn-sm" id="sGoodsBtn">打开</button></label>
+        <div class="hint">英文品名 → HS 编码 / 中文报关名 / 申报要素 / 货源地。生成报关资料时自动套。</div>
+      </div>
+      <div class="fld">
+        <label>买方（报关资料上的收货方）</label>
+        <div class="row2" style="margin-top:4px">
+          <input id="sBuyerName" placeholder="公司名，如 CSQUARE STEEL CO., LIMITED">
+          <input id="sBuyerAttn" placeholder="ATTN 联系人">
+        </div>
+        <div class="row2" style="margin-top:6px">
+          <input id="sBuyerAddr" placeholder="地址">
+          <input id="sBuyerTel" placeholder="TEL">
+        </div>
+        <div class="hint">基本不变，填一次就行。生成销售合同 / 商业发票 / 装箱单时用。</div>
       </div>
       <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
         <label>请款单署名（只影响你自己的账号）</label>
@@ -1263,7 +1414,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 
       <div class="bf-sec">物流（可留空）</div>
       <div class="row2">
-        <div class="fld"><label>BL# / 提单号</label><input id="fBl"></div>
+        <div class="fld"><label>MBL# / 总提单号</label><input id="fBl"></div>
         <div class="fld"><label>货物信息</label><input id="fCargo" placeholder="件数 / 毛重 / 体积"></div>
       </div>
       <div class="row2">
@@ -1330,6 +1481,70 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   </div>
 </div>
 
+<!-- 生成报关资料 -->
+<div class="modal-mask" id="mCustoms">
+  <div class="modal" style="max-width:640px">
+    <div class="md-hd"><h2>生成报关资料</h2><button class="btn btn-sm" data-close="mCustoms">✕</button></div>
+    <div class="md-bd">
+      <div class="hint" id="csHead" style="margin-bottom:10px"></div>
+      <div id="csWarn"></div>
+      <div class="row2">
+        <div class="fld"><label>合同号 *</label><input id="csNo" placeholder="如 HKG26-024-B5&amp;005-B4"></div>
+        <div class="fld"><label>合同日期</label><input id="csDate" type="date"></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>发票 / 装箱单日期</label><input id="csInvDate" type="date"></div>
+        <div class="fld"><label>汇率（RMB/USD）*</label><input id="csRate" type="number" step="0.0001" placeholder="6.8167"></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>利润点</label><input id="csProfit" type="number" step="0.01" placeholder="1.02"></div>
+        <div class="fld"><label>加价率（含税）</label><input id="csMarkup" type="number" step="0.01" placeholder="1.13"></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>贸易国（地区）</label><input id="csTrade" placeholder="香港"></div>
+        <div class="fld"><label>运抵国（地区）</label><input id="csArrive" placeholder="美国"></div>
+      </div>
+      <div class="hint">USD 报关价由模板里的公式算：采购总价 × 加价率 ÷ 汇率 × 利润点。汇率和利润点会记住，下次预填。</div>
+    </div>
+    <div class="md-ft"><button class="btn" data-close="mCustoms">取消</button><button class="btn btn-ink" id="csGo" title="Ctrl+Enter">生成并下载</button></div>
+  </div>
+</div>
+
+<!-- 报关商品库 -->
+<div class="modal-mask" id="mGoods">
+  <div class="modal" style="max-width:900px">
+    <div class="md-hd"><h2>报关商品库</h2><button class="btn btn-sm" data-close="mGoods">✕</button></div>
+    <div class="md-bd">
+      <div class="hint" style="margin-bottom:8px">按<b>英文品名</b>匹配（忽略大小写和空格/连字符）。填一次，以后每个柜生成报关资料都自动套上 HS 编码、中文报关名、申报要素、货源地。</div>
+      <div class="gd-bar">
+        <input id="gdSearch" placeholder="搜英文品名 / 中文名 / HS">
+        <button class="btn btn-sm" id="gdImport">⇩ 从当前柜导入没收录的品名</button>
+        <button class="btn btn-sm" id="gdAdd">＋ 加一条</button>
+      </div>
+      <div id="gdList" class="gd-list"></div>
+      <div class="hint" id="gdHint"></div>
+    </div>
+    <div class="md-ft"><button class="btn" data-close="mGoods">取消</button><button class="btn btn-ink" id="gdSave" title="Ctrl+Enter">保存</button></div>
+  </div>
+</div>
+
+<!-- 新建 MBL# / 往柜里加订单 -->
+<div class="modal-mask" id="mMbl">
+  <div class="modal" style="max-width:720px">
+    <div class="md-hd"><h2 id="mblTitle">新建 MBL#</h2><button class="btn btn-sm" data-close="mMbl">✕</button></div>
+    <div class="md-bd">
+      <div class="fld"><label>MBL# / 总提单号 *</label><input id="mblNo" placeholder="例:ONEYTS6ND1744600"></div>
+      <div class="mbl-pk-bar">
+        <input id="mblSearch" placeholder="搜标题 / PO号 / 项目号 / 供应商">
+        <label class="ship-only"><input type="checkbox" id="mblIncl"> 含已分柜的订单</label>
+      </div>
+      <div id="mblList" class="mbl-pk-list"></div>
+      <div class="hint" id="mblPickHint"></div>
+    </div>
+    <div class="md-ft"><button class="btn" data-close="mMbl">取消</button><button class="btn btn-ink" id="mblGo" title="Ctrl+Enter">加进这个柜</button></div>
+  </div>
+</div>
+
 <!-- 编辑订单信息 -->
 <div class="modal-mask" id="mOrder">
   <div class="modal">
@@ -1375,7 +1590,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
     <div class="md-hd"><h2 id="shTitle">物流信息</h2><button class="btn btn-sm" data-close="mShip">✕</button></div>
     <div class="md-bd">
       <div class="row2">
-        <div class="fld"><label>BL# / 提单号</label><input id="shBl" placeholder="例:COSU6398471230"></div>
+        <div class="fld"><label>MBL# / 总提单号</label><input id="shBl" placeholder="例:COSU6398471230　几个订单拼一柜就填同一个号"></div>
         <div class="fld"><label>船名 / 航次</label><input id="shVessel" placeholder="例:COSCO SHIPPING / 025E"></div>
       </div>
       <div class="fld"><label>货物信息</label>
@@ -2375,13 +2590,15 @@ function setView(m){
   $("#tabProj").classList.toggle("on",m==="proj");
   $("#tabCal").classList.toggle("on",m==="cal");
   $("#tabFin").classList.toggle("on",m==="fin");
+  $("#tabShip").classList.toggle("on",m==="ship");
   $("#board").style.display=m==="board"?"":"none";
   $("#projView").style.display=m==="proj"?"":"none";
   $("#calView").style.display=m==="cal"?"":"none";
   $("#finView").style.display=m==="fin"?"":"none";
+  $("#shipView").style.display=m==="ship"?"":"none";
   render();
   if(changed && !reduceMotion()){
-    const el={cal:$("#calView"),board:$("#board"),proj:$("#projView"),fin:$("#finView")}[m];
+    const el={cal:$("#calView"),board:$("#board"),proj:$("#projView"),fin:$("#finView"),ship:$("#shipView")}[m];
     const cls=m==="board"?"view-anim-l":"view-anim-r";
     el.classList.remove("view-anim-r","view-anim-l");
     void el.offsetWidth;
@@ -2792,7 +3009,7 @@ function render(){
       }).join(""):`<div class="empty">暂无</div>`}</div>
     </section>`;
     bindBoardEvents();
-    renderProjects(); renderCal(); renderFin(); renderAlert();
+    renderProjects(); renderCal(); renderFin(); renderShip(); renderAlert();
     $("#countNote").textContent=`${st} ${items.length} 条 / 共 ${state.records.length} 条`;
     return;
   }
@@ -2813,6 +3030,7 @@ function render(){
   renderProjects();
   renderCal();
   renderFin();
+  renderShip();
   renderAlert();
   // 事件
   bindBoardEvents();
@@ -2890,7 +3108,7 @@ const shGet=(r,bid)=>bid?shMore(r).find(b=>b.bid===bid):sh(r);
 /* ── 货物信息明细 ──
    batch.cargoLines=[{desc,pcs,pkgs,gw,nw,cbm,note}];合计四列自动求和,不入库。
    老数据的 batch.cargo 自由文本会被 parseCargo 拆成明细行(拆不动的整段进品名,不丢数据)。 */
-const CGN=["pcs","pkgs","gw","nw","cbm"];
+const CGN=["pcs","pkgs","gw","nw","cbm","price"];
 const cgNum=v=>{ const n=parseFloat(String(v==null?"":v).replace(/,/g,"")); return isNaN(n)?null:n; };
 const cgFmt=n=>n==null?"":(Math.round(n*1000)/1000).toLocaleString("en-US",{maximumFractionDigits:3});
 function parseCargoLine(raw){
@@ -2989,7 +3207,7 @@ function cargoTableHTML(b){
 }
 function shipKvHTML(b,late){
   return `<dl class="kv">
-    <dt>BL# / 提单号</dt><dd class="mono">${esc(b.bl||"—")}</dd>
+    <dt>MBL# / 总提单号</dt><dd class="mono">${esc(b.bl||"—")}</dd>
     <dt>ORIGIN</dt><dd class="mono">${esc(b.origin||"—")}</dd>
     <dt>DESTINATION</dt><dd class="mono">${esc(b.dest||"—")}</dd>
     <dt>ETD</dt><dd class="mono">${b.etd?fmtD(b.etd):"—"}</dd>
@@ -3035,6 +3253,612 @@ function shipSecHTML(rec){
   }
   return `<div class="sec" data-sec="物流信息"><div class="sec-hd"><span class="fold">▼</span>物流信息<span class="hdbtns">${multi||isViewer()?"":`<button class="btn btn-sm" id="btnEditShip">✎ 编辑</button>`}${addBtn}</span></div><div class="sec-bd">${body}</div></div>`;
 }
+/* ================= 报关资料:商品库 + 买方 =================
+   报关资料要的 HS 编码 / 中文报关名 / 申报要素 / 境内货源地,系统里原本没有。
+   按英文品名建一张商品库,填一次以后每个柜都自动套。买方基本不变,存设置里。 */
+function goodsDB(){ const g=(state.settings||{}).goods; return Array.isArray(g)?g:[]; }
+const gKey=v=>String(v||"").trim().toLowerCase().replace(/[\s‐-―-]+/g,"");
+function goodsFind(en){
+  const k=gKey(en); if(!k) return null;
+  return goodsDB().find(x=>gKey(x.en)===k)||null;
+}
+function buyerInfo(){
+  const b=(state.settings||{}).buyer||{};
+  return {name:b.name||"",addr:b.addr||"",attn:b.attn||"",tel:b.tel||""};
+}
+/* 整柜的报关行:把这一柜每个订单的货物明细摊平,带上来源和商品库资料 */
+function customsRows(g){
+  const out=[];
+  g.items.forEach(x=>{
+    const oi=orderInfo(x.r);
+    cargoOf(x.b).forEach(l=>{
+      const en=String(l.desc||"").trim();
+      const m=goodsFind(en);
+      out.push({
+        en, po:poShortNo(x.r), fullPo:x.r.po||"", title:x.r.title||"", supplier:oi.supplier||"",
+        pcs:l.pcs||"", pkgs:l.pkgs||"", gw:l.gw||"", nw:l.nw||"", cbm:l.cbm||"",
+        priceRmb:(l.price==null||l.price==="")?null:Number(l.price),
+        totalRmb:(l.price==null||l.price==="")?null:Number(l.price)*cnum(l.pcs),
+        unit:m?m.unit||"":"", hs:m?m.hs||"":"", cn:m?m.cn||"":"", elements:m?m.elements||"":"", origin:m?m.origin||"":"",
+        matched:!!m
+      });
+    });
+  });
+  return out;
+}
+const cnum=v=>{ const n=Number(String(v||"").replace(/[^0-9.\-]/g,"")); return isFinite(n)?n:0; };
+function customsTotals(rows){
+  return rows.reduce((a,r)=>({pkgs:a.pkgs+cnum(r.pkgs),gw:a.gw+cnum(r.gw),nw:a.nw+cnum(r.nw),cbm:a.cbm+cnum(r.cbm)}),
+    {pkgs:0,gw:0,nw:0,cbm:0});
+}
+
+/* ================= 发货(MBL 拼柜)视图 =================
+   一行 = 一条采购记录(订单)的一个批次。几个订单填同一个 MBL# 就是拼在一个柜里。
+   共享字段(船名/ETD/ETA/起运港/目的港/柜号)填一次同步给全组;货物明细每个订单各填各的。 */
+const MBL_SHARE=[["vessel","船名 / 航次"],["etd","ETD"],["eta","ETA"],
+                 ["origin","ORIGIN"],["dest","DESTINATION"],["ctnr","柜号 / 唛头"]];
+let shipOpen=new Set();      // 展开着的 MBL key
+/* 「有没有改动」靠比对界面快照,不用脏标记 —— cgRenderInto 渲染完会调一次 onChange
+   来算初始合计,早先在那个回调里 add(dirty),结果一展开就被当成改过了。
+   也不能直接拿界面值跟数据比:共享栏显示的是"已填的那个值",而组里常有订单是空的,
+   那样比每次都算"有差异"。所以只跟**展开那一刻的界面值**比。 */
+function mblSnap(sec){
+  const share={};
+  const no=sec.querySelector("[data-mblno]");
+  if(no) share.__mbl=no.value;
+  sec.querySelectorAll("[data-share]").forEach(i=>share[i.dataset.share]=i.value);
+  const cargo=[...sec.querySelectorAll("[data-cargo]")].map(b=>cargoSig(cgReadFrom(b)));
+  return JSON.stringify({share,cargo});
+}
+
+function shipGroups(){
+  const map=new Map();
+  state.records.forEach(r=>{
+    if(!passFilter(r)) return;
+    const bs=shBatches(r);
+    bs.forEach((b,i)=>{
+      const mbl=String(b.bl||"").trim();
+      /* 有 MBL 号的一定列出来;没号的只列已经在物流/完结的,免得把还没发的也堆进来 */
+      if(!mbl && !(r.status==="物流"||r.status==="完结")) return;
+      const key=mbl||"__none__";
+      if(!map.has(key)) map.set(key,{key,mbl,items:[]});
+      map.get(key).items.push({r,b,bid:b.bid||"",n:i+1,multi:bs.length>1});
+    });
+  });
+  const out=[...map.values()];
+  out.forEach(g=>{
+    const seen=new Set(); g.money={};
+    g.items.forEach(x=>{
+      /* 一条记录分几批时金额只算一次,不然合计会翻倍 */
+      if(seen.has(x.r.id)) return; seen.add(x.r.id);
+      const a=recAmount(x.r); if(a&&x.r.status!=="已取消") g.money[a.cur]=(g.money[a.cur]||0)+a.val;
+    });
+    g.cargo=cargoTotals(g.items.reduce((acc,x)=>acc.concat(cargoOf(x.b)),[]));
+    g.recN=seen.size;
+    g.arrived=g.items.every(x=>x.b.arrived);
+  });
+  /* 未分组永远排最后,其余按 ETD 倒序(没填的排后面) */
+  return out.sort((a,b)=>{
+    if(a.mbl&&!b.mbl) return -1; if(!a.mbl&&b.mbl) return 1;
+    const fe=g=>{ for(const x of g.items){ const v=String(x.b.etd||"").trim(); if(v) return v; } return ""; };
+    const ea=fe(a), eb=fe(b);
+    if(ea&&eb&&ea!==eb) return eb.localeCompare(ea);
+    if(ea&&!eb) return -1; if(!ea&&eb) return 1;
+    return String(a.mbl).localeCompare(String(b.mbl));
+  });
+}
+
+const mblMoneyText=m=>Object.entries(m).filter(([,v])=>v).map(([c,v])=>c+money(v)).join(" / ")||"—";
+
+function renderShip(){
+  const box=$("#shipList"); if(!box) return;
+  const hideDone=$("#shipHideDone")&&$("#shipHideDone").checked;
+  let gs=shipGroups();
+  if(hideDone) gs=gs.filter(g=>!g.arrived);
+  if(!gs.length){ box.innerHTML=`<div class="ship-empty">还没有进入物流的货。填了 MBL# 之后，拼在同一个柜里的订单会自动归到一组。</div>`; return; }
+  box.innerHTML=gs.map(g=>{
+    const open=shipOpen.has(g.key);
+    const c=g.cargo;
+    const firstOf=k=>{ for(const x of g.items){ const v=String(x.b[k]||"").trim(); if(v) return v; } return ""; };
+    const etd=firstOf("etd"), eta=firstOf("eta");
+    /* 数的是订单(记录)不是批次 —— 同一个订单分两批装同一个柜,还是一个订单 */
+    const nTxt=String(g.recN);
+    return `<section class="mbl${open?" open":""}" data-mbl="${esc(g.key)}">
+      <div class="mbl-hd mbl-cols" data-toggle="${esc(g.key)}"${g.recN!==g.items.length?` title="${g.recN} 个订单，其中有订单分了多批装，共 ${g.items.length} 批"`:""}>
+        <span class="mbl-fold">${open?"▼":"►"}</span>
+        <span class="mbl-no ${g.mbl?"":"none"}">${g.mbl?esc(g.mbl):"未填 MBL#"}</span>
+        <span class="mbl-n">${nTxt}</span>
+        <span class="mbl-amt">${esc(mblMoneyText(g.money))}</span>
+        <span class="mbl-sub">${c.cbm!=null?cgFmt(c.cbm):""}</span>
+        <span class="mbl-sub">${c.gw!=null?cgFmt(c.gw):""}</span>
+        <span class="mbl-sub">${c.pkgs!=null?cgFmt(c.pkgs):""}</span>
+        <span class="mbl-date">${etd?fmtD(etd):""}</span>
+        <span class="mbl-date">${eta?fmtD(eta):""}</span>
+        <span class="mbl-ok">${g.arrived?"<i>到货</i>":""}</span>
+      </div>
+      ${open?`<div class="mbl-bd">${mblBodyHTML(g)}</div>`:""}
+    </section>`;
+  }).join("");
+  bindShip();
+}
+
+function mblBodyHTML(g){
+  const first=g.items[0].b;
+  const share=MBL_SHARE.map(([k,lab])=>{
+    /* 只比已经填了的值。空的不算"不同" —— 一柜里常常只有一个订单填了船名,
+       其余留空等着同步,那种情况该把已填的值显示出来,而不是报冲突。 */
+    const vals=[...new Set(g.items.map(x=>String(x.b[k]||"").trim()).filter(Boolean))];
+    const conflict=vals.length>1;
+    const blank=g.items.filter(x=>!String(x.b[k]||"").trim()).length;
+    const type=(k==="etd"||k==="eta")?"date":"text";
+    const tag=conflict?' <span style="color:var(--safety)">各不相同</span>'
+             :(vals.length&&blank?` <span style="color:var(--steel);font-weight:400">${blank} 个没填</span>`:"");
+    return `<div class="fld"><label>${esc(lab)}${tag}</label>
+      <input data-share="${k}" type="${type}" value="${esc(conflict?"":(vals[0]||""))}" placeholder="${conflict?"填了会覆盖全部":""}"></div>`;
+  }).join("");
+  const items=g.items.map((x,i)=>{
+    const a=recAmount(x.r);
+    return `<div class="mbl-item mbl-blk" data-i="${i}">
+      <div class="mbl-ihd">
+        <span class="ti mbl-go" data-go="${esc(x.r.id)}" title="打开这条采购记录改信息"><b>${esc(poShortNo(x.r))}</b>　${esc(x.r.title)}</span>
+        ${x.multi?`<span class="bn">第 ${x.n} 批</span>`:""}
+        <span class="sup">${esc(orderInfo(x.r).supplier||"—")}</span>
+        <span class="amt">${a?esc(a.cur)+money(a.val):"—"}</span>
+        ${(isViewer()||!g.mbl)?"":`<button class="mbl-rm" data-rm="${i}" title="把这个订单移出本柜（清掉它的 MBL#）">移出</button>`}
+      </div>
+      <div class="mbl-ibd">
+        <div class="cg-wrap"><div class="cg-rows" data-cargo="${i}"></div></div>
+        <div class="mbl-itot" data-itot="${i}"></div>
+      </div>
+    </div>`;
+  }).join("");
+  const noFld=g.mbl?`<div class="fld mbl-nofld"><label>MBL# <span style="color:var(--steel);font-weight:400">改这里会改整柜</span></label>
+      <input data-mblno value="${esc(g.mbl)}" spellcheck="false"></div>`:"";
+  return `<div class="mbl-blk mbl-share-blk">
+      <div class="mbl-blk-t">整柜共享 · 填一次同步给全部 ${g.recN} 个订单</div>
+      <div class="mbl-share">${noFld}${share}</div>
+      <div class="mbl-act">
+        <button class="btn btn-sm" data-syncall="1">⇩ 同步给全部 ${g.recN} 个订单</button>
+        ${(isViewer()||!g.mbl)?"":`<button class="btn btn-sm" data-addto="${esc(g.mbl)}">＋ 加订单进这个柜</button>`}
+        ${g.mbl?`<button class="btn btn-sm" data-customs="${esc(g.mbl)}">📄 报关资料</button>`:""}
+        <span class="hint">留空的字段不会覆盖已有内容</span>
+      </div>
+    </div>
+    ${items}
+    <div class="mbl-foot">
+      <span class="tot" data-tot="1"></span>
+      ${isViewer()?"":`<button class="btn btn-ink" data-save="${esc(g.key)}">保存这一柜</button>`}
+    </div>`;
+}
+
+/* ---- 生成报关资料 ----
+   模板是仓库根目录的 customs_template.xlsx（从用户那份实例清空数据来的，公式和格式原样保留）。
+   后 3 个 sheet 全靠公式引用 Sales Contract，所以只要填 6 列 + 头部，USD 价模板自己算。
+   ⚠️ 模板必须用 ExcelJS 自己写出来的那份 —— openpyxl 重存的会让 ExcelJS 读挂（drawing 引用坏）。 */
+const XLSX_CDN="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
+const CS_ROWS={scFirst:20,scLast:35,csFirst:22,csLast:31,elFirst:45,elLast:54};
+let _xlsjs=null;
+function loadExcelJS(){
+  if(window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  if(!_xlsjs) _xlsjs=new Promise((res,rej)=>{
+    const sc=document.createElement("script");
+    sc.src=XLSX_CDN;
+    sc.onload=()=>window.ExcelJS?res(window.ExcelJS):rej(new Error("ExcelJS 没挂上"));
+    sc.onerror=()=>{ _xlsjs=null; rej(new Error("加载 ExcelJS 失败（需要联网）")); };
+    document.head.appendChild(sc);
+  });
+  return _xlsjs;
+}
+const csCfg=()=>Object.assign({rate:"",profit:"1.02",markup:"1.13",trade:"香港",arrive:"美国"},
+                              (state.settings||{}).customs||{});
+let customsMbl="";
+function openCustoms(mbl){
+  if(isViewer()) return denyRO();
+  const g=shipGroups().find(x=>x.key===mbl); if(!g) return toast("找不到这一柜","err");
+  customsMbl=mbl;
+  const rows=customsRows(g);
+  const miss=[...new Set(rows.filter(r=>!r.matched||!r.hs||!r.unit).map(r=>r.en))];
+  const noPrice=rows.filter(r=>r.totalRmb==null).length;
+  $("#csHead").innerHTML=`${esc(g.mbl)} · ${g.recN} 个订单 · ${rows.length} 行货`;
+  $("#csWarn").innerHTML=(miss.length||noPrice)?`<div class="cs-warn">
+    ${miss.length?`<b>${miss.length}</b> 个品名在商品库里缺 HS 编码或单位，生成出来这几行会是空的：
+      <div class="miss">${miss.map(esc).join("<br>")}</div>
+      <button class="btn btn-sm" id="csFix" style="margin-top:6px">去商品库补</button>`:""}
+    ${noPrice?`<div${miss.length?' style="margin-top:6px"':''}><b>${noPrice}</b> 行货物明细没填「单价 RMB」，报关金额会算不出来。</div>`:""}
+  </div>`:"";
+  const fix=$("#csFix");
+  if(fix) fix.addEventListener("click",()=>{ closeModal("mCustoms"); openGoods(mbl); });
+  const c=csCfg(), t=new Date(), iso=d=>d.toISOString().slice(0,10);
+  $("#csNo").value=(state.settings||{}).customs&&(state.settings.customs.lastNo||"")||"";
+  $("#csDate").value=iso(t); $("#csInvDate").value=iso(t);
+  $("#csRate").value=c.rate; $("#csProfit").value=c.profit; $("#csMarkup").value=c.markup;
+  $("#csTrade").value=c.trade; $("#csArrive").value=c.arrive;
+  openModal("mCustoms");
+  setTimeout(()=>$("#csNo").focus(),50);
+}
+
+function csFillWorkbook(wb,d){
+  const sc=wb.getWorksheet("Sales Contract"), ci=wb.getWorksheet("Template_CI"),
+        pl=wb.getWorksheet("Template_PL"), cs=wb.getWorksheet("报关单及申报要素");
+  if(!sc||!ci||!pl||!cs) throw new Error("模板里少了 sheet，检查 customs_template.xlsx");
+  const set=(ws,a,v)=>{ ws.getCell(a).value=(v===""||v==null)?null:v; };
+  const R=CS_ROWS;
+  set(sc,"E3",d.contractNo); set(sc,"E4",d.contractDate);
+  set(sc,"B11",d.buyer.name); set(sc,"B12",d.buyer.addr);
+  set(sc,"B13",d.buyer.attn); set(sc,"B14",d.buyer.tel);
+  set(sc,"H18",d.markup);
+  set(sc,"B40",d.origin?`Port of Loading: ${d.origin}`:null);
+  set(sc,"B41",d.dest?`Port of Destination: ${d.dest}`:null);
+  ["G36","G37","H37","G38","H38","G39","H39"].forEach(a=>set(sc,a,null));
+  set(ci,"E12",d.invDate);
+  if(typeof pl.getCell("F11").value!=="object") set(pl,"F11",d.invDate);
+  d.rows.forEach((r,i)=>{
+    const n=R.scFirst+i; if(n>R.scLast) return;
+    set(sc,`B${n}`,r.en); set(sc,`C${n}`,r.qty); set(sc,`D${n}`,r.unit);
+    set(sc,`H${n}`,r.totalRmb); set(sc,`J${n}`,d.rate); set(sc,`K${n}`,d.profit);
+    sc.getCell(`I${n}`).value={formula:`H${n}*$H$18`};
+    set(pl,`D${n}`,r.pkgs); set(pl,`E${n}`,r.gw); set(pl,`F${n}`,r.nw); set(pl,`G${n}`,r.cbm);
+  });
+  for(let n=R.scFirst+d.rows.length;n<=R.scLast;n++){
+    ["B","C","D","H","I","J","K"].forEach(c2=>set(sc,`${c2}${n}`,null));
+    ["D","E","F","G"].forEach(c2=>set(pl,`${c2}${n}`,null));
+  }
+  set(cs,"G10",d.vessel); set(cs,"L10",d.mbl);
+  set(cs,"D14",d.trade); set(cs,"G14",d.arrive); set(cs,"L14",d.dest);
+  d.rows.forEach((r,i)=>{
+    const n=R.csFirst+i; if(n>R.csLast) return;
+    set(cs,`B${n}`,r.hs); set(cs,`C${n}`,r.cn); set(cs,`F${n}`,r.unit);
+    set(cs,`L${n}`,"中国"); set(cs,`M${n}`,d.arrive); set(cs,`N${n}`,r.origin);
+  });
+  for(let n=R.csFirst+d.rows.length;n<=R.csLast;n++)
+    ["B","C","F","L","M","N","O"].forEach(c2=>set(cs,`${c2}${n}`,null));
+  d.rows.forEach((r,i)=>{
+    const n=R.elFirst+i; if(n>R.elLast) return;
+    set(cs,`A${n}`,i+1);
+    set(cs,`B${n}`,[r.fullPo,[r.supplier,r.title].filter(Boolean).join("-")].filter(Boolean).join(" "));
+    set(cs,`C${n}`,r.cn); set(cs,`D${n}`,r.elements);
+  });
+  for(let n=R.elFirst+d.rows.length;n<=R.elLast;n++)
+    ["A","B","C","D"].forEach(c2=>set(cs,`${c2}${n}`,null));
+}
+
+function csFileName(g,no){
+  const t=new Date(), p2=n=>String(n).padStart(2,"0");
+  const ymd=String(t.getFullYear()).slice(2)+p2(t.getMonth()+1)+p2(t.getDate());
+  const titles=[...new Set(g.items.map(x=>x.r.title).filter(Boolean))].join("");
+  return `${ymd} ${titles} ${String(no||g.mbl).replace(/[^0-9A-Za-z]+/g,"")} 报关资料.xlsx`
+         .replace(/[\\/:*?"<>|]+/g,"").trim();
+}
+
+async function genCustoms(){
+  if(isViewer()) return denyRO();
+  const g=shipGroups().find(x=>x.key===customsMbl); if(!g) return toast("找不到这一柜","err");
+  const no=$("#csNo").value.trim();
+  if(!no) return toast("先填合同号","err");
+  const rate=Number($("#csRate").value);
+  if(!isFinite(rate)||rate<=0) return toast("汇率要填一个大于 0 的数","err");
+  const btn=$("#csGo"), old=btn.textContent;
+  btn.disabled=true; btn.textContent="生成中…";
+  try{
+    const ExcelJSLib=await loadExcelJS();
+    const url=new URL("customs_template.xlsx",location.href).href+"?v="+Date.now();
+    const res=await fetch(url);
+    if(!res.ok) throw new Error(`取模板失败（HTTP ${res.status}）。customs_template.xlsx 传到仓库了吗？`);
+    const buf=await res.arrayBuffer();
+    const wb=new ExcelJSLib.Workbook();
+    await wb.xlsx.load(buf);
+    const rows=customsRows(g);
+    const b=g.items[0].b;
+    const dt=v=>v?new Date(v+"T00:00:00"):null;
+    csFillWorkbook(wb,{
+      contractNo:no, contractDate:dt($("#csDate").value), invDate:dt($("#csInvDate").value),
+      markup:Number($("#csMarkup").value)||null, rate, profit:Number($("#csProfit").value)||null,
+      origin:b.origin||"", dest:b.dest||"", vessel:b.vessel||"", mbl:g.mbl,
+      trade:$("#csTrade").value.trim(), arrive:$("#csArrive").value.trim(),
+      buyer:buyerInfo(),
+      rows:rows.map(r=>({en:r.en,qty:cnum(r.pcs)||null,unit:r.unit,totalRmb:r.totalRmb,
+        pkgs:cnum(r.pkgs)||null,gw:cnum(r.gw)||null,nw:cnum(r.nw)||null,cbm:cnum(r.cbm)||null,
+        hs:r.hs,cn:r.cn,origin:r.origin,elements:r.elements,fullPo:r.fullPo,supplier:r.supplier,title:r.title}))
+    });
+    const out=await wb.xlsx.writeBuffer();
+    const blob=new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download=csFileName(g,no);
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
+    /* 记住参数,下次预填 */
+    const cur=(state.settings||{}).customs||{};
+    const next={rate:String(rate),profit:$("#csProfit").value.trim(),markup:$("#csMarkup").value.trim(),
+                trade:$("#csTrade").value.trim(),arrive:$("#csArrive").value.trim(),lastNo:no};
+    closeModal("mCustoms");
+    toast(`已生成 ${rows.length} 行货的报关资料`,"ok");
+    if(JSON.stringify(cur)!==JSON.stringify(next)&&!isViewer()){
+      state.settings=state.settings||{}; state.settings.customs=next;
+      await persist(`报关参数（汇率 ${rate}）`);
+    }
+  }catch(e){
+    toast(e.message||"生成失败","err");
+  }finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+/* ---- 报关商品库编辑 ---- */
+let gdDraft=[];      // 编辑中的副本,保存才写回
+function openGoods(fromMbl){
+  if(isViewer()) return denyRO();
+  gdDraft=goodsDB().map(x=>({en:x.en||"",unit:x.unit||"",hs:x.hs||"",cn:x.cn||"",origin:x.origin||"",elements:x.elements||"",_new:false}));
+  $("#gdSearch").value="";
+  $("#gdImport").style.display=fromMbl?"":"none";
+  $("#gdImport").dataset.mbl=fromMbl||"";
+  renderGoods();
+  openModal("mGoods");
+  setTimeout(()=>$("#gdSearch").focus(),50);
+}
+function renderGoods(){
+  const box=$("#gdList"); if(!box) return;
+  const q=gKey($("#gdSearch").value);
+  const list=gdDraft.map((x,i)=>({x,i}))
+    .filter(({x})=>!q||gKey(x.en).includes(q)||gKey(x.cn).includes(q)||gKey(x.hs).includes(q));
+  box.innerHTML=list.length?list.map(({x,i})=>`<div class="gd-row${x._new?" gd-new":""}" data-gi="${i}">
+    <div class="gd-l1">
+      <input class="gd-en" data-gk="en" value="${esc(x.en)}" placeholder="英文品名（跟货物明细里写的一致）">
+      <input data-gk="unit" value="${esc(x.unit)}" placeholder="单位 nos/pcs/kgs">
+      <input class="gd-hs" data-gk="hs" value="${esc(x.hs)}" placeholder="HS 编码">
+      <input data-gk="cn" value="${esc(x.cn)}" placeholder="中文报关名">
+      <input data-gk="origin" value="${esc(x.origin)}" placeholder="货源地">
+      <button class="gd-del" title="删掉这条">✕</button>
+    </div>
+    <textarea data-gk="elements" placeholder="申报要素（多行，照海关要求写）">${esc(x.elements)}</textarea>
+  </div>`).join(""):`<div class="gd-empty">${gdDraft.length?"没有匹配的":"还没有商品资料。点「＋ 加一条」，或者在某个柜里点「⇩ 从当前柜导入没收录的品名」"}</div>`;
+  box.querySelectorAll("[data-gk]").forEach(inp=>inp.addEventListener("input",()=>{
+    const i=Number(inp.closest(".gd-row").dataset.gi);
+    gdDraft[i][inp.dataset.gk]=inp.value;
+    gdHint();
+  }));
+  box.querySelectorAll(".gd-del").forEach(b=>b.addEventListener("click",()=>{
+    const i=Number(b.closest(".gd-row").dataset.gi);
+    gdDraft.splice(i,1); renderGoods();
+  }));
+  gdHint();
+}
+function gdHint(){
+  const real=gdDraft.filter(x=>String(x.en||"").trim());
+  const miss=(k,lab)=>{const n=real.filter(x=>!String(x[k]||"").trim()).length;
+    return n?` · <span style="color:var(--safety)">${n} 条缺${lab}</span>`:"";};
+  $("#gdHint").innerHTML=`共 <b>${real.length}</b> 条`+miss("unit","单位")+miss("hs","HS")+miss("cn","中文名")+miss("elements","申报要素");
+}
+function gdImportFrom(mbl){
+  const g=shipGroups().find(x=>x.key===mbl); if(!g) return toast("找不到这一柜","err");
+  const seen=new Set(gdDraft.map(x=>gKey(x.en)));
+  let n=0;
+  customsRows(g).forEach(r=>{
+    const k=gKey(r.en);
+    if(!k||seen.has(k)) return;
+    seen.add(k); n++;
+    gdDraft.unshift({en:r.en,unit:"",hs:"",cn:"",origin:"",elements:"",_new:true});
+  });
+  renderGoods();
+  toast(n?`导入 ${n} 个还没收录的品名，补上 HS 和申报要素`:"这一柜的品名都已经收录了","ok");
+}
+async function saveGoods(){
+  if(isViewer()) return denyRO();
+  const clean=gdDraft.map(x=>({en:String(x.en||"").trim(),unit:String(x.unit||"").trim(),hs:String(x.hs||"").trim(),
+    cn:String(x.cn||"").trim(),origin:String(x.origin||"").trim(),elements:String(x.elements||"").trim()}))
+    .filter(x=>x.en);
+  /* 同一个英文品名只留一条:**列表里靠前的赢** —— 新加/新导入的都 unshift 在最前面,
+     那是用户正在编辑的那条,不该被下面的旧条目覆盖 */
+  const map=new Map();
+  clean.forEach(x=>{ const k=gKey(x.en); if(!map.has(k)) map.set(k,x); });
+  const arr=[...map.values()];
+  if(JSON.stringify(arr)===JSON.stringify(goodsDB())){ closeModal("mGoods"); return toast("没有改动"); }
+  state.settings=state.settings||{}; state.settings.goods=arr;
+  closeModal("mGoods");
+  if(await persist(`报关商品库 ${arr.length} 条`)) toast(`已保存 ${arr.length} 条商品资料`,"ok");
+}
+
+/* ---- 新建 MBL# / 往已有柜里加订单 ---- */
+let mblPickTo="";      // 空=新建;否则是要加进去的 MBL#
+/* 能拼柜的:下单之后的记录的每个批次(多批各列一行) */
+function mblCandidates(){
+  const out=[];
+  state.records.forEach(r=>{
+    if(!["下单","物流","完结"].includes(r.status)) return;
+    shBatches(r).forEach((b,i,arr)=>{
+      out.push({r,b,bid:b.bid||"",n:i+1,multi:arr.length>1,now:String(b.bl||"").trim()});
+    });
+  });
+  return out;
+}
+function openMblPick(to){
+  if(isViewer()) return denyRO();
+  mblPickTo=String(to||"");
+  $("#mblTitle").textContent=mblPickTo?`往 ${mblPickTo} 里加订单`:"新建 MBL#";
+  $("#mblNo").value=mblPickTo;
+  $("#mblNo").readOnly=!!mblPickTo;
+  $("#mblSearch").value=""; $("#mblIncl").checked=false;
+  renderMblPick();
+  openModal("mMbl");
+  setTimeout(()=>$(mblPickTo?"#mblSearch":"#mblNo").focus(),50);
+}
+function renderMblPick(){
+  const box=$("#mblList"); if(!box) return;
+  const q=$("#mblSearch").value.trim().toLowerCase();
+  const incl=$("#mblIncl").checked;
+  const cands=mblCandidates().filter(x=>{
+    if(x.now && x.now===mblPickTo) return false;      // 已经在这个柜里的不用再列
+    if(x.now && !incl) return false;                   // 默认只列还没分柜的
+    if(!q) return true;
+    return matchSearch(x.r,q) || sKey(x.now).includes(sKey(q));
+  });
+  if(!cands.length){ box.innerHTML=`<div class="mbl-pk-empty">${incl?"没有可选的订单":"没有还没分柜的订单 —— 勾上「含已分柜的订单」可以从别的柜挪过来"}</div>`; return; }
+  box.innerHTML=cands.map((x,i)=>{
+    const a=recAmount(x.r);
+    return `<label class="mbl-pk">
+      <input type="checkbox" data-pk="${x.r.id}|${esc(x.bid)}">
+      <span class="ti"><b>${esc(poShortNo(x.r))}</b>　${esc(x.r.title)}</span>
+      ${x.multi?`<span class="bn">第 ${x.n} 批</span>`:""}
+      <span class="sup">${esc(orderInfo(x.r).supplier||"—")}</span>
+      ${x.now?`<span class="now">现在在 ${esc(x.now)}</span>`:""}
+      <span class="amt">${a?esc(a.cur)+money(a.val):"—"}</span>
+    </label>`;
+  }).join("");
+  box.querySelectorAll("[data-pk]").forEach(i=>i.addEventListener("change",mblPickHint));
+  mblPickHint();
+}
+function mblPickHint(){
+  const picked=[...$$("#mblList [data-pk]")].filter(i=>i.checked);
+  const moving=picked.filter(i=>i.closest(".mbl-pk").querySelector(".now")).length;
+  /* 列表里一行是一个批次,同一订单分多批会占两行,所以订单数要去重 */
+  const orders=new Set(picked.map(i=>i.dataset.pk.split("|")[0])).size;
+  const batchTip=picked.length!==orders?`（${picked.length} 批）`:"";
+  $("#mblPickHint").innerHTML=picked.length
+    ? `已选 <b>${orders}</b> 个订单${batchTip}${moving?` · 其中 <b style="color:var(--safety)">${moving}</b> 个会从原来的柜移过来`:""}`
+    : "勾上要装进这个柜的订单";
+}
+async function mblPickGo(){
+  if(isViewer()) return denyRO();
+  const no=$("#mblNo").value.trim();
+  if(!no) return toast("先填 MBL#","err");
+  const picked=[...$$("#mblList [data-pk]")].filter(i=>i.checked).map(i=>i.dataset.pk);
+  if(!picked.length) return toast("还没勾选要装进来的订单","err");
+  const touched=new Map(); let moved=0;
+  picked.forEach(k=>{
+    const [rid,bid]=k.split("|");
+    const r=getRec(rid); if(!r) return;
+    const b=shGet(r,bid); if(!b) return;
+    const was=String(b.bl||"").trim();
+    if(was===no) return;
+    b.bl=no; if(was) moved++;
+    touched.set(rid,r);
+    log(r,"装柜",`MBL# ${was?`${was} → ${no}`:no}`);
+  });
+  if(!touched.size){ closeModal("mMbl"); return toast("没有变化"); }
+  closeModal("mMbl");
+  shipOpen.add(no);
+  setView("ship");
+  if(await persist(`MBL# ${no} 装柜 ${touched.size} 个订单`))
+    toast(`${touched.size} 个订单已装进 ${no}${moved?` · ${moved} 个从原柜移过来`:""}`,"ok");
+}
+async function mblRemove(rid,bid){
+  if(isViewer()) return denyRO();
+  const r=getRec(rid); if(!r) return;
+  const b=shGet(r,bid); if(!b) return;
+  const was=String(b.bl||"").trim(); if(!was) return;
+  if(!confirm(`把「${r.title}」移出 ${was}？\n\n只清掉它的 MBL#，其他物流信息和货物明细都留着。`)) return;
+  delete b.bl;
+  log(r,"移出柜",`原 MBL# ${was}`);
+  render();
+  if(await persist(`${r.id} 移出 MBL# ${was}`)) toast("已移出","ok");
+}
+
+function bindShip(){
+  $$("#shipList .mbl-hd").forEach(h=>h.addEventListener("click",()=>{
+    const k=h.dataset.toggle;
+    if(shipOpen.has(k)){
+      const sec=h.closest(".mbl");
+      if(sec&&sec._snap&&mblSnap(sec)!==sec._snap&&!confirm("这一柜有没保存的改动，确定收起吗？")) return;
+      shipOpen.delete(k);
+    } else shipOpen.add(k);
+    renderShip();
+  }));
+  $$("#shipList .mbl").forEach(sec=>{
+    const key=sec.dataset.mbl;
+    if(!shipOpen.has(key)) return;
+    const g=shipGroups().find(x=>x.key===key); if(!g) return;
+    /* 每个订单一个行编辑器 */
+    g.items.forEach((x,i)=>{
+      const box=sec.querySelector(`[data-cargo="${i}"]`);
+      cgRenderInto(box,cargoOf(x.b),()=>mblSyncTot(sec,g));
+    });
+    const sync=sec.querySelector("[data-syncall]");
+    if(sync) sync.addEventListener("click",()=>{
+      const vals={};
+      sec.querySelectorAll("[data-share]").forEach(inp=>{ const v=inp.value.trim(); if(v) vals[inp.dataset.share]=v; });
+      if(!Object.keys(vals).length) return toast("上面几栏都是空的，没什么可同步");
+      toast(`${Object.keys(vals).length} 个字段会在保存时写给这一柜全部订单`,"ok");
+    });
+    const save=sec.querySelector("[data-save]");
+    if(save) save.addEventListener("click",()=>saveShipGroup(key));
+    const add=sec.querySelector("[data-addto]");
+    if(add) add.addEventListener("click",e=>{ e.stopPropagation(); openMblPick(add.dataset.addto); });
+    const cus=sec.querySelector("[data-customs]");
+    if(cus) cus.addEventListener("click",e=>{ e.stopPropagation(); openCustoms(cus.dataset.customs); });
+    /* 点订单号/品名 → 打开那条记录的抽屉改信息 */
+    sec.querySelectorAll("[data-go]").forEach(a=>a.addEventListener("click",e=>{
+      e.stopPropagation();
+      if(sec._snap&&mblSnap(sec)!==sec._snap&&!confirm("这一柜有没保存的改动，打开记录会丢掉。继续吗？")) return;
+      openDrawer(a.dataset.go);
+    }));
+    sec.querySelectorAll("[data-rm]").forEach(btn=>btn.addEventListener("click",e=>{
+      e.stopPropagation();
+      const x=g.items[Number(btn.dataset.rm)]; if(x) mblRemove(x.r.id,x.bid);
+    }));
+    mblSyncTot(sec,g);
+    sec._snap=mblSnap(sec);     /* 展开那一刻的界面值,收起时拿来比 */
+  });
+}
+
+function mblSyncTot(sec,g){
+  const all=[];
+  g.items.forEach((x,i)=>{
+    const box=sec.querySelector(`[data-cargo="${i}"]`);
+    const lines=cgReadFrom(box); all.push(...lines);
+    const t=sec.querySelector(`[data-itot="${i}"]`);
+    if(t) t.textContent=cgTotalText(lines);
+  });
+  const t=cargoTotals(all);
+  const bits=[`订单 <b>${g.recN}</b>${g.recN!==g.items.length?`<span style="color:var(--steel)">（${g.items.length} 批）</span>`:""}`,
+    `金额 <b>${esc(mblMoneyText(g.money))}</b>`];
+  if(t.pkgs!=null) bits.push(`件数 <b>${cgFmt(t.pkgs)}</b>`);
+  if(t.gw!=null) bits.push(`毛重 <b>${cgFmt(t.gw)} KGS</b>`);
+  if(t.nw!=null) bits.push(`净重 <b>${cgFmt(t.nw)} KGS</b>`);
+  if(t.cbm!=null) bits.push(`CBM <b>${cgFmt(t.cbm)}</b>`);
+  const box=sec.querySelector("[data-tot]");
+  if(box) box.innerHTML=bits.join("");
+}
+
+async function saveShipGroup(key){
+  if(isViewer()) return denyRO();
+  const sec=$(`#shipList .mbl[data-mbl="${CSS.escape(key)}"]`); if(!sec) return;
+  const g=shipGroups().find(x=>x.key===key); if(!g) return;
+  const share={};
+  sec.querySelectorAll("[data-share]").forEach(inp=>{ const v=inp.value.trim(); if(v) share[inp.dataset.share]=v; });
+  /* 改 MBL# 本身:整柜所有订单一起改(写错了好改) */
+  const noInp=sec.querySelector("[data-mblno]");
+  const newNo=noInp?noInp.value.trim():"";
+  let renamed=false;
+  if(noInp && newNo!==g.mbl){
+    if(!newNo){ noInp.value=g.mbl; return toast("MBL# 不能清空。要把订单拿出这个柜，用右边的「移出」","err"); }
+    const dup=shipGroups().some(x=>x.mbl&&x.mbl===newNo);
+    if(!confirm(`把这一柜 ${g.recN} 个订单的 MBL# 改掉？\n\n${g.mbl}\n  ↓\n${newNo}`
+      +(dup?`\n\n⚠️ 已经有一个柜是 ${newNo}，改完会跟它合并成一柜。`:""))){ noInp.value=g.mbl; return; }
+    renamed=true;
+  }
+  const touched=new Map();   // recId -> rec
+  let nShare=0, nCargo=0;
+  g.items.forEach((x,i)=>{
+    const b=shGet(x.r,x.bid); if(!b) return;
+    let changed=false;
+    if(renamed){ b.bl=newNo; changed=true; }
+    Object.entries(share).forEach(([k,v])=>{ if(String(b[k]||"")!==v){ b[k]=v; changed=true; nShare++; } });
+    const lines=cgReadFrom(sec.querySelector(`[data-cargo="${i}"]`));
+    /* 字段是 cargoLines(结构化);b.cargo 是旧的自由文本格式,写进去会被 parseCargo 当字符串解析 */
+    if(cargoSig(cargoOf(b))!==cargoSig(lines)){
+      if(lines.length){ b.cargoLines=lines; delete b.cargo; } else { delete b.cargoLines; delete b.cargo; }
+      changed=true; nCargo++;
+    }
+    if(changed) touched.set(x.r.id,x.r);
+  });
+  if(!touched.size){ sec._snap=mblSnap(sec); return toast("没有改动"); }
+  touched.forEach(r=>log(r,renamed?"改 MBL#":"发货页统一录入",
+    renamed?`${g.mbl} → ${newNo}`:`MBL# ${g.mbl||"(未填)"}`));
+  if(renamed){ shipOpen.delete(key); shipOpen.add(newNo); }
+  render();
+  if(await persist(renamed?`MBL# ${g.mbl} → ${newNo}（${touched.size} 个订单）`
+                          :`MBL# ${g.mbl||"(未填)"} 统一录入 ${touched.size} 条`))
+    toast(renamed?`MBL# 已改成 ${newNo} · ${touched.size} 个订单`
+                 :`已保存 ${touched.size} 条记录${nShare?` · ${nShare} 处共享字段`:""}${nCargo?` · ${nCargo} 个订单的货物明细`:""}`,"ok");
+}
+
 /* ================= 付款请款单 =================
    模板对照:北京鸿坤环宇贸易咨询有限责任公司 PAYMENT REQUEST。
    除了请款人姓名/部门/截止日期,其余字段全部从记录和供应商库自动带入。
@@ -3076,6 +3900,13 @@ function supShort(sp){
 
 /* 项目号全称。记录里 job 存的是 "26-016",但单据上要写 "HKG26-016"。
    优先从 PO 号解析(HKG26016-NM10 → HKG26-016),解析不出来才回落,不硬编前缀免得猜错。 */
+/* 发货页用的短号:PO 号去掉字母前缀。HKG26005-NM08 → 26005-NM08。
+   没填 PO 就回落到 项目号-二级号,再不行用内部编号 */
+function poShortNo(r){
+  const po=String((r&&r.po)||"").trim();
+  if(po) return po.replace(/^[A-Za-z]+/,"");
+  return fullJob(r)||String((r&&r.id)||"");
+}
 function jobFullNo(r){
   const m=String((r&&r.po)||"").trim().match(/^([A-Za-z]+)(\d{2})(\d{3})/);
   if(m) return m[1].toUpperCase()+m[2]+"-"+m[3];
@@ -3857,7 +4688,7 @@ function downloadCSV(name,rows){
 }
 function exportRecords(){
   const list=state.records.filter(passFilter);
-  const head=["单号","项目号","二级项目号","合同/PO号","标题","英文标题","状态","优先级","目的地","需求人","需要日期","交期","签订日期","供应商","币种","金额","报价家数","BL#","ORIGIN","DESTINATION","ETD","ETA","实际到货","附件数","说明","创建时间","更新时间"];
+  const head=["单号","项目号","二级项目号","合同/PO号","标题","英文标题","状态","优先级","目的地","需求人","需要日期","交期","签订日期","供应商","币种","金额","报价家数","MBL#","ORIGIN","DESTINATION","ETD","ETA","实际到货","附件数","说明","创建时间","更新时间"];
   const rows=[head].concat(list.map(r=>{
     const oi=orderInfo(r), sp=r.ship||{}, a=recAmount(r);
     return [r.id,r.job||"",r.sub||"",r.po||"",r.title||"",r.titleEn||"",r.status,r.pri,r.dest||"",r.requester||"",fmtD(r.neededBy),r.eta||"",fmtD(r.signed),
@@ -4081,7 +4912,7 @@ function printHTML(r){
 
   if(isShipping(r)) shBatches(r).forEach((b,i,arr)=>{
     out+=H(arr.length>1?`物流信息 · 第 ${i+1} 批`:"物流信息",b.arrived?"已到货":"")+KV([
-      ["BL#",b.bl||"—"],["船名/航次",b.vessel||"—"],
+      ["MBL#",b.bl||"—"],["船名/航次",b.vessel||"—"],
       ["ORIGIN",b.origin||"—"],["DESTINATION",b.dest||"—"],
       ["ETD",fmtD(b.etd)||"—"],["ETA",fmtD(b.eta)||"—"],
       ["柜号/唛头",b.ctnr||"—"],["实际到货",fmtD(b.arrived)||"—"]]);
@@ -4397,7 +5228,7 @@ function resetOrderFields(){
 }
 
 /* ================= 物流信息 ================= */
-const SHIP_FIELDS={bl:["BL#","shBl"],vessel:["船名/航次","shVessel"],
+const SHIP_FIELDS={bl:["MBL#","shBl"],vessel:["船名/航次","shVessel"],
   origin:["ORIGIN","shOrigin"],dest:["DESTINATION","shDest"],etd:["ETD","shEtd"],eta:["ETA","shEta"],
   ctnr:["柜号/唛头","shCtnr"],arrived:["实际到货","shArrived"]};
 const SHIP_KEYS=Object.keys(SHIP_FIELDS);
@@ -4409,41 +5240,51 @@ const cargoBrief=lines=>{ if(!(lines||[]).length) return "空";
 };
 const shipDesc=b=>SHIP_KEYS.filter(k=>b[k]).map(k=>`${SHIP_FIELDS[k][0]}:${b[k]}`).join("; ");
 /* 货物明细行编辑器 */
+/* price = 采购单价 RMB。报关资料要用它推 USD 售价（× 加价率 ÷ 汇率） */
 const CG_COLS=[["desc","品名","text"],["pcs","PCS","num"],["pkgs","PACKAGES","num"],
-  ["gw","毛重 KGS","num"],["nw","净重 KGS","num"],["cbm","CBM","num"],["note","备注","text"]];
+  ["gw","毛重 KGS","num"],["nw","净重 KGS","num"],["cbm","CBM","num"],
+  ["price","单价 RMB","num"],["note","备注","text"]];
 function cgRowHTML(l){
   return `<div class="cg-row">${CG_COLS.map(([k,lab,t])=>
     `<input class="cg-i cg-${k}" data-cgk="${k}" ${t==="num"?'type="text" inputmode="decimal"':""} placeholder="${esc(lab)}" value="${esc(l&&l[k]!=null?String(l[k]):"")}">`).join("")}
     <button type="button" class="cg-del" title="删掉这一行">✕</button></div>`;
 }
-function cgRenderRows(lines){
-  const box=$("#shCargoRows");
+/* 行编辑器要能同时开好几份(发货页每个订单一份),所以都按容器操作,不写死 #shCargoRows */
+function cgRenderInto(box,lines,onChange){
+  if(!box) return;
   box.innerHTML=`<div class="cg-row cg-head">${CG_COLS.map(([,lab])=>`<span>${esc(lab)}</span>`).join("")}<span></span></div>`
     +((lines&&lines.length?lines:[null]).map(cgRowHTML).join(""));
-  cgBind(); cgSyncTotals();
+  cgBindIn(box,onChange);
+  if(onChange) onChange();
 }
-function cgReadRows(){
-  return [...$$("#shCargoRows .cg-row:not(.cg-head)")].map(r=>{
+function cgReadFrom(box){
+  if(!box) return [];
+  return [...box.querySelectorAll(".cg-row:not(.cg-head)")].map(r=>{
     const o={};
     r.querySelectorAll(".cg-i").forEach(i=>o[i.dataset.cgk]=i.value.trim());
     return o;
   }).filter(l=>!cargoEmpty(l));
 }
-function cgSyncTotals(){
-  const t=cargoTotals(cgReadRows());
-  const parts=[["PACKAGES",t.pkgs],["毛重",t.gw],["净重",t.nw],["CBM",t.cbm]]
-    .filter(([,v])=>v!=null).map(([k,v])=>`${k} ${cgFmt(v)}`);
-  $("#shCargoTot").textContent=parts.length?"合计  "+parts.join("　"):"";
-}
-function cgBind(){
-  $$("#shCargoRows .cg-i").forEach(i=>{ i.oninput=cgSyncTotals; });
-  $$("#shCargoRows .cg-del").forEach(b=>{ b.onclick=()=>{
-    const rows=$$("#shCargoRows .cg-row:not(.cg-head)");
+function cgBindIn(box,onChange){
+  box.querySelectorAll(".cg-i").forEach(i=>{ i.oninput=()=>{ if(onChange) onChange(); }; });
+  box.querySelectorAll(".cg-del").forEach(b=>{ b.onclick=()=>{
+    const rows=box.querySelectorAll(".cg-row:not(.cg-head)");
     if(rows.length<=1){ b.closest(".cg-row").querySelectorAll(".cg-i").forEach(i=>i.value=""); }
     else b.closest(".cg-row").remove();
-    cgSyncTotals();
+    if(onChange) onChange();
   };});
 }
+const cgTotalText=lines=>{
+  const t=cargoTotals(lines);
+  const parts=[["PACKAGES",t.pkgs],["毛重",t.gw],["净重",t.nw],["CBM",t.cbm]]
+    .filter(([,v])=>v!=null).map(([k,v])=>`${k} ${cgFmt(v)}`);
+  return parts.length?"合计  "+parts.join("　"):"";
+};
+/* 下面三个是 mShip 弹窗用的,保持原来的签名 */
+function cgRenderRows(lines){ cgRenderInto($("#shCargoRows"),lines,cgSyncTotals); }
+function cgReadRows(){ return cgReadFrom($("#shCargoRows")); }
+function cgSyncTotals(){ $("#shCargoTot").textContent=cgTotalText(cgReadRows()); }
+function cgBind(){ cgBindIn($("#shCargoRows"),cgSyncTotals); }
 let editingShipId=null, editingBid="";   // ""=第1批  "__new__"=新增  其他=bid
 function openEditShip(id,bid){
   const rec=getRec(id); if(!rec)return;
@@ -4708,6 +5549,19 @@ $("#tabBoard").addEventListener("click",()=>setView("board"));
 $("#tabProj").addEventListener("click",()=>setView("proj"));
 $("#tabCal").addEventListener("click",()=>setView("cal"));
 $("#tabFin").addEventListener("click",()=>setView("fin"));
+$("#tabShip").addEventListener("click",()=>setView("ship"));
+$("#shipHideDone").addEventListener("change",renderShip);
+$("#btnNewMbl").addEventListener("click",()=>openMblPick(""));
+$("#sGoodsBtn").addEventListener("click",()=>{ closeModal("mSettings"); openGoods(""); });
+$("#gdAdd").addEventListener("click",()=>{ gdDraft.unshift({en:"",unit:"",hs:"",cn:"",origin:"",elements:"",_new:true}); renderGoods();
+  setTimeout(()=>{ const f=$("#gdList .gd-row .gd-en"); if(f) f.focus(); },30); });
+$("#gdSearch").addEventListener("input",renderGoods);
+$("#gdImport").addEventListener("click",e=>gdImportFrom(e.currentTarget.dataset.mbl));
+$("#gdSave").addEventListener("click",saveGoods);
+$("#csGo").addEventListener("click",genCustoms);
+$("#mblGo").addEventListener("click",mblPickGo);
+$("#mblSearch").addEventListener("input",renderMblPick);
+$("#mblIncl").addEventListener("change",renderMblPick);
 $("#calPrev").addEventListener("click",()=>calShift(-1));
 $("#calNext").addEventListener("click",()=>calShift(1));
 $("#calToday").addEventListener("click",()=>{ calMon=calKey(new Date()); renderCal(); });
@@ -4770,6 +5624,9 @@ function openSettings(){
   $("#sTlKeep").value=(state.settings||{}).tlKeep||"";
   {const w=((state.settings||{}).payReq||{})[authUser()||""]||{};
    $("#sPrName").value=w.name||""; $("#sPrDept").value=w.dept||"";}
+  {const b=buyerInfo();
+   $("#sBuyerName").value=b.name; $("#sBuyerAttn").value=b.attn;
+   $("#sBuyerAddr").value=b.addr; $("#sBuyerTel").value=b.tel;}
   openModal("mSettings");
 }
 $("#sSizeBtn").addEventListener("click",checkRepoSize);
@@ -4792,6 +5649,14 @@ $("#sSave").addEventListener("click",async()=>{
     if(keep!==null&&isFinite(keep)&&keep>=10&&keep<=500&&keep!==tlKeep()&&!isViewer()){
       state.settings=state.settings||{}; state.settings.tlKeep=keep; chg.push(`时间线保留 ${keep} 条`);
     }
+    {const nb={name:$("#sBuyerName").value.trim(),addr:$("#sBuyerAddr").value.trim(),
+               attn:$("#sBuyerAttn").value.trim(),tel:$("#sBuyerTel").value.trim()};
+     const ob=buyerInfo();
+     if(!isViewer()&&JSON.stringify(nb)!==JSON.stringify(ob)){
+       state.settings=state.settings||{};
+       if(nb.name||nb.addr||nb.attn||nb.tel) state.settings.buyer=nb; else delete state.settings.buyer;
+       chg.push("买方信息");
+     }}
     {const u=authUser()||"", prN=$("#sPrName").value.trim(), prD=$("#sPrDept").value.trim();
      const cur=((state.settings||{}).payReq||{})[u]||{};
      if(u&&!isViewer()&&(prN!==(cur.name||"")||prD!==(cur.dept||""))){
