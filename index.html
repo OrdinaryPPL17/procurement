@@ -294,7 +294,7 @@ tr.sel td:first-child{position:relative}
   #printArea{font-family:var(--sans);color:#000}
 }
 #printArea{display:none}
-body.readonly #bulkReq,body.readonly #bulkDel,body.readonly #bulkTo,body.readonly #btnNew,body.readonly [data-um="backfill"],body.readonly #btnBulk,body.readonly #btnEditInfo,body.readonly #btnDelRec,body.readonly #btnEditOrder,body.readonly #btnEditShip,
+body.readonly #bulkReq,body.readonly #bulkDel,body.readonly #bulkTo,body.readonly #btnNew,body.readonly [data-um="backfill"],body.readonly [data-um="goods"],body.readonly #btnBulk,body.readonly #btnEditInfo,body.readonly #btnDelRec,body.readonly #btnEditOrder,body.readonly #btnEditShip,
 body.readonly .upl-zone,body.readonly .att-item .del,body.readonly #supAddBtn,body.readonly [data-supedit],
 body.readonly .proj-hd .addbtn,body.readonly #dwBody .actions,body.readonly #dwBody .act-note,
 body.readonly #dwBody .qt td:last-child,body.readonly #dwBody .qt th:last-child,
@@ -516,7 +516,7 @@ body.dark .ack-row{background:#232A32}
 /* 货物明细行编辑器 */
 .cg-ed{border:1px solid var(--line);border-radius:6px;padding:8px;background:rgba(255,255,255,.5)}
 .cg-grid{min-width:640px}
-.cg-row{display:grid;grid-template-columns:1.6fr .6fr .8fr .8fr .8fr .6fr .8fr 1fr 24px;gap:5px;align-items:center;margin-bottom:5px}
+.cg-row{display:grid;grid-template-columns:1.5fr .6fr .8fr .8fr .8fr .6fr 1fr .9fr 24px;gap:5px;align-items:center;margin-bottom:5px}
 .cg-row.cg-head{margin-bottom:4px}
 .cg-row.cg-head span{font-size:10px;font-weight:700;color:var(--steel);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cg-i{width:100%;min-width:0;font-size:12px;padding:5px 6px}
@@ -1165,6 +1165,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
           <button class="chip" id="userChip" title="账户菜单">👤 未设置 <span class="cv">▾</span></button>
           <div class="user-menu" id="userMenu">
             <button data-um="suppliers" title="供应商名称、银行信息、产品清单"><span class="ic">🏢</span>供应商库</button>
+            <button data-um="goods" title="英文品名 → HS 编码 / 中文报关名 / 申报要素 / 货源地，生成报关资料时自动套"><span class="ic">📦</span>报关商品库</button>
           <button data-um="backfill" title="一屏录入历史采购，直接生成到指定状态"><span class="ic">⤓</span>补录历史采购</button>
           <button data-um="theme" id="umTheme"><span class="ic">🌙</span>深色模式</button>
           <button data-um="settings"><span class="ic">⚙</span>数据仓库设置</button>
@@ -1298,11 +1299,6 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
         <div id="sDataInfo" class="hint">超过 1MB 后 GitHub 接口要改用 raw 方式读取（已支持），但每次保存都要整个文件重传，仓库历史也会变大。</div>
       </div>
       <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
-        <label style="display:flex;align-items:center;justify-content:space-between">报关商品库
-          <button class="btn btn-sm" id="sGoodsBtn">打开</button></label>
-        <div class="hint">英文品名 → HS 编码 / 中文报关名 / 申报要素 / 货源地。生成报关资料时自动套。</div>
-      </div>
-      <div class="fld">
         <label>买方（报关资料上的收货方）</label>
         <div class="row2" style="margin-top:4px">
           <input id="sBuyerName" placeholder="公司名，如 CSQUARE STEEL CO., LIMITED">
@@ -3108,7 +3104,7 @@ const shGet=(r,bid)=>bid?shMore(r).find(b=>b.bid===bid):sh(r);
 /* ── 货物信息明细 ──
    batch.cargoLines=[{desc,pcs,pkgs,gw,nw,cbm,note}];合计四列自动求和,不入库。
    老数据的 batch.cargo 自由文本会被 parseCargo 拆成明细行(拆不动的整段进品名,不丢数据)。 */
-const CGN=["pcs","pkgs","gw","nw","cbm","price"];
+const CGN=["pcs","pkgs","gw","nw","cbm","amt"];
 const cgNum=v=>{ const n=parseFloat(String(v==null?"":v).replace(/,/g,"")); return isNaN(n)?null:n; };
 const cgFmt=n=>n==null?"":(Math.round(n*1000)/1000).toLocaleString("en-US",{maximumFractionDigits:3});
 function parseCargoLine(raw){
@@ -3277,8 +3273,7 @@ function customsRows(g){
       out.push({
         en, po:poShortNo(x.r), fullPo:x.r.po||"", title:x.r.title||"", supplier:oi.supplier||"",
         pcs:l.pcs||"", pkgs:l.pkgs||"", gw:l.gw||"", nw:l.nw||"", cbm:l.cbm||"",
-        priceRmb:(l.price==null||l.price==="")?null:Number(l.price),
-        totalRmb:(l.price==null||l.price==="")?null:Number(l.price)*cnum(l.pcs),
+        totalRmb:cargoAmt(l),
         unit:m?m.unit||"":"", hs:m?m.hs||"":"", cn:m?m.cn||"":"", elements:m?m.elements||"":"", origin:m?m.origin||"":"",
         matched:!!m
       });
@@ -3287,6 +3282,29 @@ function customsRows(g){
   return out;
 }
 const cnum=v=>{ const n=Number(String(v||"").replace(/[^0-9.\-]/g,"")); return isFinite(n)?n:0; };
+/* 兼容早先按「单价」存的数据:有 amt 用 amt,否则拿旧的 price × 数量 */
+function cargoAmt(l){
+  if(!l) return null;
+  if(l.amt!=null&&l.amt!=="") return cnum(l.amt);
+  if(l.price!=null&&l.price!=="") return cnum(l.price)*cnum(l.pcs);
+  return null;
+}
+/* 货物明细金额合计 vs 订单合同额（含变更项）。一条记录分多批时按全部批次合计比 */
+function cargoAmtCheck(rec,linesOverride,bid){
+  if(!rec) return "";
+  const bs=shBatches(rec);
+  let sum=0, filled=0;
+  bs.forEach(b=>{
+    const lines=(linesOverride&&String(b.bid||"")===String(bid||""))?linesOverride:cargoOf(b);
+    lines.forEach(l=>{ const v=cargoAmt(l); if(v!=null){ sum+=v; filled++; } });
+  });
+  if(!filled) return "";
+  const a=recAmount(rec); if(!a||!(a.val>0)) return "";
+  const diff=sum-a.val, multi=bs.length>1;
+  const tag=multi?`（含全部 ${bs.length} 批）`:"";
+  if(Math.abs(diff)<0.01) return `<span style="color:var(--approve)">✓ 跟订单额对得上${tag}</span>`;
+  return `<span style="color:var(--safety)">比订单额${diff>0?"多":"少"} ${esc(a.cur)}${money(Math.abs(diff))}${tag}</span>`;
+}
 function customsTotals(rows){
   return rows.reduce((a,r)=>({pkgs:a.pkgs+cnum(r.pkgs),gw:a.gw+cnum(r.gw),nw:a.nw+cnum(r.nw),cbm:a.cbm+cnum(r.cbm)}),
     {pkgs:0,gw:0,nw:0,cbm:0});
@@ -3464,7 +3482,7 @@ function openCustoms(mbl){
     ${miss.length?`<b>${miss.length}</b> 个品名在商品库里缺 HS 编码或单位，生成出来这几行会是空的：
       <div class="miss">${miss.map(esc).join("<br>")}</div>
       <button class="btn btn-sm" id="csFix" style="margin-top:6px">去商品库补</button>`:""}
-    ${noPrice?`<div${miss.length?' style="margin-top:6px"':''}><b>${noPrice}</b> 行货物明细没填「单价 RMB」，报关金额会算不出来。</div>`:""}
+    ${noPrice?`<div${miss.length?' style="margin-top:6px"':''}><b>${noPrice}</b> 行货物明细没填「总金额 RMB」，报关金额会算不出来。</div>`:""}
   </div>`:"";
   const fix=$("#csFix");
   if(fix) fix.addEventListener("click",()=>{ closeModal("mCustoms"); openGoods(mbl); });
@@ -3803,7 +3821,10 @@ function mblSyncTot(sec,g){
     const box=sec.querySelector(`[data-cargo="${i}"]`);
     const lines=cgReadFrom(box); all.push(...lines);
     const t=sec.querySelector(`[data-itot="${i}"]`);
-    if(t) t.textContent=cgTotalText(lines);
+    if(t){
+      const chk=cargoAmtCheck(x.r,lines,x.bid);
+      t.innerHTML=esc(cgTotalText(lines))+(chk?`　${chk}`:"");
+    }
   });
   const t=cargoTotals(all);
   const bits=[`订单 <b>${g.recN}</b>${g.recN!==g.items.length?`<span style="color:var(--steel)">（${g.items.length} 批）</span>`:""}`,
@@ -5240,10 +5261,12 @@ const cargoBrief=lines=>{ if(!(lines||[]).length) return "空";
 };
 const shipDesc=b=>SHIP_KEYS.filter(k=>b[k]).map(k=>`${SHIP_FIELDS[k][0]}:${b[k]}`).join("; ");
 /* 货物明细行编辑器 */
-/* price = 采购单价 RMB。报关资料要用它推 USD 售价（× 加价率 ÷ 汇率） */
+/* amt = 这一行的采购金额(总价)RMB,跟报关表 H 列一个口径 —— 从供应商报价单直接抄,
+   不用自己除。单价交给模板公式 G=I/C 算,免得除不尽产生尾差。
+   （早先叫 price 存的是单价,读取时做了兼容） */
 const CG_COLS=[["desc","品名","text"],["pcs","PCS","num"],["pkgs","PACKAGES","num"],
   ["gw","毛重 KGS","num"],["nw","净重 KGS","num"],["cbm","CBM","num"],
-  ["price","单价 RMB","num"],["note","备注","text"]];
+  ["amt","总金额 RMB","num"],["note","备注","text"]];
 function cgRowHTML(l){
   return `<div class="cg-row">${CG_COLS.map(([k,lab,t])=>
     `<input class="cg-i cg-${k}" data-cgk="${k}" ${t==="num"?'type="text" inputmode="decimal"':""} placeholder="${esc(lab)}" value="${esc(l&&l[k]!=null?String(l[k]):"")}">`).join("")}
@@ -5283,7 +5306,12 @@ const cgTotalText=lines=>{
 /* 下面三个是 mShip 弹窗用的,保持原来的签名 */
 function cgRenderRows(lines){ cgRenderInto($("#shCargoRows"),lines,cgSyncTotals); }
 function cgReadRows(){ return cgReadFrom($("#shCargoRows")); }
-function cgSyncTotals(){ $("#shCargoTot").textContent=cgTotalText(cgReadRows()); }
+function cgSyncTotals(){
+  const lines=cgReadRows();
+  const rec=editingShipId?getRec(editingShipId):null;
+  const chk=rec?cargoAmtCheck(rec,lines,editingBid==="__new__"?"":editingBid):"";
+  $("#shCargoTot").innerHTML=esc(cgTotalText(lines))+(chk?`　${chk}`:"");
+}
 function cgBind(){ cgBindIn($("#shCargoRows"),cgSyncTotals); }
 let editingShipId=null, editingBid="";   // ""=第1批  "__new__"=新增  其他=bid
 function openEditShip(id,bid){
@@ -5541,6 +5569,7 @@ $$("#userMenu button").forEach(b=>b.addEventListener("click",()=>{
   const a=b.dataset.um;
   if(a==="settings") openSettings();
   else if(a==="suppliers") openSupList();
+  else if(a==="goods") openGoods("");
   else if(a==="backfill") openBackfill("");
   else if(a==="theme") $("#btnTheme").click();
   else { sessionUser=null; storage.removeItem("pt_auth"); storage.removeItem("pt_cache"); location.reload(); }
@@ -5552,7 +5581,6 @@ $("#tabFin").addEventListener("click",()=>setView("fin"));
 $("#tabShip").addEventListener("click",()=>setView("ship"));
 $("#shipHideDone").addEventListener("change",renderShip);
 $("#btnNewMbl").addEventListener("click",()=>openMblPick(""));
-$("#sGoodsBtn").addEventListener("click",()=>{ closeModal("mSettings"); openGoods(""); });
 $("#gdAdd").addEventListener("click",()=>{ gdDraft.unshift({en:"",unit:"",hs:"",cn:"",origin:"",elements:"",_new:true}); renderGoods();
   setTimeout(()=>{ const f=$("#gdList .gd-row .gd-en"); if(f) f.focus(); },30); });
 $("#gdSearch").addEventListener("input",renderGoods);
