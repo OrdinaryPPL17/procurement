@@ -361,6 +361,10 @@ body.readonly .card{cursor:pointer}
 .qcalc{display:grid;gap:8px;align-items:center;
   grid-template-columns:minmax(58px,.85fr) minmax(56px,.85fr) 12px minmax(80px,1.15fr) 12px 62px minmax(94px,1.45fr)}
 .qcalc .qop{text-align:center;color:var(--steel);font-size:13px;line-height:1}
+.rq-asks{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+.rq-ask{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:400;margin:0;cursor:pointer}
+.rq-ask input{width:auto;flex:none;margin:0}
+@media(max-width:640px){.rq-asks{grid-template-columns:1fr}}
 .qt th{white-space:nowrap}
 .qt .qsub{margin-top:2px;font-family:var(--mono);font-size:11px;color:var(--steel);font-weight:400}
 .qcalc #qQty,.qcalc #qUnitPrice{font-family:var(--mono);text-align:right}
@@ -528,6 +532,7 @@ body.dark .ack-row{background:#232A32}
 .cg-ed{border:1px solid var(--line);border-radius:6px;padding:8px;background:rgba(255,255,255,.5)}
 .cg-grid{min-width:640px}
 .cg-row{display:grid;grid-template-columns:1.5fr .6fr .8fr .8fr .8fr .6fr 1fr .9fr 24px;gap:5px;align-items:center;margin-bottom:5px}
+.cg-f{display:contents}
 .cg-row.cg-head{margin-bottom:4px}
 .cg-row.cg-head span{font-size:10px;font-weight:700;color:var(--steel);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cg-i{width:100%;min-width:0;font-size:12px;padding:5px 6px}
@@ -732,28 +737,25 @@ body.readonly .att-item .mv,body.readonly .att-item .ren,body.readonly .afd-acts
   .col{flex:0 0 88vw;scroll-snap-align:center;display:flex;flex-direction:column;overflow:hidden;min-height:0}
   .col-body{overflow-y:auto;flex:1;min-height:0;max-height:none;-webkit-overflow-scrolling:touch}
   .proj-wrap{flex:1;min-height:0;overflow-y:auto;padding:12px 12px 40px}
-  /* 顶栏:压成两行 */
+  /* 顶栏:两行。第一行 标题+预警+发布+账号,第二行 整排标签。
+     ⚠️ 以前这里有两套互相打架的规则,后一套把 .hd-title 又拉回 width:100%,
+     结果发布按钮被挤到第三行,顶栏吃掉屏幕的三分之一。别再重复声明 .hd-title。 */
   .only-mobile{display:block}
   .only-mobile-ib{display:inline-flex}
   .hd{flex-wrap:wrap;row-gap:0;align-items:center}
-  .hd-title{order:1;flex:1;width:auto;border-bottom:none;padding:7px 0 7px 12px}
-  .hd-title .sub{display:none}
-  .hd-title h1{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hd-title{order:1;flex:1 1 auto;width:auto;min-width:0;border-bottom:none;padding:7px 2px 7px 12px}
   .hd-title>div{min-width:0}
-  .hd-mid{order:2;margin:0;padding:7px 4px}
-  .hd-acct{order:3;border-left:none;padding:7px 10px 7px 4px;gap:6px}
-  .hd-nav{order:4;flex:1;padding:0 0 8px 12px;gap:6px}
-  .hd-right{order:5;padding:0 12px 8px 0;margin-left:auto;gap:6px}
-  .chip.alert{font-size:11px;padding:4px 7px;gap:3px}
-  .hd-title{width:100%;border-bottom:1px solid var(--line-soft);padding:8px 12px}
-  .hd-title h1{font-size:15px}
-  .hd-title .sub{font-size:9px}
+  .hd-title h1{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hd-title .sub{display:none}
   .hd-title::after,.hd-nav::after{display:none}
-  .hd-nav,.hd-mid,.hd-right{padding:7px 10px}
-  .hd-nav{gap:6px}
-  .hd-right{margin-left:auto;gap:6px}
-  .hd-acct{border-left:none;padding-left:6px;margin-left:0}
+  .hd-mid{order:2;margin:0;padding:7px 2px}
+  .hd-right{order:3;margin-left:0;padding:7px 2px;gap:6px}
+  .hd-acct{order:4;border-left:none;margin-left:0;padding:7px 10px 7px 4px;gap:6px}
+  .hd-nav{order:5;flex:1 1 100%;width:100%;margin:0;padding:0 10px 8px;gap:6px;
+    border-top:1px solid var(--line-soft)}
+  .chip.alert{font-size:11px;padding:4px 7px;gap:3px}
   .hd-right .btn{padding:6px 9px;font-size:12px}
+  .hide-sm{display:none}
   .view-tabs button{padding:6px 11px;font-size:12px}
   #connText{display:none}
   .sync-chip{padding:6px}
@@ -783,13 +785,46 @@ body.readonly .att-item .mv,body.readonly .att-item .ren,body.readonly .afd-acts
   .modal-mask{padding:3vh 10px 10px;align-items:flex-start}
   .modal{width:100%}
   .md-bd{padding:14px}
-  .md-ft{flex-wrap:wrap;gap:8px}
+  /* 弹窗比屏幕高时靠 .modal-mask 滚动,保存按钮会滚出视野 —— 钉在底部 */
+  .md-ft{position:sticky;bottom:0;z-index:2;flex-wrap:wrap;gap:8px;margin-top:4px;
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+    background:var(--paper);border-top:1px solid var(--line);
+    border-radius:0 0 10px 10px}
   .md-ft .btn{flex:1;justify-content:center}
   /* 输入框统一 16px,避免 iOS 自动放大 */
   input,select,textarea{font-size:16px}
+  /* ===== 窄屏:表格行拆成卡片 =====
+     手机上一行放不下 5-10 列,硬排的结果是每个数值被截成「¥76,…」「558.…」,
+     还看不出哪个数是什么。拆成卡片:标题占一行,其余「标签 数值」流式排开。 */
+  /* 报价对比 */
+  table.qt{font-size:13px;display:block}
+  table.qt thead{display:none}
+  table.qt tbody,table.qt tr,table.qt td{display:block;width:auto}
+  table.qt tr{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;margin-bottom:10px}
+  table.qt tr.sel{background:var(--approve-soft);border-color:var(--approve)}
+  table.qt td{border:none;padding:2px 0}
+  table.qt td:first-child{font-weight:700;padding-bottom:4px}
+  table.qt td[data-lb]::before{content:attr(data-lb);display:inline-block;min-width:38px;
+    font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--steel)}
+  table.qt td[data-lb]:empty{display:none}
+  table.qt td.qt-act{margin-top:8px;display:flex;gap:6px;white-space:normal}
+  table.qt td.qt-act .btn{flex:1;justify-content:center}
+  table.qt .qsub{margin-left:38px}
+  /* 货物明细录入:一行一个字段,带标签 */
+  .cg-row{display:block;position:relative;background:var(--card);border:1px solid var(--line);
+    border-radius:8px;padding:9px 34px 3px 10px;margin-bottom:8px}
+  .cg-row.cg-head{display:none}
+  .cg-f{display:block;margin-bottom:7px}
+  .cg-f::before{content:attr(data-lb);display:block;font-size:10px;font-weight:700;
+    letter-spacing:.04em;color:var(--steel);margin-bottom:2px}
+  .cg-del{position:absolute;top:8px;right:8px}
   /* 表格换行 */
-  table.qt{font-size:12px}
-  .kv{grid-template-columns:76px 1fr}
+  /* 标签列写死 76px 时,「MBL# / 总提单号」会折行,「DESTINATION」直接顶到值上没空隙 */
+  .kv{display:block}
+  .kv dt{font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--steel);margin-top:9px}
+  .kv dt:first-child{margin-top:0}
+  .kv dd{margin:1px 0 0}
   /* 底部条:避开 iPhone 手势条 */
   .bulkbar,.undobar{width:calc(100% - 20px);justify-content:center;border-radius:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));flex-wrap:wrap;gap:8px}
   /* 触控目标放大 */
@@ -882,7 +917,9 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 .ship-wrap>*{flex:none;width:100%}
 .ship-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .ship-only{font-size:12px;color:var(--steel);display:flex;align-items:center;gap:6px;white-space:nowrap}
-#shipList{border:1px solid var(--line);border-radius:10px;background:var(--paper);overflow:hidden}
+/* ⚠️ 又踩了一次:容器写 --paper 就跟页面底色一样,整块糊在背景里。列表本身是白卡片。 */
+#shipList{border:1px solid var(--line);border-radius:10px;background:var(--card);
+  box-shadow:0 1px 2px rgba(27,42,58,.05);overflow:hidden}
 .mbl{border-bottom:1px solid var(--line-soft)}
 .mbl:last-child{border-bottom:none}
 /* 展开的那一组是焦点:浮起来 + 左边一条色条 */
@@ -979,7 +1016,7 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 .mbl-pk-empty{padding:20px;text-align:center;color:var(--steel);font-size:13px}
 .gd-bar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .gd-bar input{flex:1}
-.gd-list{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--paper)}
+.gd-list{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)}
 .gd-row{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:8px}
 .gd-row:last-child{margin-bottom:0}
 .gd-l1{display:grid;grid-template-columns:1.5fr .6fr 1fr 1fr .8fr 24px;gap:6px;align-items:center}
@@ -1137,6 +1174,22 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   .psub .dd{grid-area:4/1;text-align:left;font-size:11px}
   .proj-sum{flex-direction:row;justify-content:space-between;gap:8px;padding:8px 12px;font-size:11px}
 }
+/* ===== 窄屏:发货列表行拆成卡片 =====
+   必须放在 .mbl-* 基础样式「之后」。之前写在上面那个 @media 块里,
+   被后面的 .mbl-cols{display:grid} 和 .mbl-hd>span{ellipsis} 原样盖掉,
+   数值照旧被截成「¥76,…」。同名同权重的规则,谁在后面谁赢。 */
+@media(max-width:640px){
+  .mbl-head{display:none}
+  .mbl-hd.mbl-cols{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:12px 14px}
+  .mbl-hd>span{white-space:normal;overflow:visible;text-overflow:clip;text-align:left}
+  .mbl-fold{flex:none;width:12px}
+  .mbl-no{flex:1 1 calc(100% - 24px);font-size:14px}
+  .mbl-amt{font-size:15px;text-align:left}
+  .mbl-hd>span[data-lb]:not(:empty)::before{content:attr(data-lb) " ";
+    font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--steel)}
+  .mbl-hd>span[data-lb]:empty{display:none}
+  .mbl-ok{margin-left:auto;text-align:right}
+}
 </style>
 </head>
 <body>
@@ -1167,7 +1220,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       <span class="chip alert" id="alertChip" style="display:none" title="点击只看预警项"></span>
     </div>
     <div class="hd-right">
-      <button class="btn btn-primary" id="btnNew">＋ 发布采购需求</button>
+      <button class="btn btn-primary" id="btnNew">＋ 发布<span class="hide-sm">采购需求</span></button>
       <button id="btnTheme" style="display:none" aria-hidden="true"></button>
     </div>
       <div class="hd-acct">
@@ -1495,6 +1548,24 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   </div>
 </div>
 
+<div class="modal-mask" id="mRfq">
+  <div class="modal">
+    <div class="md-hd"><h2>生成询价单</h2><button class="btn btn-sm" data-close="mRfq">✕</button></div>
+    <div class="md-bd">
+      <div class="hint" style="margin-bottom:10px">发给厂商的单子，只带需求信息 —— 不会出现任何报价、供应商或内部金额。<br><b id="rqTitle"></b></div>
+      <div class="row3">
+        <div class="fld"><label>数量</label><input id="rqQty" type="text" inputmode="decimal" placeholder="如 25"></div>
+        <div class="fld"><label>单位</label><input id="rqUnit" list="unitList" placeholder="个 / pcs / sets"></div>
+        <div class="fld"><label>报价截止</label><input id="rqDue" type="date"></div>
+      </div>
+      <div class="hint" id="rqItems" style="margin:-4px 0 10px;color:var(--safety)"></div>
+      <div class="fld"><label>请厂商报以下内容</label>
+        <div id="rqAsks" class="rq-asks"></div></div>
+      <div class="fld"><label>附言</label><textarea id="rqNote" rows="2" placeholder="临时要补的话，会印在单子最后一栏"></textarea></div>
+    </div>
+    <div class="md-ft"><button class="btn" data-close="mRfq">取消</button><button class="btn btn-ink" id="rqGo" title="Ctrl+Enter">生成</button></div>
+  </div>
+</div>
 <datalist id="unitList"><option value="nos"><option value="pcs"><option value="sets"><option value="kgs"><option value="ctns"></datalist>
 
 <!-- 生成报关资料 -->
@@ -3446,13 +3517,13 @@ function renderShip(){
       <div class="mbl-hd mbl-cols" data-toggle="${esc(g.key)}"${g.recN!==g.items.length?` title="${g.recN} 个订单，其中有订单分了多批装，共 ${g.items.length} 批"`:""}>
         <span class="mbl-fold">${open?"▼":"►"}</span>
         <span class="mbl-no ${g.mbl?"":"none"}">${g.mbl?esc(g.mbl):"未填 MBL#"}</span>
-        <span class="mbl-n">${nTxt}</span>
+        <span class="mbl-n" data-lb="订单">${nTxt}</span>
         <span class="mbl-amt">${esc(mblMoneyText(g.money))}</span>
-        <span class="mbl-sub">${c.cbm!=null?cgFmt(c.cbm):""}</span>
-        <span class="mbl-sub">${c.gw!=null?cgFmt(c.gw):""}</span>
-        <span class="mbl-sub">${c.pkgs!=null?cgFmt(c.pkgs):""}</span>
-        <span class="mbl-date">${etd?fmtD(etd):""}</span>
-        <span class="mbl-date">${eta?fmtD(eta):""}</span>
+        <span class="mbl-sub" data-lb="CBM">${c.cbm!=null?cgFmt(c.cbm):""}</span>
+        <span class="mbl-sub" data-lb="毛重">${c.gw!=null?cgFmt(c.gw):""}</span>
+        <span class="mbl-sub" data-lb="件数">${c.pkgs!=null?cgFmt(c.pkgs):""}</span>
+        <span class="mbl-date" data-lb="ETD">${etd?fmtD(etd):""}</span>
+        <span class="mbl-date" data-lb="ETA">${eta?fmtD(eta):""}</span>
         <span class="mbl-ok">${g.arrived?"<i>到货</i>":""}</span>
       </div>
       ${open?`<div class="mbl-bd">${mblBodyHTML(g)}</div>`:""}
@@ -4257,6 +4328,214 @@ if(!i||i.complete)go();else{i.onload=go;i.onerror=go;}})();<\/script></body></ht
   w.document.close();
 }
 
+
+/* ================= 询价单 =================
+   发给厂商的东西:只能出现需求信息,绝不带内部报价/供应商/成本。
+   附件存在私有仓库里,厂商打不开,所以只列文件名,标注「另附」提醒自己手动发过去。 */
+const RFQ_ASKS=[
+  ["price","含税单价（人民币）及总价"],
+  ["lead","交货期（收到订单后多少天）"],
+  ["dim","单件及整批的体积、毛重净重"],
+  ["pack","包装方式（纸箱/木箱/托盘）"],
+  ["hs","HS 编码"],
+  ["warranty","质保期及售后条款"],
+  ["moq","最小起订量"],
+  ["term","价格条款（EXW / FOB / 含运）及付款方式"]
+];
+const RFQ_ASK_DEF=["price","lead","dim","pack","term"];
+const RFQ_PAYER=PR_PAYER;
+
+function rfqAsksSaved(){
+  try{ const v=JSON.parse(storage.getItem("pt_rfq_asks")||"null");
+       return Array.isArray(v)?v:RFQ_ASK_DEF; }catch(e){ return RFQ_ASK_DEF; }
+}
+/* 说明里常常是一整张清单（「1. Common Nails 2", 25lbs/bucket, 200BUCKET」这种）。
+   拆成表格，厂商才好逐项报价。拆不动的行原样留着，绝不丢内容。 */
+const RFQ_ITEM_RE=/^\s*(?:\d{1,3}\s*[.)、,，]|[-*•·])\s+(.+)$/;
+/* 只有「数字 + 单位」这种才认成数量，别的一律当规格留在品名里 */
+const RFQ_QTY_RE=/^([\d,]+(?:\.\d+)?)\s*([A-Za-z\u4e00-\u9fff][A-Za-z\u4e00-\u9fff./]*)?$/;
+function rfqParseItems(desc){
+  const items=[], rest=[];
+  String(desc||"").split(/\r?\n/).forEach(ln=>{
+    const m=ln.match(RFQ_ITEM_RE);
+    if(!m){ if(ln.trim()) rest.push(ln.trim()); return; }
+    let body=m[1].trim(), qty="", unit="";
+    const i=body.lastIndexOf(",");
+    if(i>0){
+      const q=body.slice(i+1).trim().match(RFQ_QTY_RE);
+      if(q){ qty=q[1].replace(/,/g,""); unit=q[2]||""; body=body.slice(0,i).trim(); }
+    }
+    items.push({name:body,qty,unit});
+  });
+  /* 只有一项的时候不值当排成表 */
+  return items.length>=2?{items,rest}:{items:[],rest:[]};
+}
+
+let rfqRecId=null;
+function openRfq(id){
+  const rec=getRec(id); if(!rec) return;
+  rfqRecId=id;
+  /* 数量/单位:选定报价里有就带过来,省得重填 */
+  const q=(rec.quotes||[]).find(x=>x.selected)||(rec.quotes||[])[0]||{};
+  const pi=rfqParseItems(rec.desc);
+  const many=pi.items.length>0;
+  $("#rqQty").value=many?`见明细 ${pi.items.length} 项`:(q.qty!==undefined&&q.qty!==""?q.qty:"");
+  $("#rqUnit").value=many?"":(q.unit||"");
+  $("#rqQty").disabled=$("#rqUnit").disabled=many;
+  $("#rqItems").textContent=many
+    ?`说明里认出 ${pi.items.length} 项，会排成一张询价明细表（序号 / 品名规格 / 数量）。`
+    :"";
+  const d=new Date(); d.setDate(d.getDate()+7);
+  $("#rqDue").value=d.toISOString().slice(0,10);
+  $("#rqNote").value="";
+  const on=rfqAsksSaved();
+  $("#rqAsks").innerHTML=RFQ_ASKS.map(([k,lab])=>
+    `<label class="rq-ask"><input type="checkbox" data-ask="${k}"${on.includes(k)?" checked":""}> ${esc(lab)}</label>`).join("");
+  $("#rqTitle").textContent=rec.title||rec.id;
+  openModal("mRfq"); setTimeout(()=>$("#rqQty").focus(),50);
+}
+function rfqData(){
+  const rec=getRec(rfqRecId); if(!rec) return null;
+  const asks=[...$$("#rqAsks [data-ask]")].filter(c=>c.checked).map(c=>c.dataset.ask);
+  try{ storage.setItem("pt_rfq_asks",JSON.stringify(asks)); }catch(e){}
+  const who=payReqWho();
+  return {
+    id:rec.id, title:rec.title||"", titleEn:rec.titleEn||"",
+    job:fullJob(rec), dest:rec.dest||"", need:rec.neededBy||"",
+    desc:rec.desc||"", descEn:rec.descEn||"",
+    items:rfqParseItems(rec.desc).items, itemRest:rfqParseItems(rec.desc).rest,
+    qty:$("#rqQty").disabled?"":$("#rqQty").value.trim(),
+    unit:$("#rqUnit").disabled?"":$("#rqUnit").value.trim(),
+    due:$("#rqDue").value, note:$("#rqNote").value.trim(),
+    asks:RFQ_ASKS.filter(([k])=>asks.includes(k)).map(([,lab])=>lab),
+    atts:(rec.attachments||[]).filter(a=>(a.group||"需求")==="需求").map(a=>a.name),
+    who:who.name||"", dept:who.dept||"", today:fmtD(new Date().toISOString())
+  };
+}
+function rfqFileName(d){
+  return [d.job||"",d.title||"","询价单"].filter(Boolean).join(" ")
+    .replace(/[\\/:*?"<>|]+/g,"").trim();
+}
+const RFQ_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;color:#000;margin:0;padding:0;-webkit-print-color-adjust:exact}
+.rq-bar{position:sticky;top:0;display:flex;gap:8px;align-items:center;padding:10px 14px;background:#1B2A3A;color:#fff;font-size:13px}
+.rq-bar button{font:inherit;padding:6px 14px;border-radius:6px;border:1px solid #4A5865;background:#2B3A4A;color:#fff;cursor:pointer}
+.rq-bar button:hover{background:#3A4A5A}
+.rq-bar .tip{margin-left:auto;opacity:.7;font-size:12px}
+.rq-wrap{padding:15mm 20mm}
+.rq-hd{position:relative;margin-bottom:18px;min-height:46px}
+.rq-logo{height:38px;position:absolute;left:0;top:0}
+.rq-ttl{text-align:center;font-size:16px;font-weight:700;letter-spacing:2px;padding-top:6px}
+.rq-ttl small{display:block;font-size:10px;letter-spacing:1px;font-weight:400;color:#555;margin-top:3px}
+.rq-meta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px}
+.rq-tb{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+.rq-tb td{border:1px solid #000;padding:7px 10px;vertical-align:top;word-break:break-word}
+.rq-tb tr{page-break-inside:avoid}
+.rq-tb .lb{text-align:center;font-weight:500;width:22%;background:#F5F4F0}
+.rq-tb .en{display:block;font-size:11px;color:#555;margin-top:2px}
+.rq-tb .pre{white-space:pre-wrap}
+.rq-ask{margin:0;padding-left:18px}
+.rq-ask li{margin:2px 0}
+.rq-it-t{margin:16px 0 6px;font-size:13px;font-weight:700}
+.rq-it-t small{font-weight:400;font-size:11px;color:#555}
+.rq-it th{border:1px solid #000;padding:6px 8px;font-size:12px;background:#F5F4F0;text-align:center}
+.rq-it td.c{text-align:center}
+.rq-it td{height:24px;padding:5px 8px;font-size:12px}
+.rq-sign{margin-top:40px;text-align:right;font-size:13px;line-height:1.9}
+@page{size:A4;margin:0}
+@media print{.rq-bar{display:none}.rq-wrap{padding:15mm 20mm}}
+@media screen{body{background:#eee}.rq-wrap{background:#fff;width:210mm;min-height:297mm;margin:12px auto;box-sizing:border-box}}`;
+
+function rfqHTML(d){
+  const row=(lb,val,en)=>val||en?`<tr><td class="lb">${esc(lb)}</td><td>${esc(val||"")}${en?`<span class="en">${esc(en)}</span>`:""}</td></tr>`:"";
+  const rowPre=(lb,val,en)=>val||en?`<tr><td class="lb">${esc(lb)}</td><td class="pre">${esc(val||"")}${en?`<span class="en">${esc(en)}</span>`:""}</td></tr>`:"";
+  const qty=[d.qty,d.unit].filter(Boolean).join(" ");
+  return `<div class="rq-hd"><img class="rq-logo" src="${PR_LOGO}" alt="">
+    <div class="rq-ttl">询 价 单<small>REQUEST FOR QUOTATION</small></div></div>
+<div class="rq-meta"><span>询价单号：${esc(d.id)}</span><span>日期：${esc(d.today)}</span></div>
+<table class="rq-tb">
+  ${row("询价方",RFQ_PAYER)}
+  ${row("品名",d.title,d.titleEn)}
+  ${row("项目号",d.job)}
+  ${d.items.length?row("数量","见下方询价明细，共 "+d.items.length+" 项"):row("数量",qty)}
+  ${row("需要日期",fmtD(d.need))}
+  ${row("交货地点",d.dest)}
+  ${d.items.length
+    ?(d.itemRest.length?rowPre("说明",d.itemRest.join("\n"),d.descEn):(d.descEn?row("Description",d.descEn):""))
+    :rowPre("规格说明",d.desc,d.descEn)}
+  ${d.atts.length?`<tr><td class="lb">附件</td><td>${d.atts.map(esc).join("、")}<span class="en">随本单另附</span></td></tr>`:""}
+  ${d.asks.length?`<tr><td class="lb">请报以下内容</td><td><ol class="rq-ask">${d.asks.map(a=>`<li>${esc(a)}</li>`).join("")}</ol></td></tr>`:""}
+  ${d.due?row("报价截止","请于 "+fmtD(d.due)+" 前回复"):""}
+  ${rowPre("附言",d.note)}
+</table>
+${d.items.length?`<div class="rq-it-t">询价明细　　<small>共 ${d.items.length} 项，请贵司按此清单出正式报价单</small></div>
+<table class="rq-tb rq-it">
+  <colgroup><col style="width:9%"><col style="width:66%"><col style="width:25%"></colgroup>
+  <thead><tr><th>序号</th><th>品名 / 规格</th><th>数量</th></tr></thead>
+  <tbody>${d.items.map((x,i)=>`<tr><td class="c">${i+1}</td><td>${esc(x.name)}</td>
+    <td class="c">${esc([x.qty,x.unit].filter(Boolean).join(" "))}</td></tr>`).join("")}</tbody>
+</table>`:""}
+<div class="rq-sign">${esc(RFQ_PAYER)}<br>${esc([d.dept,d.who].filter(Boolean).join(" · "))}</div>`;
+}
+function rfqText(d){
+  const L=[];
+  const put=(lb,v)=>{ if(v) L.push(lb+"："+v); };
+  L.push("询价单 / REQUEST FOR QUOTATION");
+  L.push(`询价单号：${d.id}    日期：${d.today}`);
+  L.push("");
+  put("询价方",RFQ_PAYER);
+  put("品名",d.title+(d.titleEn?" / "+d.titleEn:""));
+  put("项目号",d.job);
+  if(!d.items.length) put("数量",[d.qty,d.unit].filter(Boolean).join(" "));
+  put("需要日期",fmtD(d.need));
+  put("交货地点",d.dest);
+  if(d.items.length){
+    put("数量","见下方询价明细，共 "+d.items.length+" 项");
+    if(d.itemRest.length) put("说明",d.itemRest.join("\n"));
+    if(d.descEn) put("Description",d.descEn);
+  }else put("规格说明",d.desc+(d.descEn?"\n"+d.descEn:""));
+  if(d.atts.length) put("附件",d.atts.join("、")+"（随本单另附）");
+  if(d.asks.length){ L.push(""); L.push("请报以下内容："); d.asks.forEach((a,i)=>L.push(`  ${i+1}. ${a}`)); }
+  if(d.due){ L.push(""); put("报价截止","请于 "+fmtD(d.due)+" 前回复"); }
+  if(d.note){ L.push(""); put("附言",d.note); }
+  if(d.items.length){
+    L.push(""); L.push(`询价明细（共 ${d.items.length} 项，请贵司按此清单出正式报价单）：`);
+    const w=Math.max(...d.items.map(x=>x.name.length));
+    d.items.forEach((x,i)=>L.push(
+      `  ${String(i+1).padStart(2)}. ${x.name.padEnd(w)}  ${[x.qty,x.unit].filter(Boolean).join(" ")}`));
+  }
+  L.push(""); L.push(RFQ_PAYER);
+  if(d.dept||d.who) L.push([d.dept,d.who].filter(Boolean).join(" · "));
+  return L.join("\n");
+}
+/* 预览窗口:上面一条工具栏(打印 / 复制文本),下面是排好版的 A4。打印时工具栏自动隐藏。 */
+function genRfq(){
+  const d=rfqData(); if(!d) return;
+  const w=window.open("","_blank","width=900,height=1000");
+  if(!w) return toast("浏览器拦截了新窗口","err");
+  const txt=rfqText(d);
+  w.document.write(`<html><head><meta charset="utf-8"><title>${esc(rfqFileName(d)||("询价单 "+d.id))}</title>
+<style>${RFQ_CSS}</style></head><body>
+<div class="rq-bar"><button id="bp">🖨 打印 / 存为 PDF</button><button id="bc">📋 复制文本</button>
+  <span class="tip" id="tip">复制的是纯文本，可直接粘到微信或邮件</span></div>
+<textarea id="tx" style="position:fixed;left:-9999px;top:0">${esc(txt)}</textarea>
+<div class="rq-wrap">${rfqHTML(d)}</div>
+<script>
+var tx=document.getElementById("tx"),tip=document.getElementById("tip");
+document.getElementById("bp").onclick=function(){window.focus();window.print();};
+document.getElementById("bc").onclick=function(){
+  function done(){tip.textContent="已复制，去微信或邮件里粘贴";}
+  function fallback(){tx.style.left="0";tx.select();
+    try{document.execCommand("copy");done();}catch(e){tip.textContent="复制失败，请手动选中";}
+    tx.style.left="-9999px";}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(tx.value).then(done,fallback);
+  }else fallback();
+};
+<\/script></body></html>`);
+  w.document.close();
+  closeModal("mRfq");
+}
+
 function payHTML(rec){
   const ps=rec.payments||[];
   const oi=orderInfo(rec);
@@ -4441,7 +4720,7 @@ function openDrawer(id,keep){
   const sel=(rec.quotes||[]).find(q=>q.selected);
   $("#dwActions").innerHTML=actionsHTML(rec);
   $("#dwBody").innerHTML=`
-    <div class="sec" data-sec="基本信息"><div class="sec-hd"><span class="fold">▼</span>基本信息<span class="hdbtns"><button class="btn btn-sm" id="btnEditInfo">✎ 编辑</button><button class="btn btn-sm btn-danger" id="btnDelRec" title="删除这条采购记录">🗑 删除</button></span></div><div class="sec-bd">
+    <div class="sec" data-sec="基本信息"><div class="sec-hd"><span class="fold">▼</span>基本信息<span class="hdbtns"><button class="btn btn-sm" id="btnRfq" title="生成一份可以直接发给厂商的询价单">📤 询价单</button><button class="btn btn-sm" id="btnEditInfo">✎ 编辑</button><button class="btn btn-sm btn-danger" id="btnDelRec" title="删除这条采购记录">🗑 删除</button></span></div><div class="sec-bd">
       <dl class="kv">
         <dt>项目号</dt><dd class="mono">${esc(fullJob(rec)||"—")}</dd>
         <dt>目的地</dt><dd>${esc(rec.dest||"—")}</dd>
@@ -4461,10 +4740,10 @@ function openDrawer(id,keep){
       ${rec.quotes.length?`<table class="qt"><thead><tr><th>供应商</th><th>总价</th><th>货期</th><th>备注</th><th></th></tr></thead><tbody>
         ${rec.quotes.map((q,i)=>`<tr class="${q.selected?"sel":""}">
           <td>${q.selected?'<span class="pick">✓ 选定</span><br>':""}${esc(q.supplier)}</td>
-          <td class="num" style="white-space:nowrap">${q.currency}${money(q.price)}${quoteMismatch(q)?` <span title="总价跟 单价×数量 对不上" style="color:var(--safety)">*</span>`:""}${(q.qty||q.unitPrice)?`<div class="qsub">${q.unitPrice?esc(q.currency)+money(q.unitPrice):"?"} × ${q.qty?esc(String(q.qty))+(q.unit?" "+esc(q.unit):""):"?"}</div>`:""}</td>
-          <td>${esc(q.lead||"—")}</td>
-          <td>${linkify(q.note||"")}</td>
-          <td style="white-space:nowrap">
+          <td class="num" data-lb="总价" style="white-space:nowrap">${q.currency}${money(q.price)}${quoteMismatch(q)?` <span title="总价跟 单价×数量 对不上" style="color:var(--safety)">*</span>`:""}${(q.qty||q.unitPrice)?`<div class="qsub">${q.unitPrice?esc(q.currency)+money(q.unitPrice):"?"} × ${q.qty?esc(String(q.qty))+(q.unit?" "+esc(q.unit):""):"?"}</div>`:""}</td>
+          <td data-lb="货期">${esc(q.lead||"—")}</td>
+          <td data-lb="备注">${linkify(q.note||"")}</td>
+          <td class="qt-act" style="white-space:nowrap">
             ${!q.selected?`<button class="btn btn-sm" onclick="pickQuote('${rec.id}',${i})">选定</button>`:`<button class="btn btn-sm" onclick="unpickQuote('${rec.id}',${i})">取消选定</button>`}
             <button class="btn btn-sm" onclick="openEditQuote('${rec.id}',${i})">改</button>
             <button class="btn btn-sm btn-danger" onclick="delQuote('${rec.id}',${i})">删</button>
@@ -4531,6 +4810,7 @@ function openDrawer(id,keep){
     });
   });
   const tm=$("#tlMore"); if(tm) tm.addEventListener("click",()=>{ tlFull.has(rec.id)?tlFull.delete(rec.id):tlFull.add(rec.id); openDrawer(rec.id,true); });
+  const bRfq=$("#btnRfq"); if(bRfq) bRfq.addEventListener("click",e=>{ e.stopPropagation(); openRfq(rec.id); });
   const bEdit=$("#btnEditInfo"); if(bEdit) bEdit.addEventListener("click",()=>openEditInfo(rec.id));
   const bDel=$("#btnDelRec"); if(bDel) bDel.addEventListener("click",e=>{ e.stopPropagation(); deleteRecord(rec.id); });
   const bOrd=$("#btnEditOrder"); if(bOrd) bOrd.addEventListener("click",()=>openEditOrder(rec.id));
@@ -5347,8 +5627,10 @@ const CG_COLS=[["desc","品名","text"],["pcs","PCS","num"],["pkgs","PACKAGES","
   ["gw","毛重 KGS","num"],["nw","净重 KGS","num"],["cbm","CBM","num"],
   ["amt","总金额 RMB","num"],["note","备注","text"]];
 function cgRowHTML(l){
+  /* 外面这层 label 桌面端是 display:contents(等于不存在,不影响九列网格),
+     窄屏才变成块级并把 data-lb 显示成小标题 */
   return `<div class="cg-row">${CG_COLS.map(([k,lab,t])=>
-    `<input class="cg-i cg-${k}" data-cgk="${k}" ${t==="num"?'type="text" inputmode="decimal"':""} placeholder="${esc(lab)}" value="${esc(l&&l[k]!=null?String(l[k]):"")}">`).join("")}
+    `<label class="cg-f" data-lb="${esc(lab)}"><input class="cg-i cg-${k}" data-cgk="${k}" ${t==="num"?'type="text" inputmode="decimal"':""} placeholder="${esc(lab)}" value="${esc(l&&l[k]!=null?String(l[k]):"")}"></label>`).join("")}
     <button type="button" class="cg-del" title="删掉这一行">✕</button></div>`;
 }
 /* 行编辑器要能同时开好几份(发货页每个订单一份),所以都按容器操作,不写死 #shCargoRows */
@@ -5722,6 +6004,7 @@ $("#fSaveNext").addEventListener("click",()=>saveBackfill(true));
 $("#bSave").addEventListener("click",saveBulk);
 $("#bAddRow").addEventListener("click",()=>{ addBulkRow(); const r=[...$$("#bRows .brow")]; r[r.length-1].querySelector(".bsub").focus(); });
 $("#qeSave").addEventListener("click",saveEditQuote);
+$("#rqGo").addEventListener("click",genRfq);
 $("#eSave").addEventListener("click",saveEditInfo);
 $("#oSave").addEventListener("click",saveEditOrder);
 $("#shSave").addEventListener("click",saveEditShip);
