@@ -531,8 +531,19 @@ body.dark .ack-row{background:#232A32}
 /* 货物明细行编辑器 */
 .cg-ed{border:1px solid var(--line);border-radius:6px;padding:8px;background:rgba(255,255,255,.5)}
 .cg-grid{min-width:640px}
-.cg-row{display:grid;grid-template-columns:1.5fr .6fr .8fr .8fr .8fr .6fr 1fr .9fr 24px;gap:5px;align-items:center;margin-bottom:5px}
+.cg-row{display:grid;grid-template-columns:20px 1.5fr .6fr .8fr .8fr .8fr .6fr 1fr .9fr 24px;gap:5px;align-items:center;margin-bottom:5px}
+/* 同包:件数/毛重/净重/CBM 四格收起来,画一条竖线连到上一行 */
+.cg-pk{width:18px;height:18px;padding:0;line-height:1;font-size:11px;border:1px solid var(--line);
+  border-radius:4px;background:var(--card);color:var(--steel);cursor:pointer}
+.cg-pk:hover:not(:disabled){border-color:var(--safety);color:var(--safety)}
+.cg-pk.on{border-color:var(--safety);color:var(--safety);background:var(--safety-soft)}
+.cg-pk:disabled{visibility:hidden}
+
 .cg-f{display:contents}
+/* 必须排在 .cg-f{display:contents} 之后,不然被它盖掉,那条带子根本不出现 */
+.cg-row .cg-mute{grid-column:span 4;display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;
+  font-size:11.5px;color:var(--safety);background:var(--safety-soft);
+  border-left:2px solid var(--safety);border-radius:0 4px 4px 0}
 .cg-row.cg-head{margin-bottom:4px}
 .cg-row.cg-head span{font-size:10px;font-weight:700;color:var(--steel);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cg-i{width:100%;min-width:0;font-size:12px;padding:5px 6px}
@@ -815,6 +826,9 @@ body.readonly .att-item .mv,body.readonly .att-item .ren,body.readonly .afd-acts
   .cg-row{display:block;position:relative;background:var(--card);border:1px solid var(--line);
     border-radius:8px;padding:9px 34px 3px 10px;margin-bottom:8px}
   .cg-row.cg-head{display:none}
+  .cg-pk{position:absolute;top:8px;right:34px}
+  .cg-row.cg-same{border-left:3px solid var(--safety)}
+  .cg-row .cg-mute{display:block;height:auto;padding:6px 8px;margin-bottom:7px;grid-column:auto}
   .cg-f{display:block;margin-bottom:7px}
   .cg-f::before{content:attr(data-lb);display:block;font-size:10px;font-weight:700;
     letter-spacing:.04em;color:var(--steel);margin-bottom:2px}
@@ -3284,12 +3298,20 @@ function cargoTotals(lines){
 }
 const cargoOf=b=>(Array.isArray(b&&b.cargoLines)&&b.cargoLines.length)?b.cargoLines:(b&&b.cargo?parseCargo(b.cargo):[]);
 const cargoEmpty=l=>!String(l.desc||"").trim()&&!String(l.note||"").trim()&&!CGN.some(k=>String(l[k]||"").trim());
+/* 同包分组:返回每行所属的包序号(从 0 起)。首行永远自成一包 */
+function pkgGroups(lines){
+  let g=-1;
+  return (lines||[]).map((l,i)=>{ if(i===0||!l.samePkg) g++; return g; });
+}
+const CG_PKG=["pkgs","gw","nw","cbm"];
 function migrateCargo(b){
   if(!b||typeof b!=="object") return;
   if(Array.isArray(b.cargoLines)){
     b.cargoLines=b.cargoLines.filter(l=>l&&typeof l==="object").map(l=>{
       const o={desc:String(l.desc||""),note:String(l.note||"")};
       CGN.forEach(k=>o[k]=(l[k]==null||l[k]==="")?"":String(l[k]));
+      /* 「跟上一行打在同一个包里」——件数/毛重/净重/CBM 只在这一包的头行填一次 */
+      if(l.samePkg) o.samePkg=1;
       return o;
     }).filter(l=>!cargoEmpty(l));
     delete b.cargo;
@@ -3405,6 +3427,7 @@ function customsRows(g){
       out.push({
         en, po:poShortNo(x.r), fullPo:x.r.po||"", title:x.r.title||"", supplier:oi.supplier||"",
         pcs:l.pcs||"", pkgs:l.pkgs||"", gw:l.gw||"", nw:l.nw||"", cbm:l.cbm||"",
+        samePkg:!!l.samePkg,
         totalRmb:cargoAmt(l),
         unit:m?m.unit||"":"", hs:m?m.hs||"":"", cn:m?m.cn||"":"", elements:m?m.elements||"":"", origin:m?m.origin||"":"",
         matched:!!m
@@ -3586,7 +3609,12 @@ function mblBodyHTML(g){
    后 3 个 sheet 全靠公式引用 Sales Contract，所以只要填 6 列 + 头部，USD 价模板自己算。
    ⚠️ 模板必须用 ExcelJS 自己写出来的那份 —— openpyxl 重存的会让 ExcelJS 读挂（drawing 引用坏）。 */
 const XLSX_CDN="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
-const CS_ROWS={scFirst:20,scLast:35,csFirst:22,csLast:31,elFirst:45,elLast:54};
+/* 模板每张表都留了 CS_N 行货位。用不到的行生成时隐藏掉（隐藏行不打印）。
+   ⚠️ 老模板只有 16 / 10 行,超出的货被 `if(n>scLast) return` 默默丢掉 ——
+   用户一柜 31 项只导出 10 项就是这么来的。改模板一定要连这几个行号一起改。 */
+const CS_N=60;
+const CS_ROWS={scFirst:20,scLast:19+CS_N,scTotal:20+CS_N,
+               csFirst:22,csLast:21+CS_N,elFirst:95,elLast:94+CS_N};
 let _xlsjs=null;
 function loadExcelJS(){
   if(window.ExcelJS) return Promise.resolve(window.ExcelJS);
@@ -3637,20 +3665,31 @@ function csFillWorkbook(wb,d){
   set(sc,"B11",d.buyer.name); set(sc,"B12",d.buyer.addr);
   set(sc,"B13",d.buyer.attn); set(sc,"B14",d.buyer.tel);
   set(sc,"H18",d.markup);
-  set(sc,"B40",d.origin?`Port of Loading: ${d.origin}`:null);
-  set(sc,"B41",d.dest?`Port of Destination: ${d.dest}`:null);
-  ["G36","G37","H37","G38","H38","G39","H39"].forEach(a=>set(sc,a,null));
+  /* 合计行下面这几格是跟着货位段走的,不能再写死行号 ——
+     模板从 16 行加长到 60 行时这里整体下移了 44 行 */
+  const T=R.scTotal;
+  set(sc,`B${T+4}`,d.origin?`Port of Loading: ${d.origin}`:null);
+  set(sc,`B${T+5}`,d.dest?`Port of Destination: ${d.dest}`:null);
+  [`G${T}`,`G${T+1}`,`H${T+1}`,`G${T+2}`,`H${T+2}`,`G${T+3}`,`H${T+3}`].forEach(a=>set(sc,a,null));
   set(ci,"E12",d.invDate);
   if(typeof pl.getCell("F11").value!=="object") set(pl,"F11",d.invDate);
   d.rows.forEach((r,i)=>{
     const n=R.scFirst+i; if(n>R.scLast) return;
     set(sc,`B${n}`,r.en); set(sc,`C${n}`,r.qty); set(sc,`D${n}`,r.unit);
     set(sc,`H${n}`,r.totalRmb); set(sc,`J${n}`,d.rate); set(sc,`K${n}`,d.profit);
+    set(sc,`A${n}`,i+1);
+    /* 公式逐行写死,不指望模板里预先拉好 —— 老模板第 30-35 行就漏了 E/F/G,
+       导致第 11 项往后单价总价栏是空的 */
+    sc.getCell(`E${n}`).value={formula:`L${n}`};
+    sc.getCell(`F${n}`).value={formula:`M${n}`};
+    sc.getCell(`G${n}`).value={formula:`I${n}/C${n}`};
     sc.getCell(`I${n}`).value={formula:`H${n}*$H$18`};
+    sc.getCell(`L${n}`).value={formula:`ROUND(G${n}/J${n}*K${n},2)`};
+    sc.getCell(`M${n}`).value={formula:`L${n}*C${n}`};
     set(pl,`D${n}`,r.pkgs); set(pl,`E${n}`,r.gw); set(pl,`F${n}`,r.nw); set(pl,`G${n}`,r.cbm);
   });
   for(let n=R.scFirst+d.rows.length;n<=R.scLast;n++){
-    ["B","C","D","H","I","J","K"].forEach(c2=>set(sc,`${c2}${n}`,null));
+    ["B","C","D","E","F","G","H","I","J","K","L","M"].forEach(c2=>set(sc,`${c2}${n}`,null));
     ["D","E","F","G"].forEach(c2=>set(pl,`${c2}${n}`,null));
   }
   set(cs,"G10",d.vessel); set(cs,"L10",d.mbl);
@@ -3670,6 +3709,31 @@ function csFillWorkbook(wb,d){
   });
   for(let n=R.elFirst+d.rows.length;n<=R.elLast;n++)
     ["A","B","C","D"].forEach(c2=>set(cs,`${c2}${n}`,null));
+  /* 同一个包里的几项:装箱单上把 件数/毛重/净重/CBM 四列纵向合并成一格,
+     报关行一眼能看出这几项是一个包。数值只在头行,合计自然不会重复算。 */
+  {
+    let a=0;
+    for(let i=1;i<=d.rows.length;i++){
+      const end=(i===d.rows.length)||!d.rows[i].samePkg;
+      if(!end) continue;
+      if(i-a>1){
+        const r1=R.scFirst+a, r2=R.scFirst+i-1;
+        ["D","E","F","G"].forEach(c2=>{
+          try{ pl.mergeCells(`${c2}${r1}:${c2}${r2}`);
+               pl.getCell(`${c2}${r1}`).alignment={vertical:"middle",horizontal:"center"};
+          }catch(e){}
+        });
+      }
+      a=i;
+    }
+  }
+  /* 用不到的货位整行隐藏 —— 隐藏行不打印,也不会在 PDF 上留一片空格子 */
+  for(let i=0;i<CS_N;i++){
+    const on=i<d.rows.length;
+    [sc,ci,pl].forEach(ws=>{ ws.getRow(R.scFirst+i).hidden=!on; });
+    cs.getRow(R.csFirst+i).hidden=!on;
+    cs.getRow(R.elFirst+i).hidden=!on;
+  }
 }
 
 function csFileName(g,no){
@@ -3698,6 +3762,7 @@ async function genCustoms(){
     const wb=new ExcelJSLib.Workbook();
     await wb.xlsx.load(buf);
     const rows=customsRows(g);
+    if(rows.length>CS_N) throw new Error(`这一柜有 ${rows.length} 行货，模板一张表只放得下 ${CS_N} 行。先拆柜，或者把模板加长。`);
     const b=g.items[0].b;
     const dt=v=>v?new Date(v+"T00:00:00"):null;
     csFillWorkbook(wb,{
@@ -3707,7 +3772,7 @@ async function genCustoms(){
       trade:$("#csTrade").value.trim(), arrive:$("#csArrive").value.trim(),
       buyer:buyerInfo(),
       rows:rows.map(r=>({en:r.en,qty:cnum(r.pcs)||null,unit:r.unit,totalRmb:r.totalRmb,
-        pkgs:cnum(r.pkgs)||null,gw:cnum(r.gw)||null,nw:cnum(r.nw)||null,cbm:cnum(r.cbm)||null,
+        pkgs:cnum(r.pkgs)||null,gw:cnum(r.gw)||null,nw:cnum(r.nw)||null,cbm:cnum(r.cbm)||null,samePkg:r.samePkg,
         hs:r.hs,cn:r.cn,origin:r.origin,elements:r.elements,fullPo:r.fullPo,supplier:r.supplier,title:r.title}))
     });
     const out=await wb.xlsx.writeBuffer();
@@ -4462,7 +4527,7 @@ function rfqHTML(d){
   ${d.items.length
     ?(d.itemRest.length?rowPre("说明",d.itemRest.join("\n"),d.descEn):(d.descEn?row("Description",d.descEn):""))
     :rowPre("规格说明",d.desc,d.descEn)}
-  ${d.atts.length?`<tr><td class="lb">附件</td><td>${d.atts.map(esc).join("、")}<span class="en">随本单另附</span></td></tr>`:""}
+  ${d.atts.length?`<tr><td class="lb">附件</td><td><ol class="rq-ask">${d.atts.map(a=>`<li>${esc(a)}</li>`).join("")}</ol><span class="en" style="padding-left:18px">共 ${d.atts.length} 个，随本单另附</span></td></tr>`:""}
   ${d.asks.length?`<tr><td class="lb">请报以下内容</td><td><ol class="rq-ask">${d.asks.map(a=>`<li>${esc(a)}</li>`).join("")}</ol></td></tr>`:""}
   ${d.due?row("报价截止","请于 "+fmtD(d.due)+" 前回复"):""}
   ${rowPre("附言",d.note)}
@@ -4493,7 +4558,8 @@ function rfqText(d){
     if(d.itemRest.length) put("说明",d.itemRest.join("\n"));
     if(d.descEn) put("Description",d.descEn);
   }else put("规格说明",d.desc+(d.descEn?"\n"+d.descEn:""));
-  if(d.atts.length) put("附件",d.atts.join("、")+"（随本单另附）");
+  if(d.atts.length){ L.push(`附件（共 ${d.atts.length} 个，随本单另附）：`);
+    d.atts.forEach((a,i)=>L.push(`  ${i+1}. ${a}`)); }
   if(d.asks.length){ L.push(""); L.push("请报以下内容："); d.asks.forEach((a,i)=>L.push(`  ${i+1}. ${a}`)); }
   if(d.due){ L.push(""); put("报价截止","请于 "+fmtD(d.due)+" 前回复"); }
   if(d.note){ L.push(""); put("附言",d.note); }
@@ -5613,7 +5679,7 @@ const SHIP_FIELDS={bl:["MBL#","shBl"],vessel:["船名/航次","shVessel"],
   ctnr:["柜号/唛头","shCtnr"],arrived:["实际到货","shArrived"]};
 const SHIP_KEYS=Object.keys(SHIP_FIELDS);
 const shipVals=()=>{ const o={}; Object.entries(SHIP_FIELDS).forEach(([k,[,el]])=>{ o[k]=$("#"+el).value.trim(); }); return o; };
-const cargoSig=lines=>(lines||[]).map(l=>CG_COLS.map(([k])=>String(l[k]||"").trim()).join("|")).join("¦");
+const cargoSig=lines=>(lines||[]).map(l=>CG_COLS.map(([k])=>String(l[k]||"").trim()).concat(l.samePkg?"P":"").join("|")).join("¦");
 const cargoBrief=lines=>{ if(!(lines||[]).length) return "空";
   const t=cargoTotals(lines);
   return `${lines.length} 项`+[["PACKAGES",t.pkgs],["毛重",t.gw],["CBM",t.cbm]].filter(([,v])=>v!=null).map(([k,v])=>` ${k} ${cgFmt(v)}`).join("");
@@ -5626,31 +5692,55 @@ const shipDesc=b=>SHIP_KEYS.filter(k=>b[k]).map(k=>`${SHIP_FIELDS[k][0]}:${b[k]}
 const CG_COLS=[["desc","品名","text"],["pcs","PCS","num"],["pkgs","PACKAGES","num"],
   ["gw","毛重 KGS","num"],["nw","净重 KGS","num"],["cbm","CBM","num"],
   ["amt","总金额 RMB","num"],["note","备注","text"]];
-function cgRowHTML(l){
+function cgRowHTML(l,i){
+  const same=!!(l&&l.samePkg)&&i>0;
   /* 外面这层 label 桌面端是 display:contents(等于不存在,不影响九列网格),
      窄屏才变成块级并把 data-lb 显示成小标题 */
-  return `<div class="cg-row">${CG_COLS.map(([k,lab,t])=>
-    `<label class="cg-f" data-lb="${esc(lab)}"><input class="cg-i cg-${k}" data-cgk="${k}" ${t==="num"?'type="text" inputmode="decimal"':""} placeholder="${esc(lab)}" value="${esc(l&&l[k]!=null?String(l[k]):"")}"></label>`).join("")}
+  /* 同包时,件数/毛重/净重/CBM 四格并成一条,写明并到上一行 */
+  const cell=([k,lab,t])=>{
+    if(same&&CG_PKG.includes(k)) return k==="pkgs"
+      ? `<div class="cg-mute" data-lb="件数 / 重量 / CBM">↳ 与上一行同包，件数重量填在上面那行</div>` : "";
+    return `<label class="cg-f" data-lb="${esc(lab)}"><input class="cg-i cg-${k}" data-cgk="${k}" ${t==="num"?'type="text" inputmode="decimal"':""} placeholder="${esc(lab)}" value="${esc(l&&l[k]!=null?String(l[k]):"")}"></label>`;
+  };
+  return `<div class="cg-row${same?" cg-same":""}"${same?' data-same="1"':""}>
+    <button type="button" class="cg-pk${same?" on":""}" data-cgpk="1"${i===0?" disabled":""}
+      title="${i===0?"第一行没有上一行可并":"跟上一行打在同一个包里 —— 件数/毛重/净重/CBM 只在这一包的头行填一次"}">↳</button>
+    ${CG_COLS.map(cell).join("")}
     <button type="button" class="cg-del" title="删掉这一行">✕</button></div>`;
 }
 /* 行编辑器要能同时开好几份(发货页每个订单一份),所以都按容器操作,不写死 #shCargoRows */
 function cgRenderInto(box,lines,onChange){
   if(!box) return;
-  box.innerHTML=`<div class="cg-row cg-head">${CG_COLS.map(([,lab])=>`<span>${esc(lab)}</span>`).join("")}<span></span></div>`
-    +((lines&&lines.length?lines:[null]).map(cgRowHTML).join(""));
+  box.innerHTML=`<div class="cg-row cg-head"><span></span>${CG_COLS.map(([,lab])=>`<span>${esc(lab)}</span>`).join("")}<span></span></div>`
+    +((lines&&lines.length?lines:[null]).map((l,i)=>cgRowHTML(l,i)).join(""));
   cgBindIn(box,onChange);
   if(onChange) onChange();
 }
 function cgReadFrom(box){
   if(!box) return [];
-  return [...box.querySelectorAll(".cg-row:not(.cg-head)")].map(r=>{
+  return [...box.querySelectorAll(".cg-row:not(.cg-head)")].map((r,i)=>{
     const o={};
-    r.querySelectorAll(".cg-i").forEach(i=>o[i.dataset.cgk]=i.value.trim());
+    CG_COLS.forEach(([k])=>o[k]="");
+    r.querySelectorAll(".cg-i").forEach(x=>o[x.dataset.cgk]=x.value.trim());
+    if(i>0&&r.dataset.same==="1") o.samePkg=1;
     return o;
   }).filter(l=>!cargoEmpty(l));
 }
 function cgBindIn(box,onChange){
   box.querySelectorAll(".cg-i").forEach(i=>{ i.oninput=()=>{ if(onChange) onChange(); }; });
+  box.querySelectorAll("[data-cgpk]").forEach((b,i)=>{ b.onclick=()=>{
+    const rows=[...box.querySelectorAll(".cg-row:not(.cg-head)")];
+    const idx=rows.indexOf(b.closest(".cg-row"));
+    if(idx<1) return;
+    const lines=cgReadFrom(box);
+    /* 读的时候空行被滤掉了,按 DOM 顺序对不上,所以直接照 DOM 重读一遍不过滤 */
+    const all=rows.map((r,j)=>{ const o={}; CG_COLS.forEach(([k])=>o[k]="");
+      r.querySelectorAll(".cg-i").forEach(x=>o[x.dataset.cgk]=x.value.trim());
+      if(j>0&&r.dataset.same==="1") o.samePkg=1; return o; });
+    if(all[idx].samePkg) delete all[idx].samePkg;
+    else { all[idx].samePkg=1; CG_PKG.forEach(k=>all[idx][k]=""); }
+    cgRenderInto(box,all,onChange);
+  }; });
   box.querySelectorAll(".cg-del").forEach(b=>{ b.onclick=()=>{
     const rows=box.querySelectorAll(".cg-row:not(.cg-head)");
     if(rows.length<=1){ b.closest(".cg-row").querySelectorAll(".cg-i").forEach(i=>i.value=""); }
