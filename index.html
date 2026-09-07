@@ -97,6 +97,12 @@ body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:
   display:flex;flex-direction:column;overflow:hidden;}
 button{font-family:inherit;cursor:pointer;border:none;background:none;font-size:13px}
 input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+/* 浏览器默认 resize:both,右下角那个把手能把 textarea 横着拽出弹窗、盖住整页。
+   只留纵向,并且宽度锁死在容器里;高度也封顶,免得拉到比屏幕还长。 */
+textarea{resize:vertical;max-width:100%;min-width:100%;max-height:60vh}
+/* 粘进来一串 120 字符不带空格的东西(长链接、长货号)会把看板卡片、抽屉头、弹窗撑出去。
+   break-word 只在放不下时才断,不影响正常排版,也不改变元素的固有宽度。 */
+body{overflow-wrap:break-word}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--ink);outline-offset:1px;border-color:var(--ink)}
 button:focus-visible{outline:2px solid var(--safety);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -175,12 +181,13 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 .card .rid-l,.card .rid-r{display:flex;align-items:center;gap:6px;min-width:0}
 .card .rid-r{flex-shrink:0}
 .card .rid-l .tag{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.card .rid-l .tag.job{flex-shrink:0}
+.card .rid-l .tag{min-width:0}
+.card .rid-l .tag.job{flex-shrink:0;max-width:60%}
 .card .rid .due-t{white-space:nowrap;flex-shrink:0;font-size:11px;color:var(--steel)}
 .card .rid .due-t.overdue{color:var(--reject);font-weight:700}
 .card .ttl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:6px 0 0}
 .card .ttl h3{margin:0;min-width:0}
-.card .ttl .tag.dest{flex-shrink:0;align-self:center}
+.card .ttl .tag.dest{flex-shrink:0;align-self:center;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card h3{font-size:14px;font-weight:700;line-height:1.35}
 .card .foot .rno{font-family:var(--mono);font-size:11px;color:var(--steel)}
 .tag{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--line-soft);color:var(--ink-soft);font-family:var(--mono)}
@@ -212,6 +219,8 @@ body.dark .tag.dest{background:#2E3742;color:var(--ink-soft)}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(680px,100%);background:var(--paper);z-index:51;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
 .drawer.open{transform:translateX(0)}
 .dw-hd{background:var(--card);border-bottom:2px solid var(--ink);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+/* flex 子项默认不肯缩到内容宽度以下,标题里来一串超长不断行的东西就把抽屉撑出去 */
+.dw-hd>div:first-child{min-width:0}
 .dw-tools{display:flex;flex-direction:row;align-items:center;gap:8px;flex:none}
 .dw-hd h2{font-size:17px;font-weight:800;line-height:1.35}
 .dw-hd .rid{font-family:var(--mono);font-size:12px;color:var(--steel);margin-bottom:4px}
@@ -1206,7 +1215,9 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 }
 </style>
 </head>
-<body>
+<!-- 项目号 / PO / 合同号 / HS 编码 / 英文品名 在 iPhone 上会被自动首字母大写 + 自动纠错
+     （nm04 → Nm04）。这三个属性是继承的，挂在 body 上一次管全站。 -->
+<body autocapitalize="off" autocorrect="off" spellcheck="false">
 
 <div id="loginGate">
   <div class="login-card">
@@ -5965,6 +5976,24 @@ async function deleteSupplier(){
 }
 
 /* ================= 弹窗 / 设置 ================= */
+/* 有没保存的东西时,刷新/关标签页让浏览器弹它自带的确认框。
+   两种「未保存」:弹窗里改过、发货页展开的柜子改过。 */
+function hasUnsaved(){
+  /* $$ 返回 NodeList,没有 .some —— 必须先摊成数组,否则 beforeunload 每次都抛错 */
+  if([...$$(".modal-mask.open")].some(m=>modalDirty(m))) return true;
+  return [...document.querySelectorAll(".mbl.open")].some(sec=>{
+    try{ return sec._snap&&mblSnap(sec)!==sec._snap; }catch(e){ return false; }
+  });
+}
+window.addEventListener("beforeunload",e=>{ if(hasUnsaved()){ e.preventDefault(); e.returnValue=""; } });
+
+/* 文件没落在上传区时,浏览器默认会把它当页面打开 —— 应用连同没保存的东西一起没了。
+   全局兜底:只拦「拖的是文件」,看板卡片之间的拖拽(text/plain)不受影响。 */
+["dragover","drop"].forEach(ev=>document.addEventListener(ev,e=>{
+  const t=e.dataTransfer;
+  if(t&&[...(t.types||[])].includes("Files")) e.preventDefault();
+}));
+
 /* 滚轮滚过聚焦中的数字框会悄悄改掉数值(见 -0.01 那次),全站禁掉 */
 document.addEventListener("wheel",e=>{
   const t=e.target;
@@ -5977,8 +6006,20 @@ document.addEventListener("click",e=>{
   if(mvCtx.kind==="folder") afMoveFolder(mvCtx.id,mvCtx.fid,g,to);
   else afMove(mvCtx.id,mvCtx.idx,g,to);
 });
-function openModal(id){ $("#"+id).classList.add("open"); }
-function closeModal(id){ $("#"+id).classList.remove("open"); }
+/* 打开那一刻把所有输入框的值记下来,Esc / 点遮罩想关的时候拿来比。
+   ✕ 和「取消」是明确的意思表示,不拦;只拦这两个「手滑」的路径。 */
+function modalSnap(m){
+  return [...m.querySelectorAll("input,select,textarea")]
+    .map(e=>(e.type==="checkbox"||e.type==="radio")?(e.checked?"1":"0"):e.value).join("\u0001");
+}
+function modalDirty(m){ return m._snap!==undefined && modalSnap(m)!==m._snap; }
+function openModal(id){ const m=$("#"+id); m.classList.add("open"); m._snap=modalSnap(m); }
+function closeModal(id){ const m=$("#"+id); m.classList.remove("open"); delete m._snap; }
+/* 手滑关窗:改过东西才问一句 */
+function tryCloseModal(m){
+  if(modalDirty(m)&&!confirm("这个窗口里有还没保存的改动，关掉就没了。确定关吗？")) return false;
+  m.classList.remove("open"); delete m._snap; return true;
+}
 $$("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
 $("#sTplBtn").addEventListener("click",backfillFolders);
 $("#sTlBtn").addEventListener("click",compactTimelines);
@@ -5987,7 +6028,7 @@ $("#sDataBtn").addEventListener("click",()=>{
   $("#sDataInfo").innerHTML=`合计 <b>${KB(d.total)}</b> · 时间线 ${KB(d.时间线)} · 附件条目 ${KB(d.附件条目)} · 文件夹 ${KB(d.文件夹)} · 报价付款 ${KB(d.报价付款)} · 供应商 ${KB(d.供应商)}`
     +`<br>${d.total>1048576?"⚠️ 已超过 1MB：读取会自动改用 raw 方式（本版已支持），旧版页面需强刷":"离 1MB 还有 "+KB(1048576-d.total)}`;
 });
-$$(".modal-mask").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
+$$(".modal-mask").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)tryCloseModal(m)}));
 
 $("#btnNew").addEventListener("click",()=>{ $("#nReq").value=cfg.name||""; $("#nSub").value=""; $("#nTitleEn").value=""; $("#nDescEn").value=""; pendingFiles=[]; renderPendingAtt(); openModal("mNew"); setTimeout(()=>$("#nTitle").focus(),50); });
 
@@ -6008,7 +6049,12 @@ $("#nSubmit").addEventListener("click",createRecord);
 $("#btnRefresh").addEventListener("click",()=>loadData(false));
 $("#dwClose").addEventListener("click",closeDrawer);
 $("#drawerMask").addEventListener("click",closeDrawer);
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){closeDrawer(); $$(".modal-mask.open").forEach(m=>m.classList.remove("open")); $("#lightbox").classList.remove("open");} });
+document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return;
+  const open=$$(".modal-mask.open");
+  if(open.length){ tryCloseModal(open[open.length-1]); return; }   /* 只关最上面那个 */
+  if($("#lightbox").classList.contains("open")){ $("#lightbox").classList.remove("open"); return; }
+  closeDrawer();
+});
 /* Ctrl/Cmd+Enter 提交当前弹窗:取最上层打开的弹窗,点它的主按钮(btn-primary 优先,其次最后一个 btn-ink) */
 function modalPrimaryBtn(m){
   const ft=m.querySelector(".md-ft"); if(!ft) return null;
