@@ -4290,7 +4290,8 @@ const PR_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans
 .pr-sign{display:flex;gap:80px;margin-top:46px;font-size:13px}
 .pr-sign>div{flex:1}
 .pr-sign .en{margin-bottom:18px}
-@page{size:A4;margin:0}`;
+/* 夏威夷这边打印机装的是 Letter,A4 打在 Letter 纸上会被缩放、边距对不上 */
+@page{size:8.5in 11in;margin:0}`;
 
 /* ================= 对账单 =================
    发给供应商的,抬头是供应商公司名。表格逻辑跟用户给的模板一致:
@@ -4378,7 +4379,7 @@ const ST_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans
 .st-rl{padding-left:14px}
 .st-rl span{display:inline-block;min-width:104px}
 .st-ft{text-align:center;font-size:13px;margin-top:56px}
-@page{size:A4;margin:0}`;
+@page{size:8.5in 11in;margin:0}`;
 
 /* 直接出对账单。变更项现在存在记录上(订单信息里填),不再弹窗确认 */
 function openStmt(id,idx){
@@ -4504,8 +4505,14 @@ const RFQ_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han San
 .rq-bar button{font:inherit;padding:6px 14px;border-radius:6px;border:1px solid #4A5865;background:#2B3A4A;color:#fff;cursor:pointer}
 .rq-bar button:hover{background:#3A4A5A}
 .rq-bar .tip{margin-left:auto;opacity:.7;font-size:12px}
-.rq-wrap{padding:15mm 20mm}
-.rq-hd{position:relative;margin-bottom:18px;min-height:46px}
+.rq-wrap{padding:14mm 16mm}
+/* 整份单子套在一张表里,表头放 thead —— thead 会在每一页顶部自动重复,
+   这是让「每页都有表头」唯一稳的办法(普通 div 只会出现在第一页) */
+.rq-page{width:100%;border-collapse:collapse}
+.rq-page>thead{display:table-header-group}
+.rq-page>tbody{display:table-row-group}
+.rq-page>thead>tr>td,.rq-page>tbody>tr>td{padding:0;border:none}
+.rq-hd{position:relative;min-height:46px;padding-bottom:6px}
 .rq-logo{height:38px;position:absolute;left:0;top:0}
 .rq-ttl{text-align:center;font-size:16px;font-weight:700;letter-spacing:2px;padding-top:6px}
 .rq-ttl small{display:block;font-size:10px;letter-spacing:1px;font-weight:400;color:#555;margin-top:3px}
@@ -4524,17 +4531,31 @@ const RFQ_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han San
 .rq-it td.c{text-align:center}
 .rq-it td{height:24px;padding:5px 8px;font-size:12px}
 .rq-sign{margin-top:40px;text-align:right;font-size:13px;line-height:1.9}
-@page{size:A4;margin:0}
-@media print{.rq-bar{display:none}.rq-wrap{padding:15mm 20mm}}
-@media screen{body{background:#eee}.rq-wrap{background:#fff;width:210mm;min-height:297mm;margin:12px auto;box-sizing:border-box}}`;
+/* 链接在 PDF 里要能点。打印时不要蓝底,留下划线就够 */
+.rq-tb a{color:#0B5FBF;text-decoration:underline;word-break:break-all}
+@media print{.rq-tb a{color:#0B5FBF}}
+/* 用户那边是美制 Letter 8.5×11,不是 A4 */
+@page{size:8.5in 11in;margin:0}
+@media print{.rq-bar{display:none}.rq-wrap{padding:14mm 16mm}}
+@media screen{body{background:#eee}.rq-wrap{background:#fff;width:8.5in;min-height:11in;margin:12px auto;box-sizing:border-box}}`;
 
 function rfqHTML(d){
+  /* 规格说明和附言里的网址要能点 —— 存成 PDF 之后客户直接点开看货 */
+  const lk=t=>String(t||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))
+    .replace(/https?:\/\/[^\s<]+/g,m=>{
+      const tail=(m.match(/[)\]}>.,;:!?\u3002\uff0c\uff1b\uff1a\uff01\uff1f]+$/)||[""])[0];
+      const url=tail?m.slice(0,m.length-tail.length):m;
+      return `<a href="${url}">${url}</a>${tail}`;
+    });
   const row=(lb,val,en)=>val||en?`<tr><td class="lb">${esc(lb)}</td><td>${esc(val||"")}${en?`<span class="en">${esc(en)}</span>`:""}</td></tr>`:"";
-  const rowPre=(lb,val,en)=>val||en?`<tr><td class="lb">${esc(lb)}</td><td class="pre">${esc(val||"")}${en?`<span class="en">${esc(en)}</span>`:""}</td></tr>`:"";
+  const rowPre=(lb,val,en)=>val||en?`<tr><td class="lb">${esc(lb)}</td><td class="pre">${lk(val||"")}${en?`<span class="en">${lk(en)}</span>`:""}</td></tr>`:"";
   const qty=[d.qty,d.unit].filter(Boolean).join(" ");
-  return `<div class="rq-hd"><img class="rq-logo" src="${PR_LOGO}" alt="">
+  /* thead 里的东西每页都印 */
+  return `<table class="rq-page"><thead><tr><td>
+  <div class="rq-hd"><img class="rq-logo" src="${PR_LOGO}" alt="">
     <div class="rq-ttl">询 价 单<small>REQUEST FOR QUOTATION</small></div></div>
-<div class="rq-meta"><span>询价单号：${esc(d.id)}</span><span>日期：${esc(d.today)}</span></div>
+  <div class="rq-meta"><span>询价单号：${esc(d.id)}</span><span>日期：${esc(d.today)}</span></div>
+</td></tr></thead><tbody><tr><td>
 <table class="rq-tb">
   ${row("询价方",RFQ_PAYER)}
   ${row("品名",d.title,d.titleEn)}
@@ -4557,7 +4578,8 @@ ${d.items.length?`<div class="rq-it-t">询价明细　　<small>共 ${d.items.le
   <tbody>${d.items.map((x,i)=>`<tr><td class="c">${i+1}</td><td>${esc(x.name)}</td>
     <td class="c">${esc([x.qty,x.unit].filter(Boolean).join(" "))}</td></tr>`).join("")}</tbody>
 </table>`:""}
-<div class="rq-sign">${esc(RFQ_PAYER)}<br>${esc([d.dept,d.who].filter(Boolean).join(" · "))}</div>`;
+<div class="rq-sign">${esc(RFQ_PAYER)}<br>${esc([d.dept,d.who].filter(Boolean).join(" · "))}</div>
+</td></tr></tbody></table>`;
 }
 function rfqText(d){
   const L=[];
@@ -5404,7 +5426,7 @@ function printRecord(id){
   w.document.write(`<html><head><meta charset="utf-8"><title>${esc(r.po||r.id)} ${esc(r.title)}</title>
     <style>body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans SC","Noto Sans SC","思源黑体","PingFang SC","Microsoft YaHei",sans-serif;padding:26px 30px;color:#111;-webkit-print-color-adjust:exact}
     table{page-break-inside:auto}tr{page-break-inside:avoid}
-    @page{size:A4;margin:14mm}</style></head><body>${html}</body></html>`);
+    @page{size:8.5in 11in;margin:14mm}</style></head><body>${html}</body></html>`);
   w.document.close(); setTimeout(()=>{ w.focus(); w.print(); },400);
 }
 
