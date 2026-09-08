@@ -170,6 +170,7 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 
 /* ===== 卡片 ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 12px 10px;cursor:pointer;
+  overflow:hidden;   /* 兜底:极端长的串裁在卡片里,不往外溢 */
   transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease}
 .card:hover{box-shadow:0 6px 18px rgba(27,42,58,.16);border-color:var(--safety);position:relative;z-index:3}
 .card:active{background:var(--line-soft)}
@@ -181,13 +182,15 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 .card .rid-l,.card .rid-r{display:flex;align-items:center;gap:6px;min-width:0}
 .card .rid-r{flex-shrink:0}
 .card .rid-l .tag{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.card .rid-l .tag{min-width:0}
-.card .rid-l .tag.job{flex-shrink:0;max-width:60%}
+/* ⚠️ 项目号/PO 号必须完整显示 —— 之前为了防超长串加了 min-width:0 + max-width:60%,
+   结果真实的「26-015」被截成「2…」。防溢出交给 .card 的 overflow:hidden,
+   那只在真的塞不下时才裁,正常号码一个字都不少。 */
+.card .rid-l .tag.job{flex-shrink:0}
 .card .rid .due-t{white-space:nowrap;flex-shrink:0;font-size:11px;color:var(--steel)}
 .card .rid .due-t.overdue{color:var(--reject);font-weight:700}
 .card .ttl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:6px 0 0}
 .card .ttl h3{margin:0;min-width:0}
-.card .ttl .tag.dest{flex-shrink:0;align-self:center;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .ttl .tag.dest{flex-shrink:0;align-self:center;white-space:nowrap}
 .card h3{font-size:14px;font-weight:700;line-height:1.35}
 .card .foot .rno{font-family:var(--mono);font-size:11px;color:var(--steel)}
 .tag{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--line-soft);color:var(--ink-soft);font-family:var(--mono)}
