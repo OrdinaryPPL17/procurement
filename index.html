@@ -4291,7 +4291,8 @@ const PR_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans
 .pr-sign>div{flex:1}
 .pr-sign .en{margin-bottom:18px}
 /* 夏威夷这边打印机装的是 Letter,A4 打在 Letter 纸上会被缩放、边距对不上 */
-@page{size:8.5in 11in;margin:0}`;
+@media print{.pr-wrap{padding:0}}
+@page{size:8.5in 11in;margin:15mm 20mm}`;
 
 /* ================= 对账单 =================
    发给供应商的,抬头是供应商公司名。表格逻辑跟用户给的模板一致:
@@ -4379,7 +4380,8 @@ const ST_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han Sans
 .st-rl{padding-left:14px}
 .st-rl span{display:inline-block;min-width:104px}
 .st-ft{text-align:center;font-size:13px;margin-top:56px}
-@page{size:8.5in 11in;margin:0}`;
+@media print{.st-wrap{padding:0}}
+@page{size:8.5in 11in;margin:18mm 20mm}`;
 
 /* 直接出对账单。变更项现在存在记录上(订单信息里填),不再弹窗确认 */
 function openStmt(id,idx){
@@ -4535,8 +4537,8 @@ const RFQ_CSS=`body{font-family:Helvetica,"Helvetica Neue",Arial,"Source Han San
 .rq-tb a{color:#0B5FBF;text-decoration:underline;word-break:break-all}
 @media print{.rq-tb a{color:#0B5FBF}}
 /* 用户那边是美制 Letter 8.5×11,不是 A4 */
-@page{size:8.5in 11in;margin:0}
-@media print{.rq-bar{display:none}.rq-wrap{padding:14mm 16mm}}
+@page{size:8.5in 11in;margin:14mm 16mm}
+@media print{.rq-bar{display:none}.rq-wrap{padding:0}}
 @media screen{body{background:#eee}.rq-wrap{background:#fff;width:8.5in;min-height:11in;margin:12px auto;box-sizing:border-box}}`;
 
 function rfqHTML(d){
