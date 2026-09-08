@@ -171,6 +171,10 @@ header{background:var(--card);border-bottom:2px solid var(--ink);position:sticky
 /* ===== 卡片 ===== */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 12px 10px;cursor:pointer;
   overflow:hidden;   /* 兜底:极端长的串裁在卡片里,不往外溢 */
+  /* ⚠️ .col-body 是 flex column,卡片多到超过列高时 flex 会把每张卡压扁。
+     以前 overflow:visible,内容照样画出来所以看不出;加了 overflow:hidden 之后
+     被压扁的卡片直接被裁掉半截(标题/进度条/单号全没了)。卡片一律不许压缩。 */
+  flex-shrink:0;
   transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease}
 .card:hover{box-shadow:0 6px 18px rgba(27,42,58,.16);border-color:var(--safety);position:relative;z-index:3}
 .card:active{background:var(--line-soft)}
