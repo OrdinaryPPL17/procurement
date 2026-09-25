@@ -19,6 +19,7 @@
   --reject:#B3372B;
   --reject-soft:#F8E9E7;
   --steel:#6B7684;
+  --cg-hd:#EEECE5;   /* 货物表表头底条 */
   --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
   --sans:Helvetica,"Helvetica Neue",Arial,"Source Han Sans SC","Source Han Sans CN","Noto Sans SC","Noto Sans CJK SC","思源黑体","思源黑体 CN",SourceHanSansSC-Regular,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
   --shadow:0 1px 2px rgba(27,42,58,.06),0 4px 14px rgba(27,42,58,.07);
@@ -28,7 +29,7 @@
 body.dark{
   --paper:#161A1F; --card:#1E242B; --ink:#E8EAED; --ink-soft:#B4BCC6;
   --line:#39424C; --line-soft:#2A313A; --safety:#FF7A29; --safety-soft:#3A2415;
-  --approve:#3FA96D; --approve-soft:#16301F; --reject:#E06759; --reject-soft:#3A1E1B; --steel:#8C97A3;
+  --approve:#3FA96D; --approve-soft:#16301F; --reject:#E06759; --reject-soft:#3A1E1B; --steel:#8C97A3; --cg-hd:#29313A;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.35);
   --shadow-lg:0 6px 30px rgba(0,0,0,.55);
 }
@@ -546,17 +547,18 @@ body.dark .ack-row{background:#232A32}
 .cg-tb12 th:nth-child(1),.cg-tb12 td:nth-child(1){width:14.5%}
 .cg-tb12 th:nth-child(2),.cg-tb12 td:nth-child(2){width:11.5%}
 .cg-tb12 th:nth-child(3),.cg-tb12 td:nth-child(3){width:9%}
-.cg-tb12 th:nth-child(4),.cg-tb12 td:nth-child(4){width:5.5%}
-.cg-tb12 th:nth-child(5),.cg-tb12 td:nth-child(5){width:5%}
-.cg-tb12 th:nth-child(6),.cg-tb12 td:nth-child(6){width:5.5%}
-.cg-tb12 th:nth-child(7),.cg-tb12 td:nth-child(7){width:8.5%}
-.cg-tb12 th:nth-child(8),.cg-tb12 td:nth-child(8){width:7.5%}
+.cg-tb12 th:nth-child(4),.cg-tb12 td:nth-child(4){width:11%}
+.cg-tb12 th:nth-child(5),.cg-tb12 td:nth-child(5){width:5.5%}
+.cg-tb12 th:nth-child(6),.cg-tb12 td:nth-child(6){width:5%}
+.cg-tb12 th:nth-child(7),.cg-tb12 td:nth-child(7){width:5.5%}
+.cg-tb12 th:nth-child(8),.cg-tb12 td:nth-child(8){width:8.5%}
 .cg-tb12 th:nth-child(9),.cg-tb12 td:nth-child(9){width:7.5%}
-.cg-tb12 th:nth-child(10),.cg-tb12 td:nth-child(10){width:6%}
-.cg-tb12 th:nth-child(11),.cg-tb12 td:nth-child(11){width:11%}
+.cg-tb12 th:nth-child(10),.cg-tb12 td:nth-child(10){width:7.5%}
+.cg-tb12 th:nth-child(11),.cg-tb12 td:nth-child(11){width:6%}
 .cg-tb12 th:nth-child(12),.cg-tb12 td:nth-child(12){width:8.5%;word-break:break-word}
 .cg-tb td.mono{font-family:var(--mono);white-space:nowrap}
 .cg-tb .cg-inh{color:var(--steel)}
+.cg-tb .cg-na{font-family:var(--sans);color:var(--steel)}
 .cg-tb td.el{overflow:hidden}
 .cg-elv{font:inherit;text-align:left;max-width:100%;padding:1px 4px;border:1px dashed var(--line);
   border-radius:4px;background:transparent;color:var(--ink);cursor:pointer;
@@ -564,8 +566,11 @@ body.dark .ack-row{background:#232A32}
 .cg-elv:hover{border-color:var(--safety);border-style:solid}
 .cg-elv.open{border-style:solid;border-color:var(--safety);background:var(--safety-soft)}
 .cg-elrow td{background:var(--safety-soft);white-space:pre-wrap;word-break:break-word;line-height:1.6}
-.cg-tb th{text-align:left;font-size:10px;color:var(--steel);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--line);padding:4px 6px;white-space:nowrap}
+.cg-tb th{text-align:left;font-size:11px;color:var(--ink);font-weight:700;letter-spacing:.02em;background:var(--cg-hd);border-bottom:none;padding:7px 6px;white-space:nowrap}
+.cg-tb thead th:first-child{border-radius:5px 0 0 5px}
+.cg-tb thead th:last-child{border-radius:0 5px 5px 0}
 .cg-tb th.n,.cg-tb td.n{font-family:var(--mono);white-space:nowrap}
+.cg-tb th.n{font-family:inherit}
 .cg-tb td{padding:5px 6px;border-bottom:1px solid var(--line-soft);vertical-align:top}
 .cg-tb td.d{word-break:break-word}
 .cg-tb td.rm{color:var(--steel);font-size:11px}
@@ -573,12 +578,12 @@ body.dark .ack-row{background:#232A32}
 /* 货物明细行编辑器 */
 .cg-ed{border:1px solid var(--line);border-radius:6px;padding:8px;background:rgba(255,255,255,.5)}
 .cg-grid{min-width:640px}
-/* 顺序:品名 中文品名 HS QTY 单位 UNIT PACKAGES 毛重 净重 CBM 总金额 申报要素 备注
+/* 顺序:品名 中文品名 HS 申报要素 QTY 单位 UNIT PACKAGES 毛重 净重 CBM 总金额 备注(申报要素紧跟 HS,用户要求 2026-09-25)
    pkgs/gw/nw/cbm 连着,同包那条带子(grid-column:span 4)才盖得准 */
 /* ⚠️ 每一行是各自独立的 grid,表头也是。fr 轨道的最小尺寸是 min-content —— 内容一长轨道就被撑宽,
    于是这一行跟表头对不齐(同包那条灰带子最明显,它会自己长出去)。
    必须写成 minmax(0,Nfr),把最小值钉死成 0,轨道宽度才只跟容器宽度有关,所有行才一致。 */
-.cg-row{display:grid;grid-template-columns:20px minmax(0,1.5fr) minmax(0,.95fr) minmax(0,.8fr) minmax(0,.5fr) minmax(0,.45fr) minmax(0,.5fr) minmax(0,.66fr) minmax(0,.66fr) minmax(0,.66fr) minmax(0,.55fr) minmax(0,.8fr) minmax(0,.85fr) minmax(0,.7fr) 24px;gap:5px;align-items:center;margin-bottom:5px}
+.cg-row{display:grid;grid-template-columns:20px minmax(0,1.8fr) minmax(0,.9fr) minmax(0,.9fr) minmax(0,.75fr) minmax(0,.5fr) minmax(0,.4fr) minmax(0,.42fr) minmax(0,.72fr) minmax(0,.62fr) minmax(0,.62fr) minmax(0,.55fr) minmax(0,.8fr) minmax(0,.62fr) 24px;gap:5px;align-items:center;margin-bottom:5px}
 /* 同包:件数/毛重/净重/CBM 四格收起来,画一条竖线连到上一行 */
 .cg-pk{width:18px;height:18px;padding:0;line-height:1;font-size:11px;border:1px solid var(--line);
   border-radius:4px;background:var(--card);color:var(--steel);cursor:pointer}
@@ -586,23 +591,31 @@ body.dark .ack-row{background:#232A32}
 .cg-pk.on{border-color:var(--safety);color:var(--safety);background:var(--safety-soft)}
 .cg-pk:disabled{visibility:hidden}
 
-.cg-f{display:contents}
+/* 写成 .cg-row .cg-f:物流弹窗里整块在 .fld 下面,.fld label{display:block;margin-bottom} 是 (0,1,1),
+   单类名压不住 —— 行会变成 33px、申报要素按钮跟输入框错位 */
+.cg-row .cg-f{display:contents}
 /* 必须排在 .cg-f{display:contents} 之后,不然被它盖掉,那条带子根本不出现 */
 .cg-row .cg-mute{grid-column:span 4;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;
   font-size:11.5px;color:var(--safety);background:var(--safety-soft);
   border-left:2px solid var(--safety);border-radius:0 4px 4px 0}
-.cg-row.cg-head{margin-bottom:4px}
-.cg-row.cg-head span{font-size:10px;font-weight:700;color:var(--steel);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 表头:浅底条 + 深色字(以前 10px 灰字太淡)。左右不加 padding —— 表头也是一行独立 grid,
+   加了轨道就跟下面的行对不齐;首尾两列(↳ / ✕)本来就空着,底条两头自然留白 */
+.cg-row.cg-head{margin-bottom:6px;padding:6px 0;background:var(--cg-hd);border-radius:5px}
+.cg-row.cg-head span{font-size:11px;font-weight:700;color:var(--ink);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cg-i{width:100%;min-width:0;font-size:12px;padding:5px 6px}
-.cg-i.cg-pcs,.cg-i.cg-pkgs,.cg-i.cg-gw,.cg-i.cg-nw,.cg-i.cg-cbm{font-family:var(--mono)}
+/* 数字列等宽。总金额以前漏了,是比例字体。
+   对齐一律靠左:试过数字右对齐 + 表头右对齐,整排表头一左一右,用户嫌乱(2026-09-25) */
+.cg-i.num{font-family:var(--mono)}
 .cg-i.inh::placeholder{color:var(--steel);opacity:1}
 .cg-i.cg-hs,.cg-i.cg-unit{font-family:var(--mono)}
-.cg-el{width:100%;min-width:0;font:inherit;font-size:12px;padding:5px 6px;text-align:left;cursor:pointer;
+.cg-el{width:100%;min-width:0;font:inherit;font-size:12px;height:26px;line-height:24px;padding:0 6px;text-align:left;cursor:pointer;
   border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--steel);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cg-el:hover{border-color:var(--safety)}
 .cg-el.has{color:var(--ink)}
-.cg-el.inh{color:var(--steel);font-style:italic}
+.cg-el.inh{color:var(--steel)}
+/* 空的时候不写字(表头已经说明了),悬停/聚焦才提示可以点 */
+.cg-el:empty:hover::after,.cg-el:empty:focus-visible::after{content:"＋ 填";color:var(--steel)}
 /* 展开框要整行通栏。.cg-f 是 display:contents,所以这个 div 得自己写 grid-column */
 .cg-elbox{grid-column:1/-1;margin:2px 0 6px}
 .cg-elbox textarea{width:100%;min-width:0;max-width:100%;font-size:12px;padding:6px}
@@ -610,6 +623,8 @@ body.dark .ack-row{background:#232A32}
 .cg-del{color:var(--steel);font-size:12px;line-height:1;padding:3px;border-radius:3px;justify-self:center}
 .cg-del:hover{color:#fff;background:var(--reject)}
 .cg-ft{display:flex;align-items:center;gap:12px;margin-top:2px}
+/* ✕ 用 SVG 画,不走字体 —— 字形在 Windows 上会被 ClearType 镶红蓝边。尺寸跟随按钮字号 */
+.ix{width:.78em;height:.78em;vertical-align:-.04em;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
 .cg-tot{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-left:auto;text-align:right}
 body.dark .cg-ed{background:rgba(0,0,0,.15)}
 /* ===== 财务:付款总览 ===== */
@@ -888,7 +903,7 @@ body.readonly .att-item .mv,body.readonly .att-item .ren,body.readonly .afd-acts
   .cg-pk{position:absolute;top:8px;right:34px}
   .cg-row.cg-same{border-left:3px solid var(--safety)}
   .cg-row .cg-mute{display:block;height:auto;padding:6px 8px;margin-bottom:7px;grid-column:auto}
-  .cg-f{display:block;margin-bottom:7px}
+  .cg-row .cg-f{display:block;margin-bottom:7px}
   .cg-f::before{content:attr(data-lb);display:block;font-size:10px;font-weight:700;
     letter-spacing:.04em;color:var(--steel);margin-bottom:2px}
   .cg-del{position:absolute;top:8px;right:8px}
@@ -1210,6 +1225,36 @@ body.dark .md-row .fx{background:#4A555F}
 .mbl-ihd .bn{font-size:11px;color:var(--safety);font-weight:700}
 .mbl-ibd{padding:10px 14px 12px}
 .mbl-itot{font-size:11px;color:var(--steel);font-family:var(--mono);margin-top:4px}
+/* 合计在左,供应商填写表两个按钮在右 */
+.mbl-ift{display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+.mbl-ift .mbl-itot{margin-top:0;flex:1;min-width:0}
+.sf-act{display:flex;gap:6px;flex:none;margin-left:auto}
+@media(max-width:640px){ .sf-act{width:100%} .sf-act .btn{flex:1;justify-content:center} }
+.mbl-item.sf-drop{outline:2px dashed var(--safety);outline-offset:-2px}
+/* 导入后被改过的格子先标橙,手动改一下就消掉 */
+.cg-i.cg-imp,.cg-el.cg-imp{background:var(--safety-soft);border-color:var(--safety)}
+#mSf .modal{width:min(820px,100%)}
+.sf-head{font-size:12px;color:var(--ink-soft);margin-bottom:10px;line-height:1.7}
+.sf-head b{font-family:var(--mono)}
+.sf-warn{font-size:12px;color:var(--reject);background:var(--reject-soft);border-radius:6px;padding:7px 10px;margin-bottom:10px;line-height:1.6}
+.sf-bar{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--steel);margin-bottom:6px}
+.sf-bar label{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--ink);font-weight:600;white-space:nowrap;flex:none}
+.sf-tb td input[type=checkbox]{margin:2px 0 0}
+.sf-wrap{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+.sf-tb{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.sf-tb th{position:sticky;top:0;z-index:1;text-align:left;font-size:11px;font-weight:700;color:var(--ink);background:var(--cg-hd);padding:7px 8px}
+.sf-tb td{padding:6px 8px;border-top:1px solid var(--line-soft);vertical-align:top;word-break:break-word}
+.sf-tb col.c0{width:34px}.sf-tb col.c2{width:92px}
+.sf-tb tr.sf-grp td{background:var(--paper);font-weight:700;color:var(--ink)}
+.sf-tb tr.sf-grp td .sf-tag{font-weight:400;font-size:11px;color:var(--safety);margin-left:8px}
+.sf-tb td.old{color:var(--steel)}
+.sf-tb td.old s{text-decoration:none}
+.sf-tb td.new{color:var(--ink);font-weight:600}
+.sf-tb td.new.bad{color:var(--reject)}
+.sf-tb .sf-bad{display:block;font-weight:400;font-size:11px;color:var(--reject)}
+.sf-tb .sf-inh{font-size:10px;color:var(--steel);margin-left:4px}
+.sf-tb td.pre{white-space:pre-wrap}
+.sf-none{padding:28px 12px;text-align:center;color:var(--steel);font-size:13px}
 .mbl-foot{display:flex;align-items:center;gap:14px;margin-top:14px;padding:12px 14px;flex-wrap:wrap;
   background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 1px 2px rgba(27,42,58,.05)}
 .mbl-foot .tot{font-size:12px;display:flex;gap:16px;flex-wrap:wrap}
@@ -1417,7 +1462,8 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 #mShip .modal .row2,#mShip .modal .row3{max-width:760px}
 #shCargoRows{overflow-x:auto;overflow-y:visible}
 #shCargoRows>.cg-row{min-width:1060px}
-@media(max-width:640px){ #shCargoRows>.cg-row{min-width:0} }
+/* 手机上一行拆成卡片,外层 .cg-grid 的 640 也得放掉,不然卡片右边被裁一截 */
+@media(max-width:640px){ #shCargoRows>.cg-row{min-width:0} .cg-grid{min-width:0} }
 </style>
 </head>
 <!-- 项目号 / PO / 合同号 / HS 编码 / 英文品名 在 iPhone 上会被自动首字母大写 + 自动纠错
@@ -1522,7 +1568,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       <span class="stamp" id="dwStamp"></span>
       <button class="btn btn-sm" id="dwPrint" title="打印 / 导出PDF">🖨 打印</button>
       <button class="btn btn-sm" id="dwZip" title="打包成 zip：一份 PDF + 全部附件">📦 导出</button>
-      <button class="btn btn-sm" id="dwClose">✕ 关闭</button>
+      <button class="btn btn-sm" id="dwClose"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg> 关闭</button>
     </div>
   </div>
   <div class="dw-act" id="dwActions"></div>
@@ -1532,7 +1578,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 新建 -->
 <div class="modal-mask" id="mNew">
   <div class="modal">
-    <div class="md-hd"><h2>发布采购需求</h2><button class="btn btn-sm" data-close="mNew">✕</button></div>
+    <div class="md-hd"><h2>发布采购需求</h2><button class="btn btn-sm" data-close="mNew"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="fld"><label>标题(中文) *</label><input id="nTitle" placeholder="例:Nanue桥 环链电动葫芦 3吨×2台"></div>
       <div class="fld"><label>Title (English)</label><input id="nTitleEn" placeholder="e.g. Electric Chain Hoist 3T x 2 sets"></div>
@@ -1562,7 +1608,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 设置 -->
 <div class="modal-mask" id="mSettings">
   <div class="modal">
-    <div class="md-hd"><h2>GitHub 连接设置</h2><button class="btn btn-sm" data-close="mSettings">✕</button></div>
+    <div class="md-hd"><h2>GitHub 连接设置</h2><button class="btn btn-sm" data-close="mSettings"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="row2">
         <div class="fld"><label>仓库 Owner *</label><input id="sOwner" placeholder="例:fjiang17"></div>
@@ -1626,7 +1672,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 编辑基本信息 -->
 <div class="modal-mask" id="mEdit">
   <div class="modal">
-    <div class="md-hd"><h2>修改采购需求</h2><button class="btn btn-sm" data-close="mEdit">✕</button></div>
+    <div class="md-hd"><h2>修改采购需求</h2><button class="btn btn-sm" data-close="mEdit"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="fld"><label>标题(中文) *</label><input id="eTitle"></div>
       <div class="fld"><label>Title (English)</label><input id="eTitleEn" placeholder="e.g. Electric Chain Hoist 3T x 2 sets"></div>
@@ -1660,7 +1706,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 补录历史采购 -->
 <div class="modal-mask" id="mBackfill">
   <div class="modal">
-    <div class="md-hd"><h2>补录历史采购</h2><button class="btn btn-sm" data-close="mBackfill">✕</button></div>
+    <div class="md-hd"><h2>补录历史采购</h2><button class="btn btn-sm" data-close="mBackfill"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="bf-sec">基本信息</div>
       <div class="row3">
@@ -1732,7 +1778,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 批量新建采购需求 -->
 <div class="modal-mask" id="mBulk">
   <div class="modal">
-    <div class="md-hd"><h2>新建项目 / 批量加采购需求</h2><button class="btn btn-sm" data-close="mBulk">✕</button></div>
+    <div class="md-hd"><h2>新建项目 / 批量加采购需求</h2><button class="btn btn-sm" data-close="mBulk"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="row2">
         <div class="fld"><label>项目号 *</label><input id="bJob" list="jobList" placeholder="例:26-016"></div>
@@ -1756,7 +1802,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 编辑报价 -->
 <div class="modal-mask" id="mQuote">
   <div class="modal">
-    <div class="md-hd"><h2>修改报价</h2><button class="btn btn-sm" data-close="mQuote">✕</button></div>
+    <div class="md-hd"><h2>修改报价</h2><button class="btn btn-sm" data-close="mQuote"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="fld"><label>供应商 *</label><input id="qeSup" list="supListData3" placeholder="可从供应商库选"><datalist id="supListData3"></datalist></div>
       <div class="row3">
@@ -1780,7 +1826,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 
 <div class="modal-mask" id="mRfq">
   <div class="modal">
-    <div class="md-hd"><h2>生成询价单</h2><button class="btn btn-sm" data-close="mRfq">✕</button></div>
+    <div class="md-hd"><h2>生成询价单</h2><button class="btn btn-sm" data-close="mRfq"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="hint" style="margin-bottom:10px">发给厂商的单子，只带需求信息 —— 不会出现任何报价、供应商或内部金额。<br><b id="rqTitle"></b></div>
       <div class="row3">
@@ -1801,7 +1847,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 生成报关资料 -->
 <div class="modal-mask" id="mCustoms">
   <div class="modal" style="max-width:640px">
-    <div class="md-hd"><h2>生成报关资料</h2><button class="btn btn-sm" data-close="mCustoms">✕</button></div>
+    <div class="md-hd"><h2>生成报关资料</h2><button class="btn btn-sm" data-close="mCustoms"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="hint" id="csHead" style="margin-bottom:10px"></div>
       <div id="csWarn"></div>
@@ -1830,7 +1876,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 提单 / OBL / 电放(整柜一份) -->
 <div class="modal-mask" id="mBl">
   <div class="modal" style="max-width:520px">
-    <div class="md-hd"><h2>上传提单</h2><button class="btn btn-sm" data-close="mBl">✕</button></div>
+    <div class="md-hd"><h2>上传提单</h2><button class="btn btn-sm" data-close="mBl"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="hint" id="blHead" style="margin-bottom:10px"></div>
       <div class="fld"><label>类型</label>
@@ -1845,7 +1891,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 报关单 / 清关文件 定稿(整柜,可多个) -->
 <div class="modal-mask" id="mDocs">
   <div class="modal">
-    <div class="md-hd"><h2>报关单</h2><button class="btn btn-sm" data-close="mDocs">✕</button></div>
+    <div class="md-hd"><h2>报关单</h2><button class="btn btn-sm" data-close="mDocs"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="hint" id="mdHead" style="margin-bottom:10px"></div>
       <div class="ph-up" id="mdUp">
@@ -1862,7 +1908,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 装箱照片(整柜一个相册) -->
 <div class="modal-mask" id="mPh">
   <div class="modal">
-    <div class="md-hd"><h2>装箱照片</h2><button class="btn btn-sm" data-close="mPh">✕</button></div>
+    <div class="md-hd"><h2>装箱照片</h2><button class="btn btn-sm" data-close="mPh"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="hint" id="phHead" style="margin-bottom:10px"></div>
       <div class="ph-up" id="phUp">
@@ -1880,7 +1926,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 清关文件(进口侧 CI + PL) -->
 <div class="modal-mask" id="mCipl">
   <div class="modal">
-    <div class="md-hd"><h2>生成清关文件</h2><button class="btn btn-sm" data-close="mCipl">✕</button></div>
+    <div class="md-hd"><h2>生成清关文件</h2><button class="btn btn-sm" data-close="mCipl"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="hint" id="cpHead" style="margin-bottom:10px"></div>
       <div class="cp-top">
@@ -1903,10 +1949,24 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   </div>
 </div>
 
+<!-- 导入供应商填写表 -->
+<div class="modal-mask" id="mSf">
+  <div class="modal">
+    <div class="md-hd"><h2>导入供应商填写表</h2><button class="btn btn-sm" data-close="mSf"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+    <div class="md-bd">
+      <div class="sf-head" id="sfHead"></div>
+      <div id="sfWarn"></div>
+      <div class="sf-bar"><label><input type="checkbox" id="sfAll" checked> 全选</label><span id="sfCount"></span></div>
+      <div class="sf-wrap" id="sfList"></div>
+    </div>
+    <div class="md-ft"><button class="btn" data-close="mSf">取消</button><button class="btn btn-ink" id="sfGo">填进表格</button></div>
+  </div>
+</div>
+
 <!-- 报关商品库 -->
 <div class="modal-mask" id="mGoods">
   <div class="modal" style="max-width:900px">
-    <div class="md-hd"><h2>报关商品库</h2><button class="btn btn-sm" data-close="mGoods">✕</button></div>
+    <div class="md-hd"><h2>报关商品库</h2><button class="btn btn-sm" data-close="mGoods"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="hint" style="margin-bottom:8px">按<b>英文品名</b>匹配（忽略大小写和空格/连字符）。填一次，以后每个柜生成报关资料都自动套上 HS 编码、中文报关名、申报要素、货源地。</div>
       <div class="gd-bar">
@@ -1924,7 +1984,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 新建 MBL# / 往柜里加订单 -->
 <div class="modal-mask" id="mMbl">
   <div class="modal" style="max-width:720px">
-    <div class="md-hd"><h2 id="mblTitle">新建 MBL#</h2><button class="btn btn-sm" data-close="mMbl">✕</button></div>
+    <div class="md-hd"><h2 id="mblTitle">新建 MBL#</h2><button class="btn btn-sm" data-close="mMbl"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="fld"><label>MBL# / 总提单号 *</label><input id="mblNo" placeholder="例:ONEYTS6ND1744600"></div>
       <div class="mbl-pk-bar">
@@ -1941,7 +2001,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 编辑订单信息 -->
 <div class="modal-mask" id="mOrder">
   <div class="modal">
-    <div class="md-hd"><h2>修改订单信息</h2><button class="btn btn-sm" data-close="mOrder">✕</button></div>
+    <div class="md-hd"><h2>修改订单信息</h2><button class="btn btn-sm" data-close="mOrder"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="fld"><label>供应商</label><input id="oSup" list="supListData2" placeholder="默认取已选定报价的供应商"><datalist id="supListData2"></datalist>
         <div class="hint" id="oSupHint"></div></div>
@@ -1980,7 +2040,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 编辑物流信息 -->
 <div class="modal-mask" id="mShip">
   <div class="modal">
-    <div class="md-hd"><h2 id="shTitle">物流信息</h2><button class="btn btn-sm" data-close="mShip">✕</button></div>
+    <div class="md-hd"><h2 id="shTitle">物流信息</h2><button class="btn btn-sm" data-close="mShip"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="row2">
         <div class="fld"><label>MBL# / 总提单号</label><input id="shBl" placeholder="例:COSU6398471230　几个订单拼一柜就填同一个号"></div>
@@ -2012,7 +2072,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 移动附件到文件夹 -->
 <div class="modal-mask" id="mAttMove">
   <div class="modal" style="max-width:460px">
-    <div class="md-hd"><h2>移动到</h2><button class="btn btn-sm" data-close="mAttMove">✕</button></div>
+    <div class="md-hd"><h2>移动到</h2><button class="btn btn-sm" data-close="mAttMove"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd" id="amvList"></div>
     <div class="md-ft"><button class="btn" data-close="mAttMove">取消</button></div>
   </div>
@@ -2021,7 +2081,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 供应商列表 -->
 <div class="modal-mask" id="mSupList">
   <div class="modal">
-    <div class="md-hd"><h2>供应商库 <span id="supCount" style="font-weight:400;font-size:12px;color:var(--steel)"></span></h2><button class="btn btn-sm" data-close="mSupList">✕</button></div>
+    <div class="md-hd"><h2>供应商库 <span id="supCount" style="font-weight:400;font-size:12px;color:var(--steel)"></span></h2><button class="btn btn-sm" data-close="mSupList"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <input id="supSearch" type="search" placeholder="搜索名称 / 英文名 / 电话…">
@@ -2035,7 +2095,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 供应商编辑 -->
 <div class="modal-mask" id="mSupEdit">
   <div class="modal">
-    <div class="md-hd"><h2 id="supEditTitle">新增供应商</h2><button class="btn btn-sm" data-close="mSupEdit">✕</button></div>
+    <div class="md-hd"><h2 id="supEditTitle">新增供应商</h2><button class="btn btn-sm" data-close="mSupEdit"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
       <div class="row2">
         <div class="fld"><label>中文名称 *</label><input id="spName" placeholder="例:某某进出口有限公司"></div>
@@ -2082,7 +2142,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   <select id="bulkTo"><option value="">改为状态…</option></select>
   <button id="bulkReq">改需求人</button>
   <button id="bulkDel">删除</button>
-  <button class="x" id="bulkClear" title="取消选择">✕</button>
+  <button class="x" id="bulkClear" title="取消选择"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
 </div>
 
 <div id="toast"></div>
@@ -3657,40 +3717,42 @@ function orderInfo(r){
   return {supplier,amount,cur,price,lead:q.lead||"",quoteSupplier:q.supplier||"",quotePrice:q.price,quoteCur:q.currency||"$",overridden};
 }
 let shbFold=new Set();   // 折叠的批次:rec.id+"|"+bid
+/* 空格统一用这个 —— 直接写 "—" 的话,等宽列(HS/UNIT/数字)里的破折号比正文列短一截 */
+const CG_NA=`<span class="cg-na">—</span>`;
 function cargoTableHTML(b){
   const lines=cargoOf(b);
   if(!lines.length) return `<div class="afd-empty">还没有货物明细，点「✎ 编辑」按行填写</div>`;
   const t=cargoTotals(lines), multi=lines.length>1;
   /* 灰字 = 来自报关商品库(没在这一票单独填过) */
   const gcell=(l,k)=>{ const e=cgEff(l,k);
-    return e.v?`<span class="${e.own?"":"cg-inh"}"${e.own?"":' title="来自报关商品库"'}>${esc(e.v)}</span>`:"—"; };
+    return e.v?`<span class="${e.own?"":"cg-inh"}"${e.own?"":' title="来自报关商品库"'}>${esc(e.v)}</span>`:CG_NA; };
   const elc=(l,i)=>{ const e=cgEff(l,"elements");
-    if(!e.v) return "—";
+    if(!e.v) return CG_NA;
     const first=(e.v.split(/\r?\n/)[0]||"").trim();
     return `<button type="button" class="cg-elv${e.own?"":" cg-inh"}" data-cgelv="${i}"
       title="${e.own?"这一票单独填的":"来自报关商品库"} —— 点开看全部">${esc(first.slice(0,16))}${e.v.length>first.length?" …":""}</button>`;
   };
-  const CGTH=`<th>品名</th><th>中文品名</th><th>HS CODE</th><th class="n">QTY</th><th>单位</th><th>UNIT</th><th class="n">PACKAGES</th><th class="n">毛重 KGS</th><th class="n">净重 KGS</th><th class="n">CBM</th><th>申报要素</th><th>备注</th>`;
+  const CGTH=`<th>品名</th><th>中文品名</th><th>HS CODE</th><th>申报要素</th><th class="n">QTY</th><th>单位</th><th>UNIT</th><th class="n">PACKAGES</th><th class="n">毛重 KGS</th><th class="n">净重 KGS</th><th class="n">CBM</th><th>备注</th>`;
   return `<div class="cg-wrap"><table class="cg-tb cg-tb12">
     <thead><tr>${CGTH}</tr></thead>
     <tbody>${lines.map((l,i)=>`<tr>
-      <td class="d">${esc(l.desc||"—")}</td>
+      <td class="d">${l.desc?esc(l.desc):CG_NA}</td>
       <td class="d">${gcell(l,"cn")}</td>
       <td class="mono">${gcell(l,"hs")}</td>
-      <td class="n">${esc(cgFmt(cgNum(l.pcs)))||"—"}</td>
+      <td class="el">${elc(l,i)}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.pcs)))||CG_NA}</td>
       <td>${gcell(l,"unitCn")}</td>
       <td class="mono">${gcell(l,"unit")}</td>
-      <td class="n">${esc(cgFmt(cgNum(l.pkgs)))||"—"}</td>
-      <td class="n">${esc(cgFmt(cgNum(l.gw)))||"—"}</td>
-      <td class="n">${esc(cgFmt(cgNum(l.nw)))||"—"}</td>
-      <td class="n">${esc(cgFmt(cgNum(l.cbm)))||"—"}</td>
-      <td class="el">${elc(l,i)}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.pkgs)))||CG_NA}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.gw)))||CG_NA}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.nw)))||CG_NA}</td>
+      <td class="n">${esc(cgFmt(cgNum(l.cbm)))||CG_NA}</td>
       <td class="rm">${esc(l.note||"")}</td></tr>
       <tr class="cg-elrow" data-cgelrow="${i}" hidden><td colspan="12"><b>申报要素</b>　${esc(cgEff(l,"elements").v)}</td></tr>`).join("")}</tbody>
-    ${multi?`<tfoot><tr><td class="d">合计 ${lines.length} 项</td><td></td><td></td>
+    ${multi?`<tfoot><tr><td class="d">合计 ${lines.length} 项</td><td></td><td></td><td></td>
       <td class="n">${esc(cgFmt(t.pcs))}</td><td></td><td></td><td class="n">${esc(cgFmt(t.pkgs))}</td>
       <td class="n">${esc(cgFmt(t.gw))}</td><td class="n">${esc(cgFmt(t.nw))}</td>
-      <td class="n">${esc(cgFmt(t.cbm))}</td><td></td><td></td></tr></tfoot>`:""}
+      <td class="n">${esc(cgFmt(t.cbm))}</td><td></td></tr></tfoot>`:""}
   </table></div>`;
 }
 function shipKvHTML(b,late){
@@ -3925,7 +3987,11 @@ function mblBodyHTML(g){
       </div>
       <div class="mbl-ibd">
         <div class="cg-wrap"><div class="cg-rows" data-cargo="${i}"></div></div>
-        <div class="mbl-itot" data-itot="${i}"></div>
+        <div class="mbl-ift"><div class="mbl-itot" data-itot="${i}"></div>
+          <span class="sf-act">
+            <button type="button" class="btn btn-sm" data-sfgen="${i}" title="按这张表生成一份可填写的 PDF，发给供应商填（品名以外的格子都能填，已有的值先填好）">生成供应商填写表</button>
+            ${isViewer()?"":`<button type="button" class="btn btn-sm" data-sfimp="${i}" title="供应商填好发回的 PDF 导进来，对比确认后填进上面的表格（也可以直接把 PDF 拖到这个订单上）">导入填写表</button>`}
+          </span></div>
       </div>
     </div>`;
   }).join("");
@@ -4180,7 +4246,7 @@ function renderGoods(){
       <input class="gd-hs" data-gk="hs" value="${esc(x.hs)}" placeholder="HS 编码">
       <input data-gk="cn" value="${esc(x.cn)}" placeholder="中文报关名">
       <input data-gk="origin" value="${esc(x.origin)}" placeholder="货源地">
-      <button class="gd-del" title="删掉这条">✕</button>
+      <button class="gd-del" title="删掉这条"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>
     <textarea data-gk="elements" placeholder="申报要素（多行，照海关要求写）">${esc(x.elements)}</textarea>
   </div>`).join(""):`<div class="gd-empty">${gdDraft.length?"没有匹配的":"还没有商品资料。点「＋ 加一条」，或者在某个柜里点「⇩ 从当前柜导入没收录的品名」"}</div>`;
@@ -4341,7 +4407,7 @@ function blActHTML(g){
     :`<button class="btn btn-sm doc-miss" data-blup="${esc(g.mbl)}" title="正本 OBL / 电放 / 海运单，整柜传一份">提单<span class="doc-sub">未上传 · 点这里传</span></button>`;
   return `<span class="bl-chip">
       <button type="button" class="bl-open" data-blopen="${esc(g.mbl)}" title="打开 ${esc(d.name)}"><span class="bl-lab">提单</span>${blTagHTML(d)}<span class="bl-nm">${esc(d.name)}</span></button>
-      ${isViewer()?"":`<button type="button" class="bl-x" data-blup="${esc(g.mbl)}" title="换一份">换</button><button type="button" class="bl-x" data-bldel="${esc(g.mbl)}" title="删掉这份提单">✕</button>`}
+      ${isViewer()?"":`<button type="button" class="bl-x" data-blup="${esc(g.mbl)}" title="换一份">换</button><button type="button" class="bl-x" data-bldel="${esc(g.mbl)}" title="删掉这份提单"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>`}
     </span>`;
 }
 /* 仓库里的文件:图片进灯箱,PDF 等新标签页,其余下载 —— 跟附件区同一套 */
@@ -4557,7 +4623,7 @@ function mdRender(){
       <span class="fx">${esc(String(d.name).split(".").pop().toUpperCase().slice(0,4))}</span>
       <button type="button" class="md-nm" data-mdopen="${i}" title="打开">${esc(d.name)}</button>
       <span class="md-meta">${fmtSize(d.size||0)} · ${esc(d.by||"")} ${d.at?fmtDT(d.at).slice(0,10):""}</span>
-      ${ro?"":`<button type="button" class="ph-del" data-mddel="${i}" title="删掉（这一柜每个订单里都会拿掉）">✕</button>`}
+      ${ro?"":`<button type="button" class="ph-del" data-mddel="${i}" title="删掉（这一柜每个订单里都会拿掉）"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>`}
     </div>`).join("")
     :`<div class="ph-empty">还没有${K.name}。生成的单证检查没问题了，把定稿传这里${ro?"":"（可以多个，也可以直接拖进来）"}。</div>`;
   $$("#mdList [data-mdopen]").forEach(b=>b.addEventListener("click",()=>{ const d=list[Number(b.dataset.mdopen)]; openRepoFile(d.path,d.name,d.type); }));
@@ -4642,7 +4708,7 @@ function phRender(){
                  +(known.has(cur)?"":`<option value="" selected>未分柜</option>`);
   const tile=({p,i})=>`<figure class="ph-it" data-pi="${i}">
       <button type="button" class="ph-img" data-phview="${i}" title="${esc(p.name)} · ${esc(p.by||"")} ${p.at?fmtDT(p.at):""}"><img alt="" data-phsrc="${i}"></button>
-      ${ro?"":`<figcaption>${multi?`<select class="ph-c" data-phc="${i}">${opts(p.ctn)}</select>`:"<span></span>"}<button type="button" class="ph-del" data-phdel="${i}" title="删掉这张">✕</button></figcaption>`}
+      ${ro?"":`<figcaption>${multi?`<select class="ph-c" data-phc="${i}">${opts(p.ctn)}</select>`:"<span></span>"}<button type="button" class="ph-del" data-phdel="${i}" title="删掉这张"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></figcaption>`}
     </figure>`;
   $("#phGrid").innerHTML=ph.length
     ? groups.map(gr=>`<section class="ph-sec">${gr.t?`<div class="ph-sec-t">${esc(gr.t)} <span>${gr.items.length} 张</span></div>`:""}
@@ -4758,7 +4824,7 @@ function cpRenderCtns(){
   box.innerHTML=ciplD.ctns.length?ciplD.ctns.map((c,i)=>`<div class="cp-ctn" data-ci="${i}">
       <input class="cp-cno" value="${esc(c.no)}" placeholder="柜号 如 WFHU5174730" spellcheck="false">
       <select class="cp-ctype"><option value="">柜型</option>${CTN_TYPES.map(t=>`<option${t===c.type?" selected":""}>${t}</option>`).join("")}</select>
-      <button type="button" class="cp-cdel" title="删掉这个柜">✕</button></div>`).join("")
+      <button type="button" class="cp-cdel" title="删掉这个柜"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>`).join("")
     :`<div class="cp-empty">「柜号 / 唛头」里没认出柜号，点「＋ 加柜」手动加</div>`;
   box.querySelectorAll(".cp-ctn").forEach(row=>{
     const i=Number(row.dataset.ci), c=ciplD.ctns[i];
@@ -4815,7 +4881,7 @@ function cpRenderRows(){
         ${num("pkgs")}${num("gw")}${num("nw")}${num("cbm")}
         ${pi?`<span class="cp-same">同上</span>`:`<input class="cp-usd${u.own?"":" inh"}" inputmode="decimal" value="${esc(L.usd||"")}" placeholder="${esc(u.v||"可留空")}"${u.own||!u.v?"":` title="这一柜同品名那行填的，留空就用它"`}>`}
         <span class="cp-amt">${pr!=null&&q?cpUsdFmt(q*pr):"—"}</span>
-        <span class="cp-act">${pi?`<button type="button" class="cp-rm" title="删掉这一段">✕</button>`:`<button type="button" class="cp-split" title="这一行货拆到另一个柜">拆</button>`}</span>
+        <span class="cp-act">${pi?`<button type="button" class="cp-rm" title="删掉这一段"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>`:`<button type="button" class="cp-split" title="这一行货拆到另一个柜">拆</button>`}</span>
       </div>`;
     });
     if(bad.length) body+=`<div class="cp-bad" data-li="${li}">↳ 拆柜合计跟货物明细对不上：${bad.map(esc).join("　")}</div>`;
@@ -5173,10 +5239,358 @@ function bindShip(){
       e.stopPropagation();
       const x=g.items[Number(btn.dataset.rm)]; if(x) mblRemove(x.r.id,x.bid);
     }));
+    sfBind(sec,g);
     mblSyncTot(sec,g);
     sec._snap=mblSnap(sec);     /* 展开那一刻的界面值,收起时拿来比 */
   });
 }
+
+/* ================= 供应商填写表(可填写 PDF) =================
+   生成:按这个订单当前的货物明细(界面上的值,含没保存的)出一份 A4 横向的可填写 PDF。
+     品名是印死的文字(导回来靠它对行),其余 12 列 + 「同包」勾选框都是表单格子,已有值先填好。
+     底下多留 SF_EXTRA 行空白,品名也能填 —— 导入时当新行加在末尾。
+   导入:读表单格子的值(/V),跟界面上的表比,弹窗列出每处变化,勾选后填进表格。还得点「保存这一柜」才落库。
+   对行:PDF 的 Keywords 和隐藏格 __meta 里存了 {rid,bid,rows:[品名…]}。先按位置+品名对,对不上再按品名找。
+   字体:pdf-lib 的标准字体只有 WinAnsi,中文必须嵌字体。仓库根目录的 NotoSansSC-GB.ttf 是
+     思源黑体(Noto Sans CJK SC)按 GB2312 + 常用符号子集、转成 TrueType 的(~2MB)。
+     ⚠️ 必须是 TrueType:CFF 版(.otf)被 pdf-lib 嵌成 CIDFontType0,poppler 报 "Mismatch between font type
+     and embedded font file",有些阅读器直接不显示。
+     ⚠️ 嵌整份(subset:false),并且每个格子的 DA 指向这份字体(/NotoSC)—— 供应商在阅读器里新打的字
+     由阅读器用 DA 字体重画,子集化了就会缺字。所以 PDF 大约 1.4MB。 */
+const PDFLIB_CDN="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
+const FONTKIT_CDN="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js";
+const SF_FONT="NotoSansSC-GB.ttf";
+const SF_EXTRA=5;
+/* key, 中文表头, 英文表头, 宽(pt), 类型:no 行号 / desc 品名 / t 单行 / m 多行 / n 数字 / c 勾选 */
+const SF_COLS=[
+  ["no","#","",16,"no"],["desc","品名","Description",108,"desc"],["cn","中文品名","Chinese Name",70,"t"],
+  ["hs","HS 编码","HS Code",60,"t"],["elements","申报要素","Declaration Elements",118,"m"],
+  ["pcs","数量","QTY",38,"n"],["unitCn","单位","Unit (CN)",30,"t"],["unit","英文单位","Unit (EN)",38,"t"],
+  ["pkgs","件数","Packages",42,"n"],["gw","毛重 KGS","G.W.",46,"n"],["nw","净重 KGS","N.W.",46,"n"],
+  ["cbm","体积 CBM","Volume",40,"n"],["amt","总金额 RMB","Amount",60,"n"],["same","同包","Same",26,"c"],
+  ["note","备注","Remarks",56,"t"]];
+const SF_VALKEYS=["cn","hs","elements","pcs","unitCn","unit","pkgs","gw","nw","cbm","amt","note"];
+/* 字段中文名。CG_COLS 在后面才定义(const 暂时性死区),所以用到时再取 */
+const sfLab=k=>k==="samePkg"?"同包":((CG_COLS.find(c=>c[0]===k)||[])[1]||k);
+let _sfLib=null, _sfFont=null;
+function loadPdfLib(){
+  if(window.PDFLib&&window.fontkit) return Promise.resolve();
+  if(!_sfLib) _sfLib=Promise.all([loadScript(PDFLIB_CDN),loadScript(FONTKIT_CDN)])
+    .catch(()=>{ _sfLib=null; throw new Error("PDF 组件加载失败（需要联网），稍后再试"); });
+  return _sfLib;
+}
+async function sfFontBytes(){
+  if(_sfFont) return _sfFont;
+  const res=await fetch(new URL(SF_FONT,location.href).href);
+  if(!res.ok) throw new Error(`取中文字体失败（HTTP ${res.status}）。${SF_FONT} 传到仓库了吗？`);
+  return (_sfFont=await res.arrayBuffer());
+}
+/* 界面上这张表的全部行(不滤空行,位置跟 DOM 一一对应) */
+function cgReadAll(box){
+  return [...box.querySelectorAll(".cg-row:not(.cg-head)")].map((r,j)=>{
+    const o={}; CG_COLS.forEach(([k])=>o[k]="");
+    r.querySelectorAll(".cg-i").forEach(x=>o[x.dataset.cgk]=x.value.trim());
+    if(o.amt&&cgNum(o.amt)!=null) o.amt=o.amt.replace(/,/g,"");
+    if(j>0&&r.dataset.same==="1") o.samePkg=1;
+    return Object.assign(o,cgKeepRead(r));
+  });
+}
+const sfNorm=v=>String(v||"").trim().toLowerCase().replace(/[\s\-_]+/g,"");
+const sfFileName=x=>zipSafe(`装箱报关资料填写表 ${poShortNo(x.r)} ${orderInfo(x.r).supplier||""}`.trim())+".pdf";
+
+async function sfGenerate(x,lines){
+  await loadPdfLib();
+  const PL=window.PDFLib, {rgb,PDFName,PDFString}=PL;
+  const doc=await PL.PDFDocument.create(); doc.registerFontkit(window.fontkit);
+  const font=await doc.embedFont(await sfFontBytes(),{subset:false});
+  const form=doc.getForm();
+  /* 表单默认字体指向嵌进来的中文字体,阅读器重画格子时才有中文字形 */
+  const acro=form.acroForm.dict;
+  let dr=acro.lookup(PDFName.of("DR")); if(!dr){ dr=doc.context.obj({}); acro.set(PDFName.of("DR"),dr); }
+  let fd=dr.lookup(PDFName.of("Font")); if(!fd){ fd=doc.context.obj({}); dr.set(PDFName.of("Font"),fd); }
+  fd.set(PDFName.of("NotoSC"),font.ref);
+  acro.set(PDFName.of("DA"),PDFString.of("/NotoSC 8 Tf 0 g"));
+  const C={ink:rgb(.106,.165,.227),soft:rgb(.255,.314,.38),steel:rgb(.42,.463,.518),line:rgb(.859,.847,.808),
+    hd:rgb(.933,.925,.898),fill:rgb(1,.976,.902),acc:rgb(.91,.388,.039),white:rgb(1,1,1)};
+  const W=842,H=595,M=24,RH=28,HH=30;
+  const po=poShortNo(x.r), sup=orderInfo(x.r).supplier||"", mbl=String(x.b&&x.b.bl||"").trim(), today=new Date().toISOString().slice(0,10);
+  const tw=(t,sz)=>font.widthOfTextAtSize(String(t),sz);
+  const txt=(pg,t,x0,y0,sz,color)=>{ if(t) pg.drawText(String(t),{x:x0,y:y0,size:sz,font,color:color||C.ink}); };
+  /* 按字折行(中文没空格),最多 maxL 行,超出省略号 */
+  const wrap=(t,w,sz,maxL)=>{ const out=[]; let cur="";
+    for(const ch of String(t||"").replace(/\s+/g," ")){ if(tw(cur+ch,sz)>w&&cur){ out.push(cur); cur=ch; } else cur+=ch; }
+    if(cur) out.push(cur);
+    if(out.length>maxL){ out.length=maxL; let l=out[maxL-1]; while(l&&tw(l+"…",sz)>w) l=l.slice(0,-1); out[maxL-1]=l+"…"; }
+    return out; };
+  const eff=(l,k)=>{ if(!l) return ""; if(["cn","hs","unitCn","unit","elements"].includes(k)) return cgEff(l,k).v||""; return l[k]!=null?String(l[k]):""; };
+  const rows=lines.map(l=>({l,fixed:true})).concat(Array.from({length:SF_EXTRA},()=>({l:null,fixed:false})));
+  const daList=[];
+  /* ---- 分页 ---- */
+  const top1=H-M-70-(4*11+10)-10, topN=H-M-24, bottom=M+18;   /* 说明框 4 行 × 11 + 10,下面再空 10 */
+  const per1=Math.floor((top1-HH-bottom)/RH), perN=Math.floor((topN-HH-bottom)/RH);
+  const pages=[]; { let k=0; while(k<rows.length||!pages.length){ const n=pages.length?perN:per1; pages.push(rows.slice(k,k+n).map((r,j)=>({...r,i:k+j}))); k+=n; } }
+  const total=pages.length;
+  const colX=[]; { let cx=M; SF_COLS.forEach(c=>{ colX.push(cx); cx+=c[3]; }); }
+  const TW=SF_COLS.reduce((a,c)=>a+c[3],0);
+  pages.forEach((pr,pi)=>{
+    const pg=doc.addPage([W,H]);
+    let y;
+    if(pi===0){
+      pg.drawRectangle({x:M,y:H-M-4,width:TW,height:3,color:C.acc});
+      txt(pg,"装箱及报关资料填写表",M,H-M-26,16);
+      txt(pg,"Packing & Customs Data Form",M+tw("装箱及报关资料填写表",16)+10,H-M-25,10,C.steel);
+      const info=[["订单 PO",po],["采购内容 Item",x.r.title||"—"],["供应商 Supplier",sup||"—"],["MBL#",mbl||"—"],["生成日期 Date",today]];
+      let ix=M; info.forEach(([k,v])=>{ txt(pg,k,ix,H-M-44,7.5,C.steel); txt(pg,v,ix,H-M-56,10); ix+=Math.max(tw(v,10),tw(k,7.5))+28; });
+      const notes=[
+        ["黄底格子可填写/修改；「品名」一栏请勿改动（导回系统时按品名对行）。","Fill in the yellow fields. Do not change the Description column."],
+        ["同一包装里有多个品名：件数、毛重、净重、体积只填在第一行，其余各行勾选「同包」。","Items packed together: enter Packages / G.W. / N.W. / CBM on the first line only, tick \"Same\" on the others."],
+        ["总金额为该行总价（人民币）。申报要素可多行填写。多出的货品请填在最后的空白行。","Amount = line total in RMB. Extra items go in the blank rows at the bottom."],
+        ["填完请直接「保存」本 PDF 发回，不要打印、扫描或「打印成 PDF」（表格会失效）。","Save this PDF and send it back as is — please do not print, scan or \"print to PDF\"."]];
+      const bx=H-M-70, bh=notes.length*11+10;
+      pg.drawRectangle({x:M,y:bx-bh,width:TW,height:bh,color:C.hd});
+      notes.forEach(([zh,en],k)=>{ const yy=bx-13-k*11; txt(pg,`${k+1}. ${zh}`,M+8,yy,7.5); txt(pg,en,M+8+tw(`${k+1}. ${zh}`,7.5)+8,yy,6.5,C.steel); });
+      y=top1;
+    } else {
+      txt(pg,`装箱及报关资料填写表  ·  ${po}  ·  续 (cont.)`,M,H-M-14,9,C.steel);
+      y=topN;
+    }
+    /* 表头 */
+    pg.drawRectangle({x:M,y:y-HH,width:TW,height:HH,color:C.hd});
+    SF_COLS.forEach((c,ci)=>{ txt(pg,c[1],colX[ci]+3,y-12,7.5); if(c[2]) txt(pg,wrap(c[2],c[3]-5,5.8,1)[0],colX[ci]+3,y-23,5.8,C.steel); });
+    y-=HH;
+    pr.forEach(r=>{
+      const yb=y-RH, l=r.l;
+      pg.drawLine({start:{x:M,y:yb},end:{x:M+TW,y:yb},thickness:.5,color:C.line});
+      SF_COLS.forEach((c,ci)=>{
+        const [k,,,w,t]=c, x0=colX[ci];
+        const fb={x:x0+1.5,y:yb+3,width:w-3,height:RH-6};
+        if(t==="no"){ txt(pg,String(r.i+1),x0+3,yb+RH/2-3,7,r.fixed?C.steel:C.acc); return; }
+        if(t==="desc"&&r.fixed){
+          const ls=wrap(l.desc,w-6,7.5,2);
+          ls.forEach((s,j)=>txt(pg,s,x0+3,yb+RH/2+(ls.length===2?(j?-7:3):-3),7.5));
+          return;
+        }
+        if(t==="c"){
+          const cb=form.createCheckBox(`r${r.i}_same`);
+          cb.addToPage(pg,{x:x0+(w-11)/2,y:yb+(RH-11)/2,width:11,height:11,borderColor:C.steel,borderWidth:.8,backgroundColor:r.i===0?C.hd:C.fill});
+          if(r.i===0) cb.enableReadOnly(); else if(l&&l.samePkg) cb.check();
+          return;
+        }
+        const f=form.createTextField(`r${r.i}_${k}`);
+        if(t==="m") f.enableMultiline();
+        const v=eff(l,k); if(v) f.setText(v);
+        f.addToPage(pg,{...fb,font,backgroundColor:C.fill,borderColor:C.line,borderWidth:.5});
+        const da=`/NotoSC ${t==="m"?6:(t==="desc"?7.5:8)} Tf 0 g`;
+        f.acroField.setDefaultAppearance(da);   /* 先写一次:pdf-lib 画外观时从 DA 取字号(没写就是 0 = 撑满格子) */
+        daList.push([f,da]);
+      });
+      y=yb;
+    });
+    txt(pg,`${po}  ·  ${sup}  ·  第 ${pi+1} / ${total} 页  Page ${pi+1} of ${total}`,M,M,7,C.steel);
+    const tag="采购跟单 · 请直接保存本 PDF 发回";
+    txt(pg,tag,M+TW-tw(tag,7),M,7,C.steel);
+  });
+  const meta={t:"sf",v:1,rid:x.r.id,bid:x.bid||"",po,mbl,sup,at:today,n:lines.length,extra:SF_EXTRA,rows:lines.map(l=>l.desc||"")};
+  const mf=form.createTextField("__meta"); mf.setText(JSON.stringify(meta)); mf.enableReadOnly();
+  mf.addToPage(doc.getPage(0),{x:0,y:0,width:1,height:1,font,hidden:true,borderWidth:0});
+  doc.setTitle(`装箱及报关资料填写表 ${po}`); doc.setSubject("PT-SUPPLIER-FORM"); doc.setCreator("采购跟单");
+  doc.setKeywords([JSON.stringify(meta)]);
+  form.updateFieldAppearances(font);
+  /* ⚠️ 必须在 updateFieldAppearances 之后再写 DA:pdf-lib 画外观时会把 DA 改成 "/NotoSansCJKsc-Regular 8 Tf",
+     这个名字不在 /DR 里,阅读器重画(供应商一打字就重画)时找不到字体 → 中文变空白/方块 */
+  daList.forEach(([f,da])=>f.acroField.setDefaultAppearance(da));
+  return doc.save({updateFieldAppearances:false});
+}
+
+/* 读 PDF → {meta, rows:[{i,fixed,desc,vals,same}]} */
+async function sfRead(file){
+  await loadPdfLib();
+  const PL=window.PDFLib;
+  let doc;
+  try{ doc=await PL.PDFDocument.load(await file.arrayBuffer(),{ignoreEncryption:true,updateMetadata:false}); }
+  catch(e){ throw new Error("这份 PDF 打不开："+(e.message||e)); }
+  let fields=[]; try{ fields=doc.getForm().getFields(); }catch(e){}
+  const by=new Map(fields.map(f=>[f.getName(),f]));
+  const tv=n=>{ const f=by.get(n); if(!f||!(f instanceof PL.PDFTextField)) return ""; try{ return String(f.getText()||"").replace(/\r\n?/g,"\n").trim(); }catch(e){ return ""; } };
+  const cv=n=>{ const f=by.get(n); if(!f||!(f instanceof PL.PDFCheckBox)) return false; try{ return f.isChecked(); }catch(e){ return false; } };
+  let meta=null;
+  try{ meta=JSON.parse(tv("__meta")); }catch(e){}
+  if(!meta){ try{ meta=JSON.parse(doc.getKeywords()||""); }catch(e){} }
+  if(!meta||meta.t!=="sf"){
+    if(!fields.length) throw new Error("这份 PDF 里没有可填写的格子 —— 多半是供应商打印后扫描、或「打印成 PDF」了，表单被压平。请他在原文件里填好后直接保存发回");
+    throw new Error("这不是本系统生成的供应商填写表（找不到标记），导不了");
+  }
+  const rows=[], nFix=(meta.rows||[]).length, nAll=nFix+(meta.extra||0);
+  for(let i=0;i<nAll;i++){
+    const fixed=i<nFix, vals={};
+    SF_VALKEYS.forEach(k=>vals[k]=tv(`r${i}_${k}`));
+    const desc=fixed?meta.rows[i]:tv(`r${i}_desc`), same=cv(`r${i}_same`);
+    if(!fixed&&!desc&&!SF_VALKEYS.some(k=>vals[k])) continue;
+    rows.push({i,fixed,desc,vals,same});
+  }
+  if(!fields.some(f=>/^r\d+_/.test(f.getName()))) throw new Error("这份填写表里的格子都不见了 —— 可能被「打印成 PDF」压平了。请供应商在原文件里填好直接保存");
+  return {meta,rows};
+}
+
+/* 对比:返回 {items:[{kind:"chg",idx,k,from,to,bad}|{kind:"new",line,bad}], warns:[]} */
+function sfDiff(cur,data){
+  const items=[], warns=[], used=new Set();
+  const isNum=k=>CGN.includes(k);
+  const same=(k,a,b)=>{ if(isNum(k)){ const x=cgNum(a),y=cgNum(b); if(x!=null&&y!=null) return x===y; } return String(a||"").trim()===String(b||"").trim(); };
+  data.rows.forEach(r=>{
+    let idx=-1;
+    if(r.fixed){
+      if(cur[r.i]&&!used.has(r.i)&&sfNorm(cur[r.i].desc)===sfNorm(r.desc)) idx=r.i;
+      else idx=cur.findIndex((l,j)=>!used.has(j)&&sfNorm(l.desc)===sfNorm(r.desc));
+    }
+    const pkgFilled=CG_PKG.some(k=>r.vals[k]);
+    if(idx<0){
+      /* 新行(空白行填的,或系统里已经找不到这一行) */
+      if(!r.desc){ warns.push(`第 ${r.i+1} 行没填品名，跳过了`); return; }
+      const line={desc:r.desc}; SF_VALKEYS.forEach(k=>{ if(r.vals[k]) line[k]=r.vals[k]; });
+      if(r.same&&(cur.length||items.some(x=>x.kind==="new"))){ line.samePkg=1; CG_PKG.forEach(k=>delete line[k]); }
+      const bad=SF_VALKEYS.filter(k=>isNum(k)&&line[k]&&cgNum(line[k])==null);
+      items.push({kind:"new",line,bad,lost:r.fixed,pdfRow:r.i});
+      if(r.same&&pkgFilled) warns.push(`「${r.desc}」勾了同包又填了件数/重量/体积，按同包处理，这几格不导入`);
+      return;
+    }
+    used.add(idx);
+    const l=cur[idx];
+    const sameNow=!!l.samePkg, sameNew=idx>0&&r.same;
+    if(sameNew!==sameNow&&(idx>0)) items.push({kind:"chg",idx,k:"samePkg",from:sameNow?"已勾":"未勾",to:sameNew?"勾选":"取消",val:sameNew?1:0});
+    if(sameNew&&pkgFilled) warns.push(`「${l.desc}」勾了同包又填了件数/重量/体积，按同包处理，这几格不导入`);
+    SF_VALKEYS.forEach(k=>{
+      const nv=r.vals[k]; if(!nv) return;          /* 供应商留空 = 没给信息,不去清掉已有的 */
+      if(sameNew&&CG_PKG.includes(k)) return;
+      const gd=["cn","hs","unitCn","unit","elements"].includes(k);
+      const e=gd?cgEff(l,k):{v:l[k]||"",own:true};
+      if(same(k,e.v,nv)) return;
+      items.push({kind:"chg",idx,k,from:e.v||"",inh:gd&&!!e.v&&!e.own,to:nv,bad:isNum(k)&&cgNum(nv)==null});
+    });
+  });
+  return {items,warns};
+}
+
+let sfCtx=null;
+function sfOpenDiff(ctx){
+  sfCtx=ctx;
+  const {data,diff,x}=ctx, m=data.meta;
+  $("#sfHead").innerHTML=`<b>${esc(m.po||"")}</b>　${esc(m.sup||"")}　·　填写表生成于 ${esc(m.at||"—")}　·　文件 ${esc(ctx.fileName)}`
+    +(m.rid!==x.r.id||String(m.bid||"")!==String(x.bid||"")?`<br><span style="color:var(--reject)">⚠ 这份填写表原本是 ${esc(m.po||"另一个订单")} 的，现在导入到 ${esc(poShortNo(x.r))}</span>`:"");
+  $("#sfWarn").innerHTML=diff.warns.length?`<div class="sf-warn">${diff.warns.map(esc).join("<br>")}</div>`:"";
+  const cur=ctx.cur, groups=new Map();
+  diff.items.forEach((it,n)=>{ const key=it.kind==="new"?"new"+n:"r"+it.idx; if(!groups.has(key)) groups.set(key,[]); groups.get(key).push([it,n]); });
+  const fmt=(k,v)=>k==="amt"&&cgNum(v)!=null?cgAmtShow(v):v;
+  let html="";
+  groups.forEach((arr,key)=>{
+    const it0=arr[0][0];
+    if(it0.kind==="new"){
+      const L=it0.line;
+      const sum=SF_VALKEYS.filter(k=>L[k]).map(k=>`${sfLab(k)} ${fmt(k,L[k])}`).join(" · ")+(L.samePkg?" · 同包":"");
+      html+=`<tr class="sf-grp"><td><input type="checkbox" data-sfi="${arr[0][1]}"${it0.bad.length?"":" checked"}></td><td colspan="3">${esc(L.desc)}<span class="sf-tag">${it0.lost?"系统里找不到这一行，按新行加":"新加的行"}</span></td></tr>
+        <tr><td></td><td colspan="3" class="pre">${esc(sum)||"（只有品名）"}${it0.bad.length?`<span class="sf-bad">${it0.bad.map(k=>sfLab(k)).join("、")} 不是数字，导入后请手动改</span>`:""}</td></tr>`;
+      return;
+    }
+    html+=`<tr class="sf-grp"><td></td><td colspan="3">${it0.idx+1}. ${esc(cur[it0.idx].desc||"（无品名）")}</td></tr>`;
+    arr.forEach(([it,n])=>{
+      html+=`<tr><td><input type="checkbox" data-sfi="${n}"${it.bad?"":" checked"}></td><td>${esc(sfLab(it.k))}</td>
+        <td class="old pre">${it.from?esc(fmt(it.k,it.from)):"未填"}${it.inh?`<span class="sf-inh">商品库</span>`:""}</td>
+        <td class="new pre${it.bad?" bad":""}">${esc(fmt(it.k,it.to))}${it.bad?`<span class="sf-bad">不是数字</span>`:""}</td></tr>`;
+    });
+  });
+  $("#sfList").innerHTML=diff.items.length
+    ?`<table class="sf-tb"><colgroup><col class="c0"><col class="c2"><col><col></colgroup>
+       <thead><tr><th></th><th>字段</th><th>系统里现在</th><th>填写表</th></tr></thead><tbody>${html}</tbody></table>`
+    :`<div class="sf-none">填写表跟系统里的表完全一样，没有要导入的</div>`;
+  const sync=()=>{ const cbs=[...$$("#sfList [data-sfi]")], on=cbs.filter(c=>c.checked).length;
+    $("#sfCount").textContent=cbs.length?`已选 ${on} / ${cbs.length} 处`:"";
+    $("#sfAll").checked=!!cbs.length&&on===cbs.length; $("#sfAll").indeterminate=on>0&&on<cbs.length;
+    $("#sfGo").disabled=!on; };
+  $$("#sfList [data-sfi]").forEach(c=>c.addEventListener("change",sync));
+  $("#sfAll").onchange=()=>{ $$("#sfList [data-sfi]").forEach(c=>c.checked=$("#sfAll").checked); sync(); };
+  $(".sf-bar").style.display=diff.items.length?"":"none";
+  sync();
+  openModal("mSf");
+}
+function sfApply(){
+  const ctx=sfCtx; if(!ctx) return;
+  const pick=new Set([...$$("#sfList [data-sfi]")].filter(c=>c.checked).map(c=>Number(c.dataset.sfi)));
+  if(!pick.size) return;
+  const lines=cgReadAll(ctx.box), hl=[];
+  ctx.diff.items.forEach((it,n)=>{
+    if(!pick.has(n)) return;
+    if(it.kind==="new"){ lines.push(Object.assign(Object.fromEntries(CG_COLS.map(([k])=>[k,""])),it.line)); hl.push([lines.length-1,"*"]); return; }
+    const l=lines[it.idx]; if(!l) return;
+    if(it.k==="samePkg"){ if(it.val){ l.samePkg=1; CG_PKG.forEach(k=>l[k]=""); } else delete l.samePkg; hl.push([it.idx,"samePkg"]); return; }
+    l[it.k]=it.k==="amt"&&cgNum(it.to)!=null?String(it.to).replace(/,/g,""):it.to;
+    hl.push([it.idx,it.k]);
+  });
+  /* 界面上只剩一行空行时(还没录过),新行直接顶替它 */
+  const clean=lines.filter((l,j)=>!(cargoEmpty(l)&&!SF_VALKEYS.some(k=>String(l[k]||"").trim())&&lines.length>1&&j===0&&hl.every(h=>h[0]!==0)));
+  const shift=lines.length-clean.length;
+  cgRenderInto(ctx.box,clean,ctx.onChange);
+  const rows=[...ctx.box.querySelectorAll(".cg-row:not(.cg-head)")];
+  hl.forEach(([j,k])=>{ const r=rows[j-shift]; if(!r) return;
+    const els=k==="*"?[...r.querySelectorAll(".cg-i:not(textarea),.cg-el")]:k==="samePkg"?[r.querySelector(".cg-pk")]:k==="elements"?[r.querySelector(".cg-el")]:[r.querySelector(".cg-"+k)];
+    els.forEach(el=>{ if(!el) return; el.classList.add("cg-imp");
+      const off=()=>el.classList.remove("cg-imp"); el.addEventListener("input",off,{once:true}); el.addEventListener("click",off,{once:true}); }); });
+  closeModal("mSf");
+  const nNew=ctx.diff.items.filter((it,n)=>pick.has(n)&&it.kind==="new").length;
+  toast(`已填进 ${pick.size-nNew} 处${nNew?`、新加 ${nNew} 行`:""}（标橙的格子）。检查后点「保存这一柜」才会存`,"ok");
+  sfCtx=null;
+}
+async function sfImport(sec,g,i,file){
+  if(!file) return;
+  if(!/\.pdf$/i.test(file.name||"")&&file.type!=="application/pdf") return toast("只能导入 PDF 填写表","err");
+  try{
+    const data=await sfRead(file);
+    let x=g.items[i], ii=i;
+    if(data.meta.rid!==x.r.id||String(data.meta.bid||"")!==String(x.bid||"")){
+      const j=g.items.findIndex(y=>y.r.id===data.meta.rid&&String(y.bid||"")===String(data.meta.bid||""));
+      if(j>=0){ if(!confirm(`这份是 ${data.meta.po} 的填写表，不是 ${poShortNo(x.r)} 的。\n\n导入到 ${data.meta.po} 那个订单吗？`)) return; x=g.items[j]; ii=j; }
+      else if(!confirm(`这份填写表是 ${data.meta.po||"另一个订单"} 的，不是 ${poShortNo(x.r)} 的。\n\n仍然导入到 ${poShortNo(x.r)} 吗？（按品名对行）`)) return;
+    }
+    const box=sec.querySelector(`[data-cargo="${ii}"]`);
+    const cur=cgReadAll(box);
+    const diff=sfDiff(cur,data);
+    sfOpenDiff({data,diff,x,box,cur,fileName:file.name||"",onChange:()=>mblSyncTot(sec,g)});
+  }catch(e){ toast(e.message||"导入失败","err"); }
+}
+function sfBind(sec,g){
+  sec.querySelectorAll("[data-sfgen]").forEach(b=>b.addEventListener("click",async e=>{
+    e.stopPropagation();
+    const i=Number(b.dataset.sfgen), x=g.items[i], box=sec.querySelector(`[data-cargo="${i}"]`);
+    const lines=cgReadFrom(box);
+    if(!lines.length&&!confirm("这个订单还没有货物明细。生成一份只有空白行的填写表吗？")) return;
+    const old=b.textContent; b.disabled=true; b.textContent="生成中…";
+    try{
+      const out=await sfGenerate(x,lines);
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(new Blob([out],{type:"application/pdf"})); a.download=sfFileName(x);
+      document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
+      toast(`填写表已生成（${lines.length} 行 + ${SF_EXTRA} 行空白）。发给供应商，填好发回后点「导入填写表」`,"ok");
+    }catch(err){ toast(err.message||"生成失败","err"); }
+    finally{ b.disabled=false; b.textContent=old; }
+  }));
+  if(isViewer()) return;
+  sec.querySelectorAll("[data-sfimp]").forEach(b=>b.addEventListener("click",e=>{
+    e.stopPropagation();
+    const inp=document.createElement("input"); inp.type="file"; inp.accept="application/pdf,.pdf";
+    inp.onchange=()=>sfImport(sec,g,Number(b.dataset.sfimp),inp.files[0]);
+    inp.click();
+  }));
+  /* 直接把 PDF 拖到订单卡片上 */
+  sec.querySelectorAll(".mbl-item[data-i]").forEach(card=>{
+    const hasFile=e=>[...(e.dataTransfer&&e.dataTransfer.types||[])].includes("Files");
+    card.addEventListener("dragover",e=>{ if(!hasFile(e)) return; e.preventDefault(); card.classList.add("sf-drop"); });
+    card.addEventListener("dragleave",e=>{ if(!card.contains(e.relatedTarget)) card.classList.remove("sf-drop"); });
+    card.addEventListener("drop",e=>{ if(!hasFile(e)) return; e.preventDefault(); card.classList.remove("sf-drop");
+      const f=[...e.dataTransfer.files].find(f=>/\.pdf$/i.test(f.name)||f.type==="application/pdf");
+      if(!f) return toast("拖进来的不是 PDF","err");
+      sfImport(sec,g,Number(card.dataset.i),f); });
+  });
+}
+$("#sfGo").addEventListener("click",sfApply);
 
 function mblSyncTot(sec,g){
   const all=[];
@@ -5919,7 +6333,7 @@ function attItemHTML(rec,a,i,movable){
       ${a.share?`<span class="att-share" title="整柜共享（${esc(a.share.mbl||"")}）：在发货面板传的，这一柜每个订单都有这一份">整柜</span>`:""}
       ${isViewer()?"":`<button class="ren" onclick="event.stopPropagation();renameAttachment('${rec.id}',${i})" title="重命名">✎</button>`}
       ${mv?`<button class="mv" onclick="event.stopPropagation();openAttMove('${rec.id}',${i})" title="移动到文件夹">⤴</button>`:""}
-      <button class="del" onclick="event.stopPropagation();removeAttachment('${rec.id}',${i})" title="删除">✕</button>
+      <button class="del" onclick="event.stopPropagation();removeAttachment('${rec.id}',${i})" title="删除"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     </div>`;
 }
 /* 带文件夹的附件浏览块(所有分类通用) */
@@ -6222,7 +6636,7 @@ function actionsHTML(r){
       </div>${(r.quotes||[]).some(q=>q.selected)?"":'<div class="hint" style="font-size:12px;color:var(--steel);margin-top:8px">提示:需先添加并选定一家报价才能提请审批</div>'}${noteBox}`;
     case "审批": return `<div class="actions">
         <button class="btn" style="background:var(--approve);border-color:var(--approve);color:#fff" onclick="changeStatus('${r.id}','下单',__note(),'审批通过')">✓ 批准 →</button>
-        <button class="btn btn-danger" onclick="changeStatus('${r.id}','报价',__note()||'审批驳回','审批驳回')">✕ 驳回至报价</button>
+        <button class="btn btn-danger" onclick="changeStatus('${r.id}','报价',__note()||'审批驳回','审批驳回')"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg> 驳回至报价</button>
         <button class="btn btn-danger" onclick="if(confirm('确定取消此采购?\\n已录入的报价会保留，以后可以翻出来当参考价。'))changeStatus('${r.id}','已取消',__note(),'取消采购')">取消采购</button>
       </div>${noteBox}`;
     case "下单": return `<div class="actions">
@@ -6589,7 +7003,7 @@ function renderBfAtt(){
     <span class="fn" title="${esc(f.file.name)}">${/^image\//.test(f.file.type)?"🖼":"📎"} ${esc(f.file.name)}</span>
     <select data-bfg="${i}">${BF_GROUPS.map(g=>`<option ${f.group===g?"selected":""}>${g}</option>`).join("")}</select>
     <span class="sz">${fmtSize(f.file.size)}</span>
-    <button class="rm" data-bfrm="${i}">✕</button>
+    <button class="rm" data-bfrm="${i}"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
   </div>`).join("");
   $$("#fAttList [data-bfrm]").forEach(b=>b.addEventListener("click",()=>{ bfFiles.splice(+b.dataset.bfrm,1); renderBfAtt(); }));
   $$("#fAttList [data-bfg]").forEach(sel=>sel.addEventListener("change",()=>{ bfFiles[+sel.dataset.bfg].group=sel.value; }));
@@ -6655,7 +7069,7 @@ function addBulkRow(v){
     <input class="btitle" placeholder="例:移动破碎站" value="${esc(v.title||"")}">
     <input class="bten" placeholder="Mobile Crusher" value="${esc(v.titleEn||"")}">
     <input type="date" class="bdue" value="${esc(v.due||"")}">
-    <button class="brm" title="删除本行">✕</button>`;
+    <button class="brm" title="删除本行"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>`;
   div.querySelector(".brm").addEventListener("click",()=>{ div.remove(); if(![...$$("#bRows .brow")].length) addBulkRow(); updateBulkCount(); });
   div.querySelectorAll("input").forEach(i=>i.addEventListener("input",updateBulkCount));
   div.querySelector(".btitle").addEventListener("keydown",e=>{
@@ -6749,7 +7163,7 @@ function addAdjRow(v){
   const div=document.createElement("div"); div.className="arow";
   div.innerHTML=`<input type="number" step="0.01" class="aamt" placeholder="金额（可负）" value="${v.amount!==undefined&&v.amount!==""?esc(String(v.amount)):""}">
     <input class="anote" placeholder="说明，如 增加配件 / 含税运费 / 折让">
-    <button class="arm" title="删除本行">✕</button>`;
+    <button class="arm" title="删除本行"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>`;
   div.querySelector(".anote").value=v.note||"";
   div.querySelector(".arm").addEventListener("click",()=>{ div.remove(); updateAdjHint(); updatePayHint(); });
   div.querySelectorAll("input").forEach(i=>i.addEventListener("input",()=>{ updateAdjHint(); updatePayHint(); }));
@@ -6779,7 +7193,7 @@ function addPayRow(v){
     <select class="pcur"><option ${v.cur==="¥"?"selected":""}>$</option><option ${v.cur==="¥"?"selected":""} value="¥">¥</option></select>
     <input type="number" step="0.01" class="pamt" placeholder="金额" value="${v.amount!==undefined?esc(String(v.amount)):""}">
     <input class="pnote" placeholder="备注(可选)" value="${esc(v.note||"")}">
-    <button class="prm" title="删除本行">✕</button>`;
+    <button class="prm" title="删除本行"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>`;
   const sel=div.querySelector(".pcur"); sel.value=v.cur||"$";
   div.querySelector(".prm").addEventListener("click",()=>{ div.remove(); updatePayHint(); });
   div.querySelectorAll("input,select").forEach(i=>i.addEventListener("input",updatePayHint));
@@ -6870,7 +7284,7 @@ const SHIP_FIELDS={bl:["MBL#","shBl"],vessel:["船名/航次","shVessel"],
   ctnr:["柜号/唛头","shCtnr"],arrived:["实际到货","shArrived"]};
 const SHIP_KEYS=Object.keys(SHIP_FIELDS);
 const shipVals=()=>{ const o={}; Object.entries(SHIP_FIELDS).forEach(([k,[,el]])=>{ o[k]=$("#"+el).value.trim(); }); return o; };
-const cargoSig=lines=>(lines||[]).map(l=>CG_COLS.map(([k])=>String(l[k]||"").trim()).concat(l.samePkg?"P":"").join("|")).join("¦");
+const cargoSig=lines=>(lines||[]).map(l=>CG_COLS.map(([k])=>{ const v=String(l[k]||"").trim(), n=CGN.includes(k)?cgNum(v):null; return n==null?v:String(n); }).concat(l.samePkg?"P":"").join("|")).join("¦");
 const cargoBrief=lines=>{ if(!(lines||[]).length) return "空";
   const t=cargoTotals(lines);
   return `${lines.length} 项`+[["PACKAGES",t.pkgs],["毛重",t.gw],["CBM",t.cbm]].filter(([,v])=>v!=null).map(([k,v])=>` ${k} ${cgFmt(v)}`).join("");
@@ -6881,10 +7295,14 @@ const shipDesc=b=>SHIP_KEYS.filter(k=>b[k]).map(k=>`${SHIP_FIELDS[k][0]}:${b[k]}
    不用自己除。单价交给模板公式 G=I/C 算,免得除不尽产生尾差。
    （早先叫 price 存的是单价,读取时做了兼容） */
 /* 列顺序有讲究:pkgs/gw/nw/cbm 必须连在一起 —— 同包那条灰带子是 grid-column:span 4 盖住它们四个的 */
-const CG_COLS=[["desc","品名","text"],["cn","中文品名","gd"],["hs","HS CODE","gd"],
+const CG_COLS=[["desc","品名","text"],["cn","中文品名","gd"],["hs","HS CODE","gd"],["elements","申报要素","el"],
   ["pcs","QTY","num"],["unitCn","单位","gd"],["unit","UNIT","gd"],
   ["pkgs","PACKAGES","num"],["gw","毛重 KGS","num"],["nw","净重 KGS","num"],["cbm","CBM","num"],
-  ["amt","总金额 RMB","num"],["elements","申报要素","el"],["note","备注","text"]];
+  ["amt","总金额 RMB","num"],["note","备注","text"]];
+/* 总金额输入框的显示格式:13,487.12。只是显示 —— cgReadFrom 读回来会去掉逗号再存 */
+const cgAmtShow=v=>{ const t=String(v==null?"":v).trim(), n=cgNum(t); if(n==null) return t;
+  const d=((t.replace(/,/g,"").split(".")[1])||"").length;
+  return n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:Math.max(2,d)}); };
 function cgRowHTML(l,i){
   const same=!!(l&&l.samePkg)&&i>0;
   /* 商品库里那条(按英文品名匹配)。填了就当 placeholder 显示 —— 看得见但不存进这一票,
@@ -6900,16 +7318,16 @@ function cgRowHTML(l,i){
       const v=l&&l.elements?String(l.elements):"", ph=(m&&m.elements)||"";
       const first=((v||ph).split(/\r?\n/)[0]||"").trim();
       return `<label class="cg-f" data-lb="${esc(lab)}"><button type="button" class="cg-el${v?" has":(ph?" inh":"")}" data-cgel="1"
-        title="${v?"这一票单独填的":(ph?"来自报关商品库":"还没填")} —— 点开编辑">${first?esc(first.slice(0,14)):"＋ 填"}</button></label>`;
+        title="${v?"这一票单独填的":(ph?"来自报关商品库":"还没填")} —— 点开编辑">${first?esc(first.slice(0,14)):""}</button></label>`;
     }
     const gd=(t==="gd"&&m&&m[k])?String(m[k]):"";
-    return `<label class="cg-f" data-lb="${esc(lab)}"><input class="cg-i cg-${k}${gd&&!(l&&l[k])?" inh":""}" data-cgk="${k}" ${t==="num"?'type="text" inputmode="decimal"':""} placeholder="${esc(gd||lab)}"${gd?' title="留空就用报关商品库里的：'+esc(gd)+'"':""} value="${esc(l&&l[k]!=null?String(l[k]):"")}"></label>`;
+    return `<label class="cg-f" data-lb="${esc(lab)}"><input class="cg-i cg-${k}${t==="num"?" num":""}${gd&&!(l&&l[k])?" inh":""}" data-cgk="${k}" ${t==="num"?'type="text" inputmode="decimal"':""} placeholder="${esc(gd)}"${gd?' title="留空就用报关商品库里的：'+esc(gd)+'"':""} value="${esc(l&&l[k]!=null?(k==="amt"?cgAmtShow(l[k]):String(l[k])):"")}"></label>`;
   };
   return `<div class="cg-row${same?" cg-same":""}"${same?' data-same="1"':""}${cgKeepAttr(l)}>
     <button type="button" class="cg-pk${same?" on":""}" data-cgpk="1"${i===0?" disabled":""}
       title="${i===0?"第一行没有上一行可并":"跟上一行打在同一个包里 —— 件数/毛重/净重/CBM 只在这一包的头行填一次"}">↳</button>
     ${CG_COLS.map(cell).join("")}
-    <button type="button" class="cg-del" title="删掉这一行">✕</button>
+    <button type="button" class="cg-del" title="删掉这一行"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
     <div class="cg-elbox" hidden><textarea class="cg-i cg-elta" data-cgk="elements" rows="3"
       placeholder="${esc((m&&m.elements)||"申报要素，多行，照海关要求写")}">${esc(l&&l.elements?String(l.elements):"")}</textarea></div>
     </div>`;
@@ -6917,7 +7335,7 @@ function cgRowHTML(l,i){
 /* 行编辑器要能同时开好几份(发货页每个订单一份),所以都按容器操作,不写死 #shCargoRows */
 function cgRenderInto(box,lines,onChange){
   if(!box) return;
-  box.innerHTML=`<div class="cg-row cg-head"><span></span>${CG_COLS.map(([,lab])=>`<span>${esc(lab)}</span>`).join("")}<span></span></div>`
+  box.innerHTML=`<div class="cg-row cg-head"><span></span>${CG_COLS.map(([,lab,t])=>`<span${t==="num"?' class="n"':""}>${esc(lab)}</span>`).join("")}<span></span></div>`
     +((lines&&lines.length?lines:[null]).map((l,i)=>cgRowHTML(l,i)).join(""));
   cgBindIn(box,onChange);
   if(onChange) onChange();
@@ -6928,12 +7346,14 @@ function cgReadFrom(box){
     const o={};
     CG_COLS.forEach(([k])=>o[k]="");
     r.querySelectorAll(".cg-i").forEach(x=>o[x.dataset.cgk]=x.value.trim());
+    if(o.amt&&cgNum(o.amt)!=null) o.amt=o.amt.replace(/,/g,"");
     if(i>0&&r.dataset.same==="1") o.samePkg=1;
     return Object.assign(o,cgKeepRead(r));
   }).filter(l=>!cargoEmpty(l));
 }
 function cgBindIn(box,onChange){
   box.querySelectorAll(".cg-i").forEach(i=>{ i.oninput=()=>{ if(onChange) onChange(); }; });
+  box.querySelectorAll(".cg-amt").forEach(i=>i.addEventListener("blur",()=>{ i.value=cgAmtShow(i.value); }));
   /* 申报要素是多行的,塞不进一列。平时只显示第一行,点一下在这行下面展开整段 */
   box.querySelectorAll("[data-cgel]").forEach(b=>{ b.onclick=()=>{
     const row=b.closest(".cg-row"), bx=row.querySelector(".cg-elbox");
@@ -6945,7 +7365,7 @@ function cgBindIn(box,onChange){
   box.querySelectorAll(".cg-elta").forEach(t=>{ t.oninput=()=>{
     const row=t.closest(".cg-row"), b=row.querySelector("[data-cgel]");
     if(b){ const f=(t.value.split(/\r?\n/)[0]||"").trim();
-      b.textContent=f?f.slice(0,14):"＋ 填"; b.classList.toggle("has",!!t.value.trim()); }
+      b.textContent=f?f.slice(0,14):""; b.classList.toggle("has",!!t.value.trim()); }
     if(onChange) onChange();
   };});
   /* 品名改了,商品库匹配的那条也跟着变 —— 只换 placeholder,不动已经填过的格子 */
@@ -6955,14 +7375,14 @@ function cgBindIn(box,onChange){
       if(t!=="gd") return;
       const inp=row.querySelector(".cg-"+k); if(!inp) return;
       const gd=(m&&m[k])?String(m[k]):"";
-      inp.placeholder=gd||lab;
+      inp.placeholder=gd;
       inp.title=gd?`留空就用报关商品库里的：${gd}`:"";
       inp.classList.toggle("inh",!!gd&&!inp.value.trim());
     });
     const ta=row.querySelector(".cg-elta"), b=row.querySelector("[data-cgel]");
     if(ta){ ta.placeholder=(m&&m.elements)||"申报要素，多行，照海关要求写";
       if(b&&!ta.value.trim()){ const f=(((m&&m.elements)||"").split(/\r?\n/)[0]||"").trim();
-        b.textContent=f?f.slice(0,14):"＋ 填"; b.classList.toggle("inh",!!f); } }
+        b.textContent=f?f.slice(0,14):""; b.classList.toggle("inh",!!f); } }
   }); });
   box.querySelectorAll("[data-cgpk]").forEach((b,i)=>{ b.onclick=()=>{
     const rows=[...box.querySelectorAll(".cg-row:not(.cg-head)")];
@@ -7194,7 +7614,7 @@ let draftProds=[];
 function renderDraftProds(){
   $("#spProdList").innerHTML=draftProds.map((pr,i)=>`<div class="prod-row">
     <span class="pn">${esc(pr.name)}</span>${pr.spec?`<span class="ps">${esc(pr.spec)}</span>`:""}
-    <span style="flex:1"></span><button class="btn btn-sm" data-rmprod="${i}">✕</button></div>`).join("");
+    <span style="flex:1"></span><button class="btn btn-sm" data-rmprod="${i}"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>`).join("");
   $$("#spProdList [data-rmprod]").forEach(b=>b.addEventListener("click",()=>{ draftProds.splice(+b.dataset.rmprod,1); renderDraftProds(); }));
 }
 function addDraftProd(){
@@ -7310,7 +7730,7 @@ function renderPendingAtt(){
   $("#nAttList").innerHTML=pendingFiles.map((f,i)=>`<div style="display:flex;align-items:center;gap:8px;font-size:13px;border:1px solid var(--line-soft);border-radius:6px;padding:6px 10px">
     <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${/^image\//.test(f.type)?"🖼":"📎"} ${esc(f.name)}</span>
     <span style="color:var(--steel);flex-shrink:0">${fmtSize(f.size)}</span>
-    <button class="btn btn-sm" data-rmatt="${i}">✕</button></div>`).join("");
+    <button class="btn btn-sm" data-rmatt="${i}"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>`).join("");
   $$("#nAttList [data-rmatt]").forEach(b=>b.addEventListener("click",()=>{ pendingFiles.splice(+b.dataset.rmatt,1); renderPendingAtt(); }));
 }
 $("#nAttBtn").addEventListener("click",()=>{
