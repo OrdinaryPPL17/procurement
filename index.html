@@ -787,6 +787,25 @@ body.readonly .att-item .mv,body.readonly .att-item .ren,body.readonly .afd-acts
 .fld label{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;letter-spacing:.04em}
 .fld .hint{font-size:11px;color:var(--steel);margin-top:3px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* ===== 设置窗口:分组 ===== */
+.st-sec+.st-sec{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.st-h{display:flex;align-items:baseline;gap:10px;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px}
+.st-h span{font-size:11.5px;font-weight:400;color:var(--steel)}
+.st-h span b{font-weight:600;color:var(--ink-soft)}
+.st-chk{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;width:max-content}
+.st-chk input{width:auto;margin:0}
+.st-side{align-self:end;padding-bottom:21px}
+.st-hint{margin-top:-6px}
+.st-tool{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:11px 0;border-top:1px solid var(--line-soft)}
+.st-h+.st-tool{border-top:none;padding-top:2px}
+.st-tool b{font-size:13px;color:var(--ink)}
+/* .hint 的样式只写在 .fld 下面,这几处不在 .fld 里,要自己给 */
+.st-sec .hint{font-size:11px;color:var(--steel);line-height:1.55}
+.st-tool .hint{margin-top:2px}
+.st-tool>.btn{min-width:56px;justify-content:center}
+.st-tl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--steel);white-space:nowrap}
+.st-tl input{width:64px}
+@media(max-width:640px){ .st-side{align-self:start;padding-bottom:0;margin:-8px 0 12px} }
 .md-ft{padding:0 20px 20px;display:flex;justify-content:flex-end;gap:10px}
 
 /* toast */
@@ -938,6 +957,8 @@ body.readonly .att-item .mv,body.readonly .att-item .ren,body.readonly .afd-acts
   .proj-sum{flex-direction:column;gap:4px;padding:8px 12px}
   .psub{padding:11px 12px}
   .row2,.row3{grid-template-columns:1fr}
+  /* 竖排后 .fld 自带 margin-bottom 12,再加 grid 的 10px 行距就成了 22,跟行与行之间的 12 不一致 */
+  .row2:has(>.fld),.row3:has(>.fld){row-gap:0}
   #supList{max-height:64vh}
   #bRows{max-height:50vh}
 }
@@ -1608,64 +1629,69 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 <!-- 设置 -->
 <div class="modal-mask" id="mSettings">
   <div class="modal">
-    <div class="md-hd"><h2>GitHub 连接设置</h2><button class="btn btn-sm" data-close="mSettings"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
+    <div class="md-hd"><h2>设置</h2><button class="btn btn-sm" data-close="mSettings"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
-      <div class="row2">
-        <div class="fld"><label>仓库 Owner *</label><input id="sOwner" placeholder="例:fjiang17"></div>
-        <div class="fld"><label>仓库名 *</label><input id="sRepo" placeholder="例:procurement-tracker"></div>
-      </div>
-      <div class="row2">
-        <div class="fld"><label>分支</label><input id="sBranch" value="main"></div>
-        <div class="fld"><label>数据文件路径</label><input id="sPath" value="data/procurement.json"></div>
-        <div class="fld"><label>付款提前天数</label><input id="sPayLead" type="number" min="0" max="180" step="1" placeholder="7"><div class="hint">财务页的付款计划按「交期前 N 天」算应付日。两个账号共用这个值。</div></div>
-      </div>
-      <div class="fld"><label>Personal Access Token *</label><input id="sToken" type="password" placeholder="ghp_… 或 github_pat_…">
-        <div class="hint">建议用 Fine-grained token,只授权此仓库的 Contents 读写。Token 只存在本机浏览器,不会上传。</div>
-      </div>
-      <div class="fld"><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="sRemember" style="width:auto" checked>在本机记住 Token</label></div>
-      <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
-        <label style="display:flex;align-items:center;justify-content:space-between">仓库体积
-          <button class="btn btn-sm" id="sSizeBtn">查询</button></label>
-        <div id="sSizeInfo" class="hint">GitHub 建议单仓库不超过 10 GB。点「查询」看当前占用。</div>
-      </div>
-      <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
-        <label style="display:flex;align-items:center;justify-content:space-between">批量补建文件夹
-          <button class="btn btn-sm" id="sTplBtn">补建</button></label>
-        <div id="sTplInfo" class="hint">给已有记录按模板补建附件文件夹。只补它已经走到的阶段，已存在的同名文件夹会跳过。</div>
-      </div>
-      <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
-        <label style="display:flex;align-items:center;justify-content:space-between">数据体积
-          <button class="btn btn-sm" id="sDataBtn">查看</button></label>
-        <div id="sDataInfo" class="hint">超过 1MB 后 GitHub 接口要改用 raw 方式读取（已支持），但每次保存都要整个文件重传，仓库历史也会变大。</div>
-      </div>
-      <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
-        <label>买方（报关资料上的收货方）</label>
-        <div class="row2" style="margin-top:4px">
-          <input id="sBuyerName" placeholder="公司名，如 CSQUARE STEEL CO., LIMITED">
-          <input id="sBuyerAttn" placeholder="ATTN 联系人">
+      <!-- 分 4 组:连接 / 业务设置(共用) / 我的账号 / 维护工具。维护工具点了就执行,不走底部「保存」 -->
+      <section class="st-sec">
+        <div class="st-h">连接<span>GitHub 数据仓库</span></div>
+        <div class="row2">
+          <div class="fld"><label>仓库 Owner *</label><input id="sOwner" placeholder="例:fjiang17"></div>
+          <div class="fld"><label>仓库名 *</label><input id="sRepo" placeholder="例:procurement-tracker"></div>
         </div>
-        <div class="row2" style="margin-top:6px">
-          <input id="sBuyerAddr" placeholder="地址">
-          <input id="sBuyerTel" placeholder="TEL">
+        <div class="row2">
+          <div class="fld"><label>分支</label><input id="sBranch" value="main"></div>
+          <div class="fld"><label>数据文件路径</label><input id="sPath" value="data/procurement.json"></div>
         </div>
-        <div class="hint">基本不变，填一次就行。生成销售合同 / 商业发票 / 装箱单时用。</div>
-      </div>
-      <div class="fld" style="border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px">
-        <label>请款单署名（只影响你自己的账号）</label>
-        <span style="display:flex;gap:8px;margin-top:4px">
-          <input id="sPrName" type="text" placeholder="姓名，如 Lynne Liu" style="flex:1">
-          <input id="sPrDept" type="text" placeholder="部门，如 操作部" style="flex:1">
-        </span>
-        <div class="hint">付款表每笔右边的「请款单」按钮会用这里的姓名和部门。留空就用登录账号名。</div>
-      </div>
-      <div class="fld">
-        <label style="display:flex;align-items:center;justify-content:space-between">精简时间线
-          <span style="display:flex;gap:6px;align-items:center"><input id="sTlKeep" type="number" min="10" max="500" step="10" placeholder="60" style="width:78px">
-          <button class="btn btn-sm" id="sTlBtn">精简</button></span></label>
-        <div class="hint">每条记录只保留最近 N 条时间线，更早的合并成一条摘要（保留条数和最早时间，具体内容不可恢复）。</div>
-      </div>
+        <div class="fld"><label>Personal Access Token *</label><input id="sToken" type="password" placeholder="ghp_… 或 github_pat_…">
+          <div class="hint">建议用 Fine-grained token,只授权此仓库的 Contents 读写。Token 只存在本机浏览器,不会上传。</div>
+        </div>
+        <label class="st-chk"><input type="checkbox" id="sRemember" checked>在本机记住 Token</label>
+      </section>
+      <section class="st-sec">
+        <div class="st-h">业务设置<span>所有账号共用</span></div>
+        <div class="row2">
+          <div class="fld"><label>付款提前天数</label><input id="sPayLead" type="number" min="0" max="180" step="1" placeholder="7"></div>
+          <div class="hint st-side">财务页的付款计划按「交期前 N 天」算应付日。</div>
+        </div>
+        <div class="row2">
+          <div class="fld"><label>买方公司名</label><input id="sBuyerName" placeholder="如 CSQUARE STEEL CO., LIMITED"></div>
+          <div class="fld"><label>买方 ATTN 联系人</label><input id="sBuyerAttn"></div>
+        </div>
+        <div class="row2">
+          <div class="fld"><label>买方地址</label><input id="sBuyerAddr"></div>
+          <div class="fld"><label>买方 TEL</label><input id="sBuyerTel"></div>
+        </div>
+        <div class="hint st-hint">买方是报关资料上的收货方，生成销售合同 / 商业发票 / 装箱单时用。基本不变，填一次就行。</div>
+      </section>
+      <section class="st-sec">
+        <div class="st-h">我的账号<span>只影响 <b id="sMeWho">当前账号</b></span></div>
+        <div class="row2">
+          <div class="fld"><label>请款单署名 · 姓名</label><input id="sPrName" type="text" placeholder="如 Lynne Liu"></div>
+          <div class="fld"><label>请款单署名 · 部门</label><input id="sPrDept" type="text" placeholder="如 操作部"></div>
+        </div>
+        <div class="hint st-hint">付款表每笔右边的「请款单」按钮用这里的姓名和部门。留空就用登录账号名。</div>
+      </section>
+      <section class="st-sec">
+        <div class="st-h">维护工具<span>点按钮立即执行，不用点保存</span></div>
+        <div class="st-tool">
+          <div><b>仓库体积</b><div id="sSizeInfo" class="hint">GitHub 建议单仓库不超过 10 GB。点「查询」看当前占用。</div></div>
+          <button class="btn btn-sm" id="sSizeBtn">查询</button>
+        </div>
+        <div class="st-tool">
+          <div><b>数据体积</b><div id="sDataInfo" class="hint">超过 1MB 后 GitHub 接口要改用 raw 方式读取（已支持），但每次保存都要整个文件重传，仓库历史也会变大。</div></div>
+          <button class="btn btn-sm" id="sDataBtn">查看</button>
+        </div>
+        <div class="st-tool">
+          <div><b>批量补建文件夹</b><div id="sTplInfo" class="hint">给已有记录按模板补建附件文件夹。只补它已经走到的阶段，已存在的同名文件夹会跳过。</div></div>
+          <button class="btn btn-sm" id="sTplBtn">补建</button>
+        </div>
+        <div class="st-tool">
+          <div><b>精简时间线</b><div class="hint">每条记录只保留最近 N 条时间线，更早的合并成一条摘要（保留条数和最早时间，具体内容不可恢复）。</div></div>
+          <span class="st-tl"><span>保留</span><input id="sTlKeep" type="number" min="10" max="500" step="10" placeholder="60"><span>条</span><button class="btn btn-sm" id="sTlBtn">精简</button></span>
+        </div>
+      </section>
     </div>
-    <div class="md-ft"><button class="btn" data-close="mSettings">取消</button><button class="btn btn-ink" id="sSave" title="Ctrl+Enter">保存并连接</button></div>
+    <div class="md-ft"><button class="btn" data-close="mSettings">取消</button><button class="btn btn-ink" id="sSave" title="Ctrl+Enter 保存并重新连接">保存</button></div>
   </div>
 </div>
 
@@ -7898,6 +7924,7 @@ function openSettings(){
   $("#sOwner").value=cfg.owner; $("#sRepo").value=cfg.repo;
   $("#sBranch").value=cfg.branch; $("#sPath").value=cfg.path; $("#sToken").value=cfg.token;
   $("#sPayLead").value=payLead();
+  $("#sMeWho").textContent=authUser()||"这台电脑";
   try{
     const c=JSON.parse(storage.getItem("pt_size")||"null");
     if(c) $("#sSizeInfo").innerHTML=`上次查询：<b style="font-family:var(--mono)">${fmtMB(c.kb)}</b> / 10 GB（${fmtDT(c.at).slice(0,16)}）— 点「查询」刷新`;
