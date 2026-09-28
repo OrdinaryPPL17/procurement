@@ -1280,10 +1280,10 @@ body.dark .md-row .fx{background:#4A555F}
 .cp-po{font-family:var(--mono);color:var(--steel);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cp-d{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cp-arrow{color:var(--safety);font-weight:600}
-.cp-ro,.cp-n,.cp-amt,.cp-usd{font-family:var(--mono)}
+.cp-ro,.cp-n,.cp-amt,.cp-usd,.cp-tot{font-family:var(--mono)}
 .cp-ro{color:var(--ink-soft);padding:0 6px}
 .cp-u{font-family:var(--mono);color:var(--steel)}
-.cp-usd.inh::placeholder{color:var(--steel);opacity:1}
+.cp-usd.inh::placeholder,.cp-tot.inh::placeholder{color:var(--steel);opacity:1}
 .cp-amt{text-align:right;padding-right:4px}
 .cp-same{color:var(--steel);font-size:11px;padding-left:6px}
 .cp-act{text-align:center}
@@ -2024,7 +2024,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       </div>
       <div id="cpWarn"></div>
     </div>
-    <div class="md-ft"><button class="btn" data-close="mCipl">取消</button><button class="btn btn-ink" id="cpGo" title="Ctrl+Enter">生成清关文件</button></div>
+    <div class="md-ft"><button class="btn" data-close="mCipl">取消</button><button class="btn" id="cpSave" title="只保存单价、每行分到哪个柜、柜型、FILE#，不生成文件。别人打开「清关文件」就能直接用">保存</button><button class="btn btn-ink" id="cpGo" title="Ctrl+Enter">生成清关文件</button></div>
   </div>
 </div>
 
@@ -4967,10 +4967,25 @@ function cpMismatch(L){
     return `${lab} ${cpFmt(L.parts.reduce((s,p)=>s+cpNum(p[k]),0))} / ${cpFmt(cpNum(cpLineVal(L,k)))}`;
   });
 }
+/* 单价 / 金额 两个格子互相算。L.tot = 用户直接填的金额原文(填单价时清掉),单价存 L.usd */
+const cpLineQty=L=>cpNum(L.qty);
+/* 金额 ÷ QTY 算单价:从 2 位小数起,够让 QTY × 单价 四舍五入回原金额为止(最多 6 位) */
+function cpPriceFrom(t,q){ let p=t/q;
+  for(let d=2;d<=6;d++){ const f=Math.pow(10,d), v=Math.round(t/q*f)/f; p=v; if(Math.abs(Math.round(v*q*100)/100-t)<0.005) break; }
+  return String(p); }
+function cpTotInput(L,u){
+  const q=cpLineQty(L), pr=cgNum(u.v);
+  const val=L.tot!=null?L.tot:(u.own&&pr!=null&&q?cpUsdFmt(q*pr):"");
+  const ph=!u.own&&pr!=null&&q?cpUsdFmt(q*pr):(q?"或填金额":"先填 QTY");
+  return `<input class="cp-tot${u.own?"":" inh"}" inputmode="decimal" value="${esc(val)}" placeholder="${esc(ph)}"${q?"":" disabled"} title="${L.split?"整行合计（各柜加起来）；":""}填金额会按 QTY 算出单价">`;
+}
+/* change 是在失焦那一刻触发的,这时新点的格子还没拿到焦点 —— 晚一拍再重画,才知道焦点去了哪 */
+const cpRerenderSoon=()=>setTimeout(()=>{ if(ciplD&&$("#mCipl").classList.contains("open")) cpRenderRows(); },0);
 function cpRenderRows(){
   const opts=c=>`<option value="">— 选柜 —</option>`+ciplD.ctns.filter(x=>x.no).map(x=>
     `<option value="${esc(x.no)}"${x.no===c?" selected":""}>${esc(x.no)}${x.type?" · "+esc(x.type):""}</option>`).join("");
   const head=`<div class="cp-row cp-head"><span>柜</span><span>订单</span><span>品名</span><span>QTY</span><span>UNIT</span><span>PKGS</span><span>G/W</span><span>N/W</span><span>CBM</span><span>USD 单价</span><span>金额 USD</span><span></span></div>`;
+  /* 金额也能填:填了金额,单价 = 金额 ÷ 整行 QTY(拆柜时第一段那格是整行合计) */
   let body="";
   ciplD.lines.forEach((L,li)=>{
     const u=cpUsdOf(L);
@@ -4989,24 +5004,38 @@ function cpRenderRows(){
         <span class="cp-u">${esc(L.unit||"—")}</span>
         ${num("pkgs")}${num("gw")}${num("nw")}${num("cbm")}
         ${pi?`<span class="cp-same">同上</span>`:`<input class="cp-usd${u.own?"":" inh"}" inputmode="decimal" value="${esc(L.usd||"")}" placeholder="${esc(u.v||"可留空")}"${u.own||!u.v?"":` title="这一柜同品名那行填的，留空就用它"`}>`}
-        <span class="cp-amt">${pr!=null&&q?cpUsdFmt(q*pr):"—"}</span>
+        ${pi?`<span class="cp-amt">${pr!=null&&q?cpUsdFmt(q*pr):"—"}</span>`:cpTotInput(L,u)}
         <span class="cp-act">${pi?`<button type="button" class="cp-rm" title="删掉这一段"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>`:`<button type="button" class="cp-split" title="这一行货拆到另一个柜">拆</button>`}</span>
       </div>`;
     });
     if(bad.length) body+=`<div class="cp-bad" data-li="${li}">↳ 拆柜合计跟货物明细对不上：${bad.map(esc).join("　")}</div>`;
   });
+  /* 重画会换掉所有输入框:填完单价直接点下一格时,change 触发重画,刚点进去的格子会丢焦点 → 记住焦点在哪一格,画完放回去 */
+  const ae=document.activeElement, aRow=ae&&ae.closest&&ae.closest("#cpRows .cp-row");
+  const keep=aRow&&ae.className?{li:aRow.dataset.li,pi:aRow.dataset.pi,cls:ae.className.split(" ")[0],k:ae.dataset.k||""}:null;
   $("#cpRows").innerHTML=head+body;
   cpBindRows(); cpSync();
+  if(keep){ const r=$(`#cpRows .cp-row[data-li="${keep.li}"][data-pi="${keep.pi}"]`);
+    const el=r&&r.querySelector("."+keep.cls+(keep.k?`[data-k="${keep.k}"]`:""));
+    if(el&&!el.disabled){ el.focus(); if(el.select&&el.tagName==="INPUT") el.select(); } }
 }
 function cpBindRows(){
   $$("#cpRows .cp-row:not(.cp-head)").forEach(row=>{
     const L=ciplD.lines[Number(row.dataset.li)], p=L.parts[Number(row.dataset.pi)];
     row.querySelector(".cp-c").addEventListener("change",e=>{ p.c=e.target.value; row.classList.toggle("cp-noc",!p.c); cpSync(); });
     row.querySelectorAll(".cp-n").forEach(inp=>inp.addEventListener("input",()=>{ p[inp.dataset.k]=inp.value.trim(); cpSyncLine(L); }));
-    row.querySelectorAll(".cp-n").forEach(inp=>inp.addEventListener("change",()=>cpRenderRows()));
-    const usd=row.querySelector(".cp-usd");
-    if(usd) usd.addEventListener("input",()=>{ L.usd=usd.value.trim(); cpSync(); });
-    if(usd) usd.addEventListener("change",()=>cpRenderRows());   // 同品名的别的行默认值跟着变
+    row.querySelectorAll(".cp-n").forEach(inp=>inp.addEventListener("change",cpRerenderSoon));
+    const usd=row.querySelector(".cp-usd"), tot=row.querySelector(".cp-tot");
+    if(usd) usd.addEventListener("input",()=>{ L.usd=usd.value.trim(); delete L.tot; cpSyncLine(L); });
+    if(usd) usd.addEventListener("change",cpRerenderSoon);   // 同品名的别的行默认值跟着变
+    if(tot) tot.addEventListener("input",()=>{
+      const raw=tot.value.trim(), t=cgNum(raw), q=cpLineQty(L);
+      L.tot=raw;
+      L.usd=raw===""?"":(t!=null&&q?cpPriceFrom(t,q):L.usd);
+      if(usd) usd.value=L.usd;
+      cpSyncLine(L);
+    });
+    if(tot) tot.addEventListener("change",()=>{ delete L.tot; cpRerenderSoon(); });   // 离开时按算出的单价重新显示金额
     const sp=row.querySelector(".cp-split");
     if(sp) sp.addEventListener("click",()=>{
       if(!L.split){
@@ -5032,7 +5061,10 @@ function cpSyncLine(L){
   const li=ciplD.lines.indexOf(L), u=cpUsdOf(L), pr=cgNum(u.v);
   $$(`#cpRows .cp-row[data-li="${li}"]`).forEach(row=>{
     const p=L.parts[Number(row.dataset.pi)], q=L.split?cpNum(p.qty):cpNum(L.qty);
-    row.querySelector(".cp-amt").textContent=pr!=null&&q?cpUsdFmt(q*pr):"—";
+    const amt=row.querySelector(".cp-amt"); if(amt) amt.textContent=pr!=null&&q?cpUsdFmt(q*pr):"—";
+    /* 金额框:正在输入的不动;填单价时跟着算 */
+    const tot=row.querySelector(".cp-tot"), lq=cpLineQty(L);
+    if(tot&&document.activeElement!==tot&&L.tot==null){ tot.value=u.own&&pr!=null&&lq?cpUsdFmt(lq*pr):""; tot.classList.toggle("inh",!u.own); }
   });
   cpSync();
 }
@@ -5218,7 +5250,7 @@ async function genCipl(){
   finally{ btn.disabled=false; btn.textContent=old; }
 }
 /* 记住:柜清单、SOC、FILE#(整柜各批都写),每行的柜号/拆柜/单价(写在货物行上) */
-async function ciplSave(d){
+async function ciplSave(d,what){
   const ctns=d.ctns.filter(c=>c.no).map(c=>({no:c.no,type:c.type}));
   const no={ci:$("#cpCiNo").value.trim(),pl:$("#cpPlNo").value.trim()};
   const touched=new Set();
@@ -5236,9 +5268,9 @@ async function ciplSave(d){
     if(L.split){ l.parts=L.parts.map(p=>({c:p.c,qty:String(p.qty??""),pkgs:String(p.pkgs??""),gw:String(p.gw??""),nw:String(p.nw??""),cbm:String(p.cbm??"")})); delete l.ctn; }
     else { if(L.parts[0].c) l.ctn=L.parts[0].c; else delete l.ctn; delete l.parts; }
   });
-  touched.forEach(r=>log(r,"生成清关文件",`${d.g.mbl} · ${ctns.length} 个柜`));
+  touched.forEach(r=>log(r,what||"生成清关文件",`${d.g.mbl} · ${ctns.length} 个柜`));
   render();
-  await persist(`${d.g.mbl} 清关文件`);
+  return await persist(`${d.g.mbl} ${what||"清关文件"}`);
 }
 
 async function mblRemove(rid,bid){
@@ -8260,6 +8292,18 @@ $("#phFile").addEventListener("change",e=>{ const f=[...e.target.files]; e.targe
   if(ev==="drop") phUpload(t.files);
 }));
 $("#cpGo").addEventListener("click",genCipl);
+$("#cpSave").addEventListener("click",async()=>{
+  if(!ciplD) return; if(isViewer()) return denyRO();
+  ciplD.soc=$("#cpSoc").checked;
+  const dup=ciplD.ctns.filter(c=>c.no).map(c=>c.no).filter((v,i,a)=>a.indexOf(v)!==i);
+  if(dup.length) return toast(`柜号重复：${[...new Set(dup)].join("、")}`,"err");
+  const btn=$("#cpSave"); btn.disabled=true;
+  try{
+    const ok=await ciplSave(ciplD,"保存清关信息");
+    if(ok!==false){ const n=ciplD.lines.filter(L=>cgNum(cpUsdOf(L).v)!=null).length;
+      closeModal("mCipl"); toast(`已保存：${n}/${ciplD.lines.length} 行有单价。之后谁打开「清关文件」都会带出来`,"ok"); }
+  }finally{ btn.disabled=false; }
+});
 $("#cpSoc").addEventListener("change",e=>{ if(ciplD) ciplD.soc=e.target.checked; });
 $("#cpCtnAdd").addEventListener("click",()=>{ if(!ciplD) return; ciplD.ctns.push({no:"",type:""}); cpRenderCtns(); cpRenderRows();
   const ins=$$("#cpCtns .cp-cno"); if(ins.length) ins[ins.length-1].focus(); });
