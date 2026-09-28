@@ -4096,8 +4096,8 @@ function mblBodyHTML(g){
       </div>
       <div class="mbl-ibd">
         <div class="mbl-itool"><span class="mbl-docs-l">供应商填写表</span>
-          <button type="button" class="btn btn-sm sf-btn sf-gen" data-sfgen="${i}" title="按这张表生成一份可填写的 PDF，发给供应商填（品名以外的格子都能填，已有的值先填好）">↓ 生成 PDF</button>
-          ${isViewer()?"":`<button type="button" class="btn btn-sm sf-btn" data-sfimp="${i}" title="供应商填好发回的 PDF 导进来，对比确认后填进下面的表格（也可以直接把 PDF 拖到这个订单上）">↑ 导入填好的</button>`}
+          <button type="button" class="btn btn-sm sf-btn sf-gen" data-sfgen="${i}" title="按这张表生成一份 Excel 填写表，发给供应商填（一行一个货，已有的值先填好，下面留空白行）">↓ 生成 Excel</button>
+          ${isViewer()?"":`<button type="button" class="btn btn-sm sf-btn" data-sfimp="${i}" title="供应商填好发回的 Excel 导进来，对比确认后填进下面的表格（也可以直接把文件拖到这个订单上；以前发出去的 PDF 也能导）">↑ 导入填好的</button>`}
         </div>
         <div class="cg-wrap"><div class="cg-rows" data-cargo="${i}"></div></div>
         <div class="mbl-itot" data-itot="${i}"></div>
@@ -5386,21 +5386,11 @@ function bindShip(){
   });
 }
 
-/* ================= 供应商填写表(可填写 PDF) =================
-   生成:按这个订单当前的货物明细(界面上的值,含没保存的)出一份 A4 横向的可填写 PDF。
-     品名是印死的文字(导回来靠它对行),其余 12 列 + 「同包」勾选框都是表单格子,已有值先填好。
-     底下多留 SF_EXTRA 行空白,品名也能填 —— 导入时当新行加在末尾。
-   导入:读表单格子的值(/V),跟界面上的表比,弹窗列出每处变化,勾选后填进表格。还得点「保存这一柜」才落库。
-   对行:PDF 的 Keywords 和隐藏格 __meta 里存了 {rid,bid,rows:[品名…]}。先按位置+品名对,对不上再按品名找。
-   字体:pdf-lib 的标准字体只有 WinAnsi,中文必须嵌字体。仓库根目录的 NotoSansSC-GB.ttf 是
-     思源黑体(Noto Sans CJK SC)按 GB2312 + 常用符号子集、转成 TrueType 的(~2MB)。
-     ⚠️ 必须是 TrueType:CFF 版(.otf)被 pdf-lib 嵌成 CIDFontType0,poppler 报 "Mismatch between font type
-     and embedded font file",有些阅读器直接不显示。
-     ⚠️ 嵌整份(subset:false),并且每个格子的 DA 指向这份字体(/NotoSC)—— 供应商在阅读器里新打的字
-     由阅读器用 DA 字体重画,子集化了就会缺字。所以 PDF 大约 1.4MB。 */
+/* ================= 供应商填写表 =================
+   2026-09-28 起生成 Excel(用户:「表格形式，好填写」),见下面 sfGenerateXlsx / sfReadXlsx。
+   以前生成的是可填写 PDF(pdf-lib + 嵌 NotoSansSC-GB.ttf),生成代码已删;已经发出去的 PDF 还能导入(sfRead,只要 pdf-lib,不用字体)。
+   导入:读回来跟界面上的表比(sfDiff 按品名对行),弹窗列出每处变化,勾选后填进表格。还得点「保存这一柜」才落库。 */
 const PDFLIB_CDN="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
-const FONTKIT_CDN="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js";
-const SF_FONT="NotoSansSC-GB.ttf";
 const SF_EXTRA=5;
 /* key, 中文表头, 英文表头, 宽(pt), 类型:no 行号 / desc 品名 / t 单行 / m 多行 / n 数字 / c 勾选 */
 const SF_COLS=[
@@ -5413,18 +5403,12 @@ const SF_COLS=[
 const SF_VALKEYS=["cn","hs","elements","pcs","unitCn","unit","pkgs","gw","nw","cbm","amt","note"];
 /* 字段中文名。CG_COLS 在后面才定义(const 暂时性死区),所以用到时再取 */
 const sfLab=k=>k==="samePkg"?"同包":((CG_COLS.find(c=>c[0]===k)||[])[1]||k);
-let _sfLib=null, _sfFont=null;
+let _sfLib=null;
 function loadPdfLib(){
-  if(window.PDFLib&&window.fontkit) return Promise.resolve();
-  if(!_sfLib) _sfLib=Promise.all([loadScript(PDFLIB_CDN),loadScript(FONTKIT_CDN)])
+  if(window.PDFLib) return Promise.resolve();
+  if(!_sfLib) _sfLib=loadScript(PDFLIB_CDN)
     .catch(()=>{ _sfLib=null; throw new Error("PDF 组件加载失败（需要联网），稍后再试"); });
   return _sfLib;
-}
-async function sfFontBytes(){
-  if(_sfFont) return _sfFont;
-  const res=await fetch(new URL(SF_FONT,location.href).href);
-  if(!res.ok) throw new Error(`取中文字体失败（HTTP ${res.status}）。${SF_FONT} 传到仓库了吗？`);
-  return (_sfFont=await res.arrayBuffer());
 }
 /* 界面上这张表的全部行(不滤空行,位置跟 DOM 一一对应) */
 function cgReadAll(box){
@@ -5437,110 +5421,126 @@ function cgReadAll(box){
   });
 }
 const sfNorm=v=>String(v||"").trim().toLowerCase().replace(/[\s\-_]+/g,"");
-const sfFileName=x=>zipSafe(`装箱报关资料填写表 ${poShortNo(x.r)} ${orderInfo(x.r).supplier||""}`.trim())+".pdf";
 
-async function sfGenerate(x,lines){
-  await loadPdfLib();
-  const PL=window.PDFLib, {rgb,PDFName,PDFString}=PL;
-  const doc=await PL.PDFDocument.create(); doc.registerFontkit(window.fontkit);
-  const font=await doc.embedFont(await sfFontBytes(),{subset:false});
-  const form=doc.getForm();
-  /* 表单默认字体指向嵌进来的中文字体,阅读器重画格子时才有中文字形 */
-  const acro=form.acroForm.dict;
-  let dr=acro.lookup(PDFName.of("DR")); if(!dr){ dr=doc.context.obj({}); acro.set(PDFName.of("DR"),dr); }
-  let fd=dr.lookup(PDFName.of("Font")); if(!fd){ fd=doc.context.obj({}); dr.set(PDFName.of("Font"),fd); }
-  fd.set(PDFName.of("NotoSC"),font.ref);
-  acro.set(PDFName.of("DA"),PDFString.of("/NotoSC 8 Tf 0 g"));
-  const C={ink:rgb(.106,.165,.227),soft:rgb(.255,.314,.38),steel:rgb(.42,.463,.518),line:rgb(.859,.847,.808),
-    hd:rgb(.933,.925,.898),fill:rgb(1,.976,.902),acc:rgb(.91,.388,.039),white:rgb(1,1,1)};
-  const W=842,H=595,M=24,RH=28,HH=30;
-  const po=poShortNo(x.r), sup=orderInfo(x.r).supplier||"", mbl=String(x.b&&x.b.bl||"").trim(), today=new Date().toISOString().slice(0,10);
-  const tw=(t,sz)=>font.widthOfTextAtSize(String(t),sz);
-  const txt=(pg,t,x0,y0,sz,color)=>{ if(t) pg.drawText(String(t),{x:x0,y:y0,size:sz,font,color:color||C.ink}); };
-  /* 按字折行(中文没空格),最多 maxL 行,超出省略号 */
-  const wrap=(t,w,sz,maxL)=>{ const out=[]; let cur="";
-    for(const ch of String(t||"").replace(/\s+/g," ")){ if(tw(cur+ch,sz)>w&&cur){ out.push(cur); cur=ch; } else cur+=ch; }
-    if(cur) out.push(cur);
-    if(out.length>maxL){ out.length=maxL; let l=out[maxL-1]; while(l&&tw(l+"…",sz)>w) l=l.slice(0,-1); out[maxL-1]=l+"…"; }
-    return out; };
+/* ---- 供应商填写表:Excel 版(2026-09-28 起默认;PDF 版不再生成,但以前发出去的 PDF 仍可导入) ----
+   一行一个货,列跟 SF_COLS 一样(中英双语表头)。已有的值先填好,下面留 SF_EXTRA 行空白。
+   导回时按「品名」对行(跟 PDF 一样走 sfDiff),所以供应商插行、调顺序都不怕;品名一栏灰底,提示别改。
+   标记:隐藏工作表 _meta 的 A1 放 JSON,工作簿「关键词」里再放一份 */
+/* 发给供应商的东西写完整 PO 号(带 HKG 前缀);发货页上用的是去掉前缀的短号 poShortNo */
+const poFullNo=r=>String((r&&r.po)||"").trim()||poShortNo(r);
+const sfXlsxName=x=>zipSafe(`装箱报关资料填写表 ${poFullNo(x.r)} ${orderInfo(x.r).supplier||""}`.trim())+".xlsx";
+async function sfGenerateXlsx(x,lines){
+  const XL=await loadExcelJS();
+  const wb=new XL.Workbook(); wb.creator="采购跟单";
+  const ws=wb.addWorksheet("填写表 Form",{views:[{state:"frozen",ySplit:0}],
+    pageSetup:{orientation:"landscape",paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:.3,right:.3,top:.4,bottom:.4,header:.2,footer:.2}}});
+  const po=poFullNo(x.r), sup=orderInfo(x.r).supplier||"", mbl=String(x.b&&x.b.bl||"").trim(), today=new Date().toISOString().slice(0,10);
+  const NC=SF_COLS.length, last=String.fromCharCode(64+NC);
+  const F={ink:"FF1B2A3A",steel:"FF6B7684",hd:"FFEEECE5",fill:"FFFFF9E6",lock:"FFF3F2EE",line:"FFDBD8CE",acc:"FFE8630A"};
+  const font=(o={})=>Object.assign({name:"Microsoft YaHei",size:10,color:{argb:F.ink}},o);
+  const thin={style:"thin",color:{argb:F.line}};
+  /* 列宽:PDF 的 pt 宽大致换成字符宽 */
+  ws.columns=SF_COLS.map(c=>({key:c[0],width:c[0]==="no"?5:c[0]==="elements"?34:c[0]==="desc"?30:Math.max(9,Math.round(c[3]/4.2))}));
+  /* 标题 */
+  ws.mergeCells(`A1:${last}1`);
+  Object.assign(ws.getCell("A1"),{value:"装箱及报关资料填写表  Packing & Customs Data Form",font:font({size:15,bold:true})});
+  ws.getRow(1).height=26;
+  ws.getRow(1).getCell(1).border={top:{style:"thick",color:{argb:F.acc}}};
+  /* 订单信息 */
+  const info=[["订单 PO",po],["采购内容 Item",x.r.title||"—"],["供应商 Supplier",sup||"—"],["MBL#",mbl||"—"],["生成日期 Date",today]];
+  const infoCols=[1,3,6,10,13];
+  info.forEach(([k,v],j)=>{ const c=infoCols[j];
+    Object.assign(ws.getCell(2,c),{value:k,font:font({size:8,color:{argb:F.steel}})});
+    Object.assign(ws.getCell(3,c),{value:v,font:font({size:10,bold:j===0})}); });
+  /* 说明 */
+  const notes=[
+    "1. 黄底格子请填写/修改；「品名 Description」一栏请勿改动（导回系统时按品名对行）。Fill in the yellow cells. Do not change the Description column.",
+    "2. 同一包装里有多个品名：件数、毛重、净重、体积只填在第一行，其余各行「同包」选「同包」。Items packed together: enter Packages / G.W. / N.W. / CBM on the first line only, choose \"同包\" (Same) on the others.",
+    "3. 总金额为该行总价（人民币）。多出的货品填在下面的空白行，不够可以自己插行。Amount = line total in RMB. Extra items go in the blank rows (insert more rows if needed).",
+    "4. 填完直接保存本 Excel 发回，请不要改成 PDF 或图片。Save this Excel file and send it back as is."];
+  notes.forEach((t,j)=>{ const r=5+j; ws.mergeCells(`A${r}:${last}${r}`);
+    const cell=ws.getCell(`A${r}`); Object.assign(cell,{value:t,font:font({size:9}),fill:{type:"pattern",pattern:"solid",fgColor:{argb:F.hd}},alignment:{vertical:"middle",wrapText:true}});
+    ws.getRow(r).height=18; });
+  /* 表头 */
+  const HR=10;
+  SF_COLS.forEach((c,ci)=>{ const cell=ws.getCell(HR,ci+1);
+    cell.value=c[2]?`${c[1]}\n${c[2]}`:c[1];
+    cell.font=font({size:9,bold:true}); cell.alignment={vertical:"middle",horizontal:"left",wrapText:true};
+    cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:F.hd}}; cell.border={bottom:thin}; });
+  ws.getRow(HR).height=32;
+  ws.views=[{state:"frozen",ySplit:HR,xSplit:2}];
+  /* 数据行 */
   const eff=(l,k)=>{ if(!l) return ""; if(["cn","hs","unitCn","unit","elements"].includes(k)) return cgEff(l,k).v||""; return l[k]!=null?String(l[k]):""; };
   const rows=lines.map(l=>({l,fixed:true})).concat(Array.from({length:SF_EXTRA},()=>({l:null,fixed:false})));
-  const daList=[];
-  /* ---- 分页 ---- */
-  const top1=H-M-70-(4*11+10)-10, topN=H-M-24, bottom=M+18;   /* 说明框 4 行 × 11 + 10,下面再空 10 */
-  const per1=Math.floor((top1-HH-bottom)/RH), perN=Math.floor((topN-HH-bottom)/RH);
-  const pages=[]; { let k=0; while(k<rows.length||!pages.length){ const n=pages.length?perN:per1; pages.push(rows.slice(k,k+n).map((r,j)=>({...r,i:k+j}))); k+=n; } }
-  const total=pages.length;
-  const colX=[]; { let cx=M; SF_COLS.forEach(c=>{ colX.push(cx); cx+=c[3]; }); }
-  const TW=SF_COLS.reduce((a,c)=>a+c[3],0);
-  pages.forEach((pr,pi)=>{
-    const pg=doc.addPage([W,H]);
-    let y;
-    if(pi===0){
-      pg.drawRectangle({x:M,y:H-M-4,width:TW,height:3,color:C.acc});
-      txt(pg,"装箱及报关资料填写表",M,H-M-26,16);
-      txt(pg,"Packing & Customs Data Form",M+tw("装箱及报关资料填写表",16)+10,H-M-25,10,C.steel);
-      const info=[["订单 PO",po],["采购内容 Item",x.r.title||"—"],["供应商 Supplier",sup||"—"],["MBL#",mbl||"—"],["生成日期 Date",today]];
-      let ix=M; info.forEach(([k,v])=>{ txt(pg,k,ix,H-M-44,7.5,C.steel); txt(pg,v,ix,H-M-56,10); ix+=Math.max(tw(v,10),tw(k,7.5))+28; });
-      const notes=[
-        ["黄底格子可填写/修改；「品名」一栏请勿改动（导回系统时按品名对行）。","Fill in the yellow fields. Do not change the Description column."],
-        ["同一包装里有多个品名：件数、毛重、净重、体积只填在第一行，其余各行勾选「同包」。","Items packed together: enter Packages / G.W. / N.W. / CBM on the first line only, tick \"Same\" on the others."],
-        ["总金额为该行总价（人民币）。申报要素可多行填写。多出的货品请填在最后的空白行。","Amount = line total in RMB. Extra items go in the blank rows at the bottom."],
-        ["填完请直接「保存」本 PDF 发回，不要打印、扫描或「打印成 PDF」（表格会失效）。","Save this PDF and send it back as is — please do not print, scan or \"print to PDF\"."]];
-      const bx=H-M-70, bh=notes.length*11+10;
-      pg.drawRectangle({x:M,y:bx-bh,width:TW,height:bh,color:C.hd});
-      notes.forEach(([zh,en],k)=>{ const yy=bx-13-k*11; txt(pg,`${k+1}. ${zh}`,M+8,yy,7.5); txt(pg,en,M+8+tw(`${k+1}. ${zh}`,7.5)+8,yy,6.5,C.steel); });
-      y=top1;
-    } else {
-      txt(pg,`装箱及报关资料填写表  ·  ${po}  ·  续 (cont.)`,M,H-M-14,9,C.steel);
-      y=topN;
-    }
-    /* 表头 */
-    pg.drawRectangle({x:M,y:y-HH,width:TW,height:HH,color:C.hd});
-    SF_COLS.forEach((c,ci)=>{ txt(pg,c[1],colX[ci]+3,y-12,7.5); if(c[2]) txt(pg,wrap(c[2],c[3]-5,5.8,1)[0],colX[ci]+3,y-23,5.8,C.steel); });
-    y-=HH;
-    pr.forEach(r=>{
-      const yb=y-RH, l=r.l;
-      pg.drawLine({start:{x:M,y:yb},end:{x:M+TW,y:yb},thickness:.5,color:C.line});
-      SF_COLS.forEach((c,ci)=>{
-        const [k,,,w,t]=c, x0=colX[ci];
-        const fb={x:x0+1.5,y:yb+3,width:w-3,height:RH-6};
-        if(t==="no"){ txt(pg,String(r.i+1),x0+3,yb+RH/2-3,7,r.fixed?C.steel:C.acc); return; }
-        if(t==="desc"&&r.fixed){
-          const ls=wrap(l.desc,w-6,7.5,2);
-          ls.forEach((s,j)=>txt(pg,s,x0+3,yb+RH/2+(ls.length===2?(j?-7:3):-3),7.5));
-          return;
-        }
-        if(t==="c"){
-          const cb=form.createCheckBox(`r${r.i}_same`);
-          cb.addToPage(pg,{x:x0+(w-11)/2,y:yb+(RH-11)/2,width:11,height:11,borderColor:C.steel,borderWidth:.8,backgroundColor:r.i===0?C.hd:C.fill});
-          if(r.i===0) cb.enableReadOnly(); else if(l&&l.samePkg) cb.check();
-          return;
-        }
-        const f=form.createTextField(`r${r.i}_${k}`);
-        if(t==="m") f.enableMultiline();
-        const v=eff(l,k); if(v) f.setText(v);
-        f.addToPage(pg,{...fb,font,backgroundColor:C.fill,borderColor:C.line,borderWidth:.5});
-        const da=`/NotoSC ${t==="m"?6:(t==="desc"?7.5:8)} Tf 0 g`;
-        f.acroField.setDefaultAppearance(da);   /* 先写一次:pdf-lib 画外观时从 DA 取字号(没写就是 0 = 撑满格子) */
-        daList.push([f,da]);
-      });
-      y=yb;
+  rows.forEach((row,j)=>{
+    const R=HR+1+j, l=row.l, xr=ws.getRow(R);
+    SF_COLS.forEach(([k,,,,t],ci)=>{
+      const cell=xr.getCell(ci+1);
+      cell.border={bottom:thin,right:thin};
+      cell.font=font({size:10});
+      cell.alignment={vertical:"top",wrapText:t==="m"||t==="desc"};
+      if(t==="no"){ cell.value=j+1; cell.font=font({size:9,color:{argb:row.fixed?F.steel:F.acc}}); return; }
+      const locked=t==="desc"&&row.fixed;
+      cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:locked?F.lock:F.fill}};
+      if(t==="desc"){ if(l) cell.value=l.desc||""; return; }
+      if(t==="c"){
+        if(j>0||!row.fixed) cell.dataValidation={type:"list",allowBlank:true,formulae:['"同包"'],showErrorMessage:false};
+        if(l&&l.samePkg&&j>0) cell.value="同包";
+        cell.alignment={vertical:"top",horizontal:"center"};
+        return;
+      }
+      const v=eff(l,k);
+      if(t==="n"){ const n=cgNum(v); cell.value=v===""?null:(n!=null&&/^[\d,.\s-]+$/.test(v)?n:v); cell.alignment={vertical:"top",horizontal:"right"};
+        if(k==="amt") cell.numFmt="#,##0.00"; return; }
+      if(k==="hs") cell.numFmt="@";
+      cell.value=v||null;
     });
-    txt(pg,`${po}  ·  ${sup}  ·  第 ${pi+1} / ${total} 页  Page ${pi+1} of ${total}`,M,M,7,C.steel);
-    const tag="采购跟单 · 请直接保存本 PDF 发回";
-    txt(pg,tag,M+TW-tw(tag,7),M,7,C.steel);
+    /* 申报要素是多行的,行高按行数撑开 */
+    const el=String(eff(l,"elements")||""), n=Math.max(1,el.split("\n").length, Math.ceil(String(l&&l.desc||"").length/34));
+    xr.height=Math.min(120,Math.max(20,n*14));
   });
-  const meta={t:"sf",v:1,rid:x.r.id,bid:x.bid||"",po,mbl,sup,at:today,n:lines.length,extra:SF_EXTRA,rows:lines.map(l=>l.desc||"")};
-  const mf=form.createTextField("__meta"); mf.setText(JSON.stringify(meta)); mf.enableReadOnly();
-  mf.addToPage(doc.getPage(0),{x:0,y:0,width:1,height:1,font,hidden:true,borderWidth:0});
-  doc.setTitle(`装箱及报关资料填写表 ${po}`); doc.setSubject("PT-SUPPLIER-FORM"); doc.setCreator("采购跟单");
-  doc.setKeywords([JSON.stringify(meta)]);
-  form.updateFieldAppearances(font);
-  /* ⚠️ 必须在 updateFieldAppearances 之后再写 DA:pdf-lib 画外观时会把 DA 改成 "/NotoSansCJKsc-Regular 8 Tf",
-     这个名字不在 /DR 里,阅读器重画(供应商一打字就重画)时找不到字体 → 中文变空白/方块 */
-  daList.forEach(([f,da])=>f.acroField.setDefaultAppearance(da));
-  return doc.save({updateFieldAppearances:false});
+  const endR=HR+rows.length;
+  ws.getCell(endR+2,1).value=`${po}  ·  ${sup}  ·  采购跟单生成 · 请直接保存本 Excel 发回`;
+  ws.getCell(endR+2,1).font=font({size:8,color:{argb:F.steel}});
+  ws.pageSetup.printTitlesRow=`${HR}:${HR}`;
+  ws.pageSetup.printArea=`A1:${last}${endR}`;
+  /* 标记 */
+  const meta={t:"sf",v:2,fmt:"xlsx",rid:x.r.id,bid:x.bid||"",po,mbl,sup,at:today,n:lines.length,extra:SF_EXTRA,rows:lines.map(l=>l.desc||"")};
+  const ms=wb.addWorksheet("_meta",{state:"veryHidden"}); ms.getCell("A1").value=JSON.stringify(meta);
+  wb.keywords=JSON.stringify(meta); wb.title=`装箱及报关资料填写表 ${po}`; wb.subject="PT-SUPPLIER-FORM";
+  return wb.xlsx.writeBuffer();
+}
+/* 读 Excel → 跟 sfRead 一样的 {meta, rows:[{i,fixed,desc,vals,same}]} */
+async function sfReadXlsx(file){
+  const XL=await loadExcelJS();
+  const wb=new XL.Workbook();
+  try{ await wb.xlsx.load(await file.arrayBuffer()); }catch(e){ throw new Error("这份 Excel 打不开："+(e.message||e)+"（.xls 老格式请另存为 .xlsx）"); }
+  let meta=null;
+  const ms=wb.getWorksheet("_meta"); if(ms){ try{ meta=JSON.parse(String(ms.getCell("A1").value||"")); }catch(e){} }
+  if(!meta){ try{ meta=JSON.parse(wb.keywords||""); }catch(e){} }
+  if(!meta||meta.t!=="sf") throw new Error("这不是本系统生成的供应商填写表（找不到标记），导不了");
+  const ws=wb.worksheets.find(w=>w.name!=="_meta"&&w.state!=="veryHidden"&&w.state!=="hidden")||wb.worksheets[0];
+  const txt=v=>{ if(v==null) return "";
+    if(typeof v==="object"){ if(v.richText) return v.richText.map(t=>t.text).join(""); if("result" in v) return txt(v.result); if(v.text!=null) return String(v.text); if(v instanceof Date) return v.toISOString().slice(0,10); }
+    if(typeof v==="number") return String(Math.round(v*1e6)/1e6);
+    return String(v); };
+  /* 表头:B 列写着「品名」的那一行(供应商在上面插了行也找得到) */
+  let HR=0; ws.eachRow({includeEmpty:false},(r,n)=>{ if(!HR&&/^品名/.test(txt(r.getCell(2).value).trim())) HR=n; });
+  if(!HR) throw new Error("找不到表头（「品名」那一行）—— 表格结构被改过了，请用原文件填写");
+  const col={}; SF_COLS.forEach((c,ci)=>col[c[0]]=ci+1);
+  const pool=(meta.rows||[]).map((d,i)=>({i,n:sfNorm(d)})), used=new Set();
+  const rows=[]; let extraI=(meta.rows||[]).length;
+  for(let R=HR+1;R<=ws.rowCount;R++){
+    const r=ws.getRow(R), get=k=>txt(r.getCell(col[k]).value).replace(/\r\n?/g,"\n").trim();
+    const desc=get("desc"), vals={}; SF_VALKEYS.forEach(k=>vals[k]=get(k));
+    const sameRaw=get("same"), same=!!sameRaw&&!/^(否|no|n|0|false)$/i.test(sameRaw);
+    if(!desc&&!SF_VALKEYS.some(k=>vals[k])&&!same) continue;
+    if(/^采购跟单生成|请直接保存本 Excel/.test(get("no")+desc)) continue;
+    const hit=desc?pool.find(p=>!used.has(p.i)&&p.n===sfNorm(desc)):null;
+    if(hit){ used.add(hit.i); rows.push({i:hit.i,fixed:true,desc:meta.rows[hit.i],vals,same}); }
+    else rows.push({i:extraI++,fixed:false,desc,vals,same});
+  }
+  return {meta,rows};
 }
 
 /* 读 PDF → {meta, rows:[{i,fixed,desc,vals,same}]} */
@@ -5617,7 +5617,7 @@ function sfOpenDiff(ctx){
   sfCtx=ctx;
   const {data,diff,x}=ctx, m=data.meta;
   $("#sfHead").innerHTML=`<b>${esc(m.po||"")}</b>　${esc(m.sup||"")}　·　填写表生成于 ${esc(m.at||"—")}　·　文件 ${esc(ctx.fileName)}`
-    +(m.rid!==x.r.id||String(m.bid||"")!==String(x.bid||"")?`<br><span style="color:var(--reject)">⚠ 这份填写表原本是 ${esc(m.po||"另一个订单")} 的，现在导入到 ${esc(poShortNo(x.r))}</span>`:"");
+    +(m.rid!==x.r.id||String(m.bid||"")!==String(x.bid||"")?`<br><span style="color:var(--reject)">⚠ 这份填写表原本是 ${esc(m.po||"另一个订单")} 的，现在导入到 ${esc(poFullNo(x.r))}</span>`:"");
   $("#sfWarn").innerHTML=diff.warns.length?`<div class="sf-warn">${diff.warns.map(esc).join("<br>")}</div>`:"";
   const cur=ctx.cur, groups=new Map();
   diff.items.forEach((it,n)=>{ const key=it.kind==="new"?"new"+n:"r"+it.idx; if(!groups.has(key)) groups.set(key,[]); groups.get(key).push([it,n]); });
@@ -5682,14 +5682,17 @@ function sfApply(){
 }
 async function sfImport(sec,g,i,file){
   if(!file) return;
-  if(!/\.pdf$/i.test(file.name||"")&&file.type!=="application/pdf") return toast("只能导入 PDF 填写表","err");
+  const isX=/\.xlsx$/i.test(file.name||"")||/spreadsheetml/.test(file.type||"");
+  const isP=/\.pdf$/i.test(file.name||"")||file.type==="application/pdf";
+  if(/\.xls$/i.test(file.name||"")) return toast("这是 .xls 老格式，请在 Excel 里另存为 .xlsx 再导入","err");
+  if(!isX&&!isP) return toast("只能导入填写表（Excel .xlsx，或以前发出去的 PDF）","err");
   try{
-    const data=await sfRead(file);
+    const data=isX?await sfReadXlsx(file):await sfRead(file);
     let x=g.items[i], ii=i;
     if(data.meta.rid!==x.r.id||String(data.meta.bid||"")!==String(x.bid||"")){
       const j=g.items.findIndex(y=>y.r.id===data.meta.rid&&String(y.bid||"")===String(data.meta.bid||""));
-      if(j>=0){ if(!confirm(`这份是 ${data.meta.po} 的填写表，不是 ${poShortNo(x.r)} 的。\n\n导入到 ${data.meta.po} 那个订单吗？`)) return; x=g.items[j]; ii=j; }
-      else if(!confirm(`这份填写表是 ${data.meta.po||"另一个订单"} 的，不是 ${poShortNo(x.r)} 的。\n\n仍然导入到 ${poShortNo(x.r)} 吗？（按品名对行）`)) return;
+      if(j>=0){ if(!confirm(`这份是 ${data.meta.po} 的填写表，不是 ${poFullNo(x.r)} 的。\n\n导入到 ${data.meta.po} 那个订单吗？`)) return; x=g.items[j]; ii=j; }
+      else if(!confirm(`这份填写表是 ${data.meta.po||"另一个订单"} 的，不是 ${poFullNo(x.r)} 的。\n\n仍然导入到 ${poFullNo(x.r)} 吗？（按品名对行）`)) return;
     }
     const box=sec.querySelector(`[data-cargo="${ii}"]`);
     const cur=cgReadAll(box);
@@ -5705,18 +5708,18 @@ function sfBind(sec,g){
     if(!lines.length&&!confirm("这个订单还没有货物明细。生成一份只有空白行的填写表吗？")) return;
     const old=b.textContent; b.disabled=true; b.textContent="生成中…";
     try{
-      const out=await sfGenerate(x,lines);
+      const out=await sfGenerateXlsx(x,lines);
       const a=document.createElement("a");
-      a.href=URL.createObjectURL(new Blob([out],{type:"application/pdf"})); a.download=sfFileName(x);
+      a.href=URL.createObjectURL(new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})); a.download=sfXlsxName(x);
       document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
-      toast(`填写表已生成（${lines.length} 行 + ${SF_EXTRA} 行空白）。发给供应商，填好发回后点「导入填写表」`,"ok");
+      toast(`填写表已生成（Excel，${lines.length} 行 + ${SF_EXTRA} 行空白）。发给供应商，填好发回后点「导入填好的」`,"ok");
     }catch(err){ toast(err.message||"生成失败","err"); }
     finally{ b.disabled=false; b.textContent=old; }
   }));
   if(isViewer()) return;
   sec.querySelectorAll("[data-sfimp]").forEach(b=>b.addEventListener("click",e=>{
     e.stopPropagation();
-    const inp=document.createElement("input"); inp.type="file"; inp.accept="application/pdf,.pdf";
+    const inp=document.createElement("input"); inp.type="file"; inp.accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,application/pdf";
     inp.onchange=()=>sfImport(sec,g,Number(b.dataset.sfimp),inp.files[0]);
     inp.click();
   }));
@@ -5726,8 +5729,8 @@ function sfBind(sec,g){
     card.addEventListener("dragover",e=>{ if(!hasFile(e)) return; e.preventDefault(); card.classList.add("sf-drop"); });
     card.addEventListener("dragleave",e=>{ if(!card.contains(e.relatedTarget)) card.classList.remove("sf-drop"); });
     card.addEventListener("drop",e=>{ if(!hasFile(e)) return; e.preventDefault(); card.classList.remove("sf-drop");
-      const f=[...e.dataTransfer.files].find(f=>/\.pdf$/i.test(f.name)||f.type==="application/pdf");
-      if(!f) return toast("拖进来的不是 PDF","err");
+      const f=[...e.dataTransfer.files].find(f=>/\.(xlsx|pdf)$/i.test(f.name)||f.type==="application/pdf"||/spreadsheetml/.test(f.type||""));
+      if(!f) return toast("拖进来的不是填写表（Excel .xlsx 或 PDF）","err");
       sfImport(sec,g,Number(card.dataset.i),f); });
   });
 }
