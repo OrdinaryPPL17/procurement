@@ -1623,7 +1623,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   <div class="fin-bar"><span class="hint">只统计已下单及之后(已签合同)的记录 · 人民币和美元分开计,不换算</span></div>
   <div class="fin-cards" id="finCards"></div>
   <section class="fin-sec" data-fs="plan"><h3><span class="fold">▼</span>付款计划<span class="sub" id="finPlanNote"></span><button type="button" class="btn btn-sm fin-h3-btn" id="btnWeekPay" title="逾期未付 + 本周（周一到周日）应付，按你之前那张 Excel 的格式导出">↓ 本周付款计划</button></h3><div class="fin-bd"><div id="finPlan"></div></div></section>
-  <section class="fin-sec" data-fs="list"><h3><span class="fold">▼</span>未付明细<span class="sub" id="finListNote"></span></h3><div class="fin-bd"><div id="finList"></div></div></section>
+  <section class="fin-sec" data-fs="list"><h3><span class="fold">▼</span>未付明细<span class="sub" id="finListNote"></span><button type="button" class="btn btn-sm fin-h3-btn" id="btnUnpaidX" title="把下面这张未付明细（全部，不只是屏幕上展开的）导出成 Excel，顺序跟表头排序一样，带各币种合计">↓ 导出 Excel</button></h3><div class="fin-bd"><div id="finList"></div></div></section>
   <section class="fin-sec" data-fs="sup"><h3><span class="fold">▼</span>按供应商未付排名<span class="sub" id="finSupNote"></span></h3><div class="fin-bd"><div id="finSup"></div></div></section>
   <section class="fin-sec" data-fs="proj"><h3><span class="fold">▼</span>按项目付款进度<span class="sub" id="finProjNote"></span></h3><div class="fin-bd"><div id="finProj"></div></div></section>
 </main>
@@ -3209,6 +3209,15 @@ function setView(m){
 /* 口径:只算已下单及之后(已签合同的才是真欠款);¥ 和 $ 分开统计,不做汇率换算 */
 const FIN_ST=["下单","物流","完结"];
 let finSort={k:"unpaid",d:-1};
+/* 未付明细:未结清的,按表头当前排序。页面和「导出 Excel」共用,导出来的顺序跟屏幕上一样 */
+function finOpenRows(rows){
+  const open=rows.filter(x=>!x.settled);
+  const K=finSort.k, D=finSort.d;
+  const val=x=>K==="title"?x.r.title:K==="sup"?(orderInfo(x.r).supplier||""):K==="signed"?(x.r.signed||""):K==="no"?(x.r.po||x.r.sub||""):x[K];
+  return open.sort((a,b)=>{ const x=val(a),y=val(b);
+    if(typeof x==="number"&&typeof y==="number") return (x-y)*D;
+    return String(x).localeCompare(String(y),"zh")*D; });
+}
 /* 默认只展开「付款计划」,其余点开再看;每张表先显示 8 行,点「展开全部」看完 */
 const FIN_CAP=8;
 let finFold=new Set(["list","sup","proj"]);
@@ -3328,12 +3337,7 @@ function renderFin(){
   </table></div>${finMoreHTML(plan,"plan")}`:`<div class="fin-empty">没有待付款项，或未付的记录还没填交期</div>`;
 
   // 未付明细
-  const open=rows.filter(x=>!x.settled);
-  const K=finSort.k, D=finSort.d;
-  const val=x=>K==="title"?x.r.title:K==="sup"?(orderInfo(x.r).supplier||""):K==="signed"?(x.r.signed||""):K==="no"?(x.r.po||x.r.sub||""):x[K];
-  open.sort((a,b)=>{ const x=val(a),y=val(b);
-    if(typeof x==="number"&&typeof y==="number") return (x-y)*D;
-    return String(x).localeCompare(String(y),"zh")*D; });
+  const open=finOpenRows(rows);
   $("#finListNote").textContent=open.length?`${open.length} 笔未结清`:"";
   const th=(k,lab)=>`<th data-finsort="${k}" class="s${finSort.k===k?" on":""}">${lab}${finSort.k===k?(finSort.d<0?" ↓":" ↑"):""}</th>`;
   $("#finList").innerHTML=open.length?`<div class="fin-tb-wrap"><table class="fin-tb f-list">${FIN_COLS}
@@ -8083,7 +8087,86 @@ async function genWeekPay(){
   finally{ btn.disabled=false; btn.textContent=old; }
 }
 $("#btnWeekPay").addEventListener("click",e=>{ e.stopPropagation(); genWeekPay(); });
+/* 未付明细导出:发财务用。列 = 页面上那几列 + 项目号、币种、交期;金额是数字(带币种格式),表尾每个币种一行 SUMIF 合计 */
+async function genUnpaidX(){
+  const open=finOpenRows(finRows());
+  if(!open.length) return toast("没有未结清的款项","ok");
+  const btn=$("#btnUnpaidX"), old=btn.textContent; btn.disabled=true; btn.textContent="导出中…";
+  try{
+    const EX=await loadExcelJS();
+    const wb=new EX.Workbook(), ws=wb.addWorksheet("未付明细",{views:[{state:"frozen",ySplit:2}]});
+    const filt=[$("#fSearch").value.trim()&&`搜索「${$("#fSearch").value.trim()}」`,$("#fJob").value&&`项目 ${$("#fJob").value}`,
+      $("#fDestSel").value&&`目的地 ${$("#fDestSel").value}`,alertOnly&&"只看预警"].filter(Boolean);
+    const HEAD=["签订日期","状态","编号 (PO)","项目号","品名","供应商","币种","合同额","已付","未付","交期"];
+    [12,8,19,11,26,32,6,16,16,16,12].forEach((w,i)=>ws.getColumn(i+1).width=w);
+    const NC=HEAD.length, thin={style:"thin",color:{argb:"FFBFBFBF"}}, BOX={top:thin,left:thin,bottom:thin,right:thin};
+    const font={name:"Microsoft YaHei",size:10};
+    ws.mergeCells(1,1,1,NC);
+    const t=ws.getCell(1,1);
+    t.value=`未付明细　${open.length} 笔未结清　·　生成于 ${todayLocal()}`+(filt.length?`　·　筛选：${filt.join("、")}`:"");
+    t.font={...font,size:12,bold:true}; t.alignment={vertical:"middle"}; ws.getRow(1).height=26;
+    const hr=ws.getRow(2); hr.values=HEAD; hr.height=22;
+    hr.eachCell(c=>{ c.font={...font,bold:true}; c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFEDEDED"}}; c.border=BOX; c.alignment={vertical:"middle"}; });
+    ws.autoFilter={from:{row:2,column:1},to:{row:2,column:NC}};
+    const numFmt=cur=>`"${cur}"#,##0.00`;
+    /* 日期存成真日期(Excel 能排序筛选);签订日期不是合法日期的原样写文字,不硬转 */
+    const dt=v=>{ if(!isDateStr(v)) return v||null; const [y,m,d]=v.split("-").map(Number); return new Date(Date.UTC(y,m-1,d)); };
+    let rn=3;
+    open.forEach(x=>{
+      const row=ws.getRow(rn);
+      row.values=[dt(x.r.signed),x.r.status,x.r.po||x.r.sub||"",fullJob(x.r)||"",x.r.title||"",orderInfo(x.r).supplier||"",x.cur,x.total,x.paid||null,x.unpaid,dt(x.r.eta)];
+      row.eachCell({includeEmpty:true},(c,col)=>{ if(col>NC) return; c.font=font; c.border=BOX; c.alignment={vertical:"middle",wrapText:col===5||col===6}; });
+      [8,9,10].forEach(col=>ws.getCell(rn,col).numFmt=numFmt(x.cur));
+      [1,11].forEach(col=>{ if(ws.getCell(rn,col).value instanceof Date) ws.getCell(rn,col).numFmt="yyyy-mm-dd"; });
+      ws.getCell(rn,10).font={...font,color:{argb:"FFB42318"}};
+      row.height=22;
+      rn++;
+    });
+    const last=rn-1;
+    /* 表尾:每个币种一行合计,SUMIF 按币种列 */
+    [...new Set(open.map(x=>x.cur))].forEach((cu,k)=>{
+      const lab=ws.getCell(rn,6); lab.value=`合计 ${cu}（${open.filter(x=>x.cur===cu).length} 笔）`; lab.font={...font,bold:true}; lab.alignment={horizontal:"right"};
+      ws.getCell(rn,7).value=cu; ws.getCell(rn,7).font={...font,bold:true};
+      [["H","total"],["I","paid"],["J","unpaid"]].forEach(([L,key],j)=>{
+        const c=ws.getCell(rn,8+j);
+        c.value={formula:`SUMIF(G3:G${last},"${cu}",${L}3:${L}${last})`,result:open.filter(x=>x.cur===cu).reduce((a,x)=>a+x[key],0)};
+        c.numFmt=numFmt(cu); c.font={...font,bold:true,color:key==="unpaid"?{argb:"FFB42318"}:undefined};
+        c.border={top:k?undefined:{style:"thin"},bottom:{style:"double"}};
+      });
+      ws.getRow(rn).height=22; rn++;
+    });
+    ws.pageSetup={orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:1,printTitlesRow:"2:2",
+      margins:{left:.4,right:.4,top:.5,bottom:.5,header:.3,footer:.3}};
+    const out=await wb.xlsx.writeBuffer();
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+    a.download=`未付明细 ${todayLocal()}.xlsx`;
+    document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
+    toast(`已导出未付明细 ${open.length} 笔`,"ok");
+  }catch(e){ toast(e.message||"导出失败","err"); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+$("#btnUnpaidX").addEventListener("click",e=>{ e.stopPropagation(); genUnpaidX(); });
 
+
+/* ===== 日期框的年份限制 =====
+   浏览器的日期框年份可以敲 5~6 位(2026 多敲一个 0 就成了 20206),存进去就是「20206-11-09」这种,
+   各处都显示成原文、排序也乱。所有 input[type=date] 加 min / max(浏览器会把年份限成 4 位),
+   再兜底:改完年份不在 2000~2099 就提示并清空,不让它存进去 */
+function dateBound(root){
+  (root.matches&&root.matches('input[type="date"]')?[root]:[...root.querySelectorAll('input[type="date"]')]).forEach(i=>{
+    if(!i.min) i.min="2000-01-01"; if(!i.max) i.max="2099-12-31"; });
+}
+dateBound(document.body);
+new MutationObserver(ms=>{ for(const m of ms) for(const n of m.addedNodes) if(n.nodeType===1) dateBound(n); })
+  .observe(document.body,{childList:true,subtree:true});
+document.addEventListener("change",e=>{
+  const i=e.target; if(!(i instanceof HTMLInputElement)||i.type!=="date"||!i.value) return;
+  if(/^20\d\d-\d\d-\d\d$/.test(i.value)) return;
+  const was=i.value; i.value="";
+  toast(`日期「${was}」年份不对（多敲了一位？），已清空，请重新选`,"err");
+  i.dispatchEvent(new Event("input",{bubbles:true}));
+},true);
 
 /* ===== 从桌面拖文件进详情抽屉 =====
    只高亮「真正会传进去」的那一块,不再整段盖遮罩(那样会挡住里面的文件夹、看不清往哪放):
