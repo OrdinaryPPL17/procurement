@@ -564,6 +564,13 @@ body.dark .undobar button{border-color:#4A555F}
 body.dark .cgrp-hd .pjt{background:#3A4550;color:#E8EAED}
 .cgrp-hd .ln{flex:1;height:1px;background:var(--line-soft)}
 .cgrp-hd .amt{font-family:var(--mono);color:var(--steel);font-weight:600;font-size:13px}
+/* 展开视图里并进来的完结 / 已取消:卡片变淡,悬停恢复;标题里的计数灰色 */
+.cgrp-hd .dn{color:var(--steel);font-weight:600}
+.cgrp-hd .cg-sep{color:var(--steel);margin:0 6px;font-weight:400}
+.card.card-done{opacity:.55;filter:saturate(.5)}
+.card .done-tag{font-size:10.5px;font-weight:700;color:var(--approve);border:1px solid var(--approve);border-radius:4px;padding:0 5px;line-height:16px;margin-right:6px;white-space:nowrap}
+.card .done-tag.can{color:var(--steel);border-color:var(--steel)}
+.card.card-done:hover,.card.card-done:focus-visible{opacity:1;filter:none}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;align-items:start}
 @media(max-width:760px){.cgrid{grid-template-columns:1fr}}
 .kv-empty{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--steel);padding:4px 0 2px;margin-top:2px}
@@ -1623,7 +1630,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   <div class="fin-bar"><span class="hint">只统计已下单及之后(已签合同)的记录 · 人民币和美元分开计,不换算</span></div>
   <div class="fin-cards" id="finCards"></div>
   <section class="fin-sec" data-fs="plan"><h3><span class="fold">▼</span>付款计划<span class="sub" id="finPlanNote"></span><button type="button" class="btn btn-sm fin-h3-btn" id="btnWeekPay" title="逾期未付 + 本周（周一到周日）应付，按你之前那张 Excel 的格式导出">↓ 本周付款计划</button></h3><div class="fin-bd"><div id="finPlan"></div></div></section>
-  <section class="fin-sec" data-fs="list"><h3><span class="fold">▼</span>未付明细<span class="sub" id="finListNote"></span><button type="button" class="btn btn-sm fin-h3-btn" id="btnUnpaidX" title="把下面这张未付明细（全部，不只是屏幕上展开的）导出成 Excel，顺序跟表头排序一样，带各币种合计">↓ 导出 Excel</button></h3><div class="fin-bd"><div id="finList"></div></div></section>
+  <section class="fin-sec" data-fs="list"><h3><span class="fold">▼</span>未付明细<span class="sub" id="finListNote"></span><button type="button" class="btn btn-sm fin-h3-btn" id="btnUnpaidX" title="把下面这张未付明细（全部，不只是屏幕上展开的）导出成 Excel，按项目号排列，带各币种合计">↓ 导出 Excel</button></h3><div class="fin-bd"><div id="finList"></div></div></section>
   <section class="fin-sec" data-fs="sup"><h3><span class="fold">▼</span>按供应商未付排名<span class="sub" id="finSupNote"></span></h3><div class="fin-bd"><div id="finSup"></div></div></section>
   <section class="fin-sec" data-fs="proj"><h3><span class="fold">▼</span>按项目付款进度<span class="sub" id="finProjNote"></span></h3><div class="fin-bd"><div id="finProj"></div></div></section>
 </main>
@@ -3601,8 +3608,12 @@ function render(){
   if(expandedCol && cols.includes(expandedCol)){
     const st=expandedCol;
     const items=filtered.filter(r=>r.status===st);
+    /* 勾了「显示已完结 / 已取消」、展开的又是进行中的某一列:同项目号的完结 / 已取消也并进来,排在后面、卡片变淡。
+       只有完结的项目也列出来 */
+    const DONE=["完结","已取消"];
+    const done=showCancel&&!DONE.includes(st)?filtered.filter(r=>DONE.includes(r.status)):[];
     const groups=new Map();
-    items.forEach(r=>{ const k=r.job||"(未填项目号)"; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(r); });
+    [...items,...done].forEach(r=>{ const k=r.job||"(未填项目号)"; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(r); });
     const jobKey2=k=>{ const m=String(k).match(/(\d+)\D+(\d+)/); return m?[+m[1],+m[2]]:null; };
     const keys=[...groups.keys()].sort((a,b)=>{ if(a==="(未填项目号)")return 1; if(b==="(未填项目号)")return -1;
       const ka=jobKey2(a),kb=jobKey2(b); if(ka&&kb) return (ka[0]-kb[0])||(ka[1]-kb[1]); return a.localeCompare(b,"zh"); });
@@ -3611,17 +3622,21 @@ function render(){
         <span class="srt" data-sortcol="${st}" title="点击切换排序">${SORT_LABEL[colSort[st]||"default"]}</span>
         <span class="exp" data-expcol="${st}" title="收起">⤡ 收起</span></div>
       <div class="col-body">${keys.length?keys.map(k=>{
-        const list=sortItems(groups.get(k),colSort[st]||"job");
+        const all=groups.get(k);
+        const list=sortItems(all.filter(r=>r.status===st),colSort[st]||"job");
+        const dl=sortItems(all.filter(r=>r.status!==st),colSort[st]||"job").sort((a,b)=>DONE.indexOf(a.status)-DONE.indexOf(b.status));
         const sums={}; list.forEach(r=>{const a=recAmount(r); if(a) sums[a.cur]=(sums[a.cur]||0)+a.val;});
         const sumTxt=Object.entries(sums).map(([c,v])=>`${c}${money(v)}`).join(" · ");
-        return `<div class="cgrp"><div class="cgrp-hd"><span class="pjt">${esc(k)}</span><span>${list.length} 项</span>
+        const nDone=dl.filter(r=>r.status==="完结").length, nCan=dl.length-nDone;
+        const cnt=[list.length?`${list.length} 项`:"",nDone?`<span class="dn">完结 ${nDone}</span>`:"",nCan?`<span class="dn">已取消 ${nCan}</span>`:""].filter(Boolean).join(`<span class="cg-sep">·</span>`);
+        return `<div class="cgrp"><div class="cgrp-hd"><span class="pjt">${esc(k)}</span><span>${cnt}</span>
           ${sumTxt?`<span class="amt">${sumTxt}</span>`:""}<span class="ln"></span></div>
-          <div class="cgrid">${list.map(cardHTML).join("")}</div></div>`;
+          <div class="cgrid">${list.map(cardHTML).join("")}${dl.map(r=>cardHTML(r).replace('<article class="card','<article class="card card-done').replace('<span class="rid-r">',`<span class="rid-r"><span class="done-tag${r.status==="已取消"?" can":""}">${r.status}</span>`)).join("")}</div></div>`;
       }).join(""):`<div class="empty">暂无</div>`}</div>
     </section>`;
     bindBoardEvents();
     renderProjects(); renderCal(); renderFin(); renderShip(); renderAlert();
-    $("#countNote").textContent=`${st} ${items.length} 条 / 共 ${state.records.length} 条`;
+    $("#countNote").textContent=`${st} ${items.length} 条${done.length?` · 完结 / 已取消 ${done.length} 条`:""} / 共 ${state.records.length} 条`;
     return;
   }
   board.innerHTML=cols.map(st=>{
@@ -8087,9 +8102,15 @@ async function genWeekPay(){
   finally{ btn.disabled=false; btn.textContent=old; }
 }
 $("#btnWeekPay").addEventListener("click",e=>{ e.stopPropagation(); genWeekPay(); });
-/* 未付明细导出:发财务用。列 = 页面上那几列 + 项目号、币种、交期;金额是数字(带币种格式),表尾每个币种一行 SUMIF 合计 */
+/* 未付明细导出:发财务用。
+   按项目号(26-XXX)排,同项目里按 PO 号排 —— 不跟屏幕上的表头排序(按金额排导出来项目混在一起,用户说乱)。
+   列:项目号 / 签订日期 / 状态 / 编号 (PO) / 品名 / 供应商 / 合同额 / 已付 / 未付 / 交期。金额带币种格式,不单列币种;
+   合计用最后一列隐藏的币种做 SUMIF。对齐:文字靠左,日期 / 状态 / 项目号居中,金额靠右,表头跟着列走 */
 async function genUnpaidX(){
-  const open=finOpenRows(finRows());
+  const jobNo=r=>String(r.job||"").trim();
+  const jk=r=>{ const m=jobNo(r).match(/(\d+)\D+(\d+)/); return m?[+m[1],+m[2]]:[9999,9999]; };
+  const open=finRows().filter(x=>!x.settled).sort((a,b)=>{ const x=jk(a.r),y=jk(b.r);
+    return (x[0]-y[0])||(x[1]-y[1])||jobNo(a.r).localeCompare(jobNo(b.r))||String(a.r.po||"~").localeCompare(String(b.r.po||"~"))||String(a.r.title||"").localeCompare(String(b.r.title||""),"zh"); });
   if(!open.length) return toast("没有未结清的款项","ok");
   const btn=$("#btnUnpaidX"), old=btn.textContent; btn.disabled=true; btn.textContent="导出中…";
   try{
@@ -8097,52 +8118,58 @@ async function genUnpaidX(){
     const wb=new EX.Workbook(), ws=wb.addWorksheet("未付明细",{views:[{state:"frozen",ySplit:2}]});
     const filt=[$("#fSearch").value.trim()&&`搜索「${$("#fSearch").value.trim()}」`,$("#fJob").value&&`项目 ${$("#fJob").value}`,
       $("#fDestSel").value&&`目的地 ${$("#fDestSel").value}`,alertOnly&&"只看预警"].filter(Boolean);
-    const HEAD=["签订日期","状态","编号 (PO)","项目号","品名","供应商","币种","合同额","已付","未付","交期"];
-    [12,8,19,11,26,32,6,16,16,16,12].forEach((w,i)=>ws.getColumn(i+1).width=w);
-    const NC=HEAD.length, thin={style:"thin",color:{argb:"FFBFBFBF"}}, BOX={top:thin,left:thin,bottom:thin,right:thin};
+    /* [表头, 宽, 对齐] */
+    const COLS=[["项目号",10,"center"],["签订日期",12,"center"],["状态",8,"center"],["编号 (PO)",19,"left"],["品名",26,"left"],["供应商",32,"left"],
+      ["合同额",16,"right"],["已付",16,"right"],["未付",16,"right"],["交期",12,"center"],["币种",6,"center"]];
+    const NC=COLS.length, CUR=NC;   // 最后一列币种,隐藏,只给 SUMIF 用
+    COLS.forEach(([,w],i)=>ws.getColumn(i+1).width=w);
+    ws.getColumn(CUR).hidden=true;
+    const thin={style:"thin",color:{argb:"FFBFBFBF"}}, BOX={top:thin,left:thin,bottom:thin,right:thin};
     const font={name:"Microsoft YaHei",size:10};
-    ws.mergeCells(1,1,1,NC);
+    ws.mergeCells(1,1,1,NC-1);
     const t=ws.getCell(1,1);
-    t.value=`未付明细　${open.length} 笔未结清　·　生成于 ${todayLocal()}`+(filt.length?`　·　筛选：${filt.join("、")}`:"");
-    t.font={...font,size:12,bold:true}; t.alignment={vertical:"middle"}; ws.getRow(1).height=26;
-    const hr=ws.getRow(2); hr.values=HEAD; hr.height=22;
-    hr.eachCell(c=>{ c.font={...font,bold:true}; c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFEDEDED"}}; c.border=BOX; c.alignment={vertical:"middle"}; });
-    ws.autoFilter={from:{row:2,column:1},to:{row:2,column:NC}};
+    t.value=`未付明细　${open.length} 笔未结清　·　按项目号排列　·　生成于 ${todayLocal()}`+(filt.length?`　·　筛选：${filt.join("、")}`:"");
+    t.font={...font,size:12,bold:true}; t.alignment={vertical:"middle",horizontal:"left"}; ws.getRow(1).height=26;
+    const hr=ws.getRow(2); hr.values=COLS.map(c=>c[0]); hr.height=22;
+    COLS.forEach(([,,al],i)=>{ const c=hr.getCell(i+1);
+      c.font={...font,bold:true}; c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFEDEDED"}}; c.border=BOX; c.alignment={vertical:"middle",horizontal:al}; });
+    ws.autoFilter={from:{row:2,column:1},to:{row:2,column:NC-1}};
     const numFmt=cur=>`"${cur}"#,##0.00`;
     /* 日期存成真日期(Excel 能排序筛选);签订日期不是合法日期的原样写文字,不硬转 */
     const dt=v=>{ if(!isDateStr(v)) return v||null; const [y,m,d]=v.split("-").map(Number); return new Date(Date.UTC(y,m-1,d)); };
     let rn=3;
     open.forEach(x=>{
       const row=ws.getRow(rn);
-      row.values=[dt(x.r.signed),x.r.status,x.r.po||x.r.sub||"",fullJob(x.r)||"",x.r.title||"",orderInfo(x.r).supplier||"",x.cur,x.total,x.paid||null,x.unpaid,dt(x.r.eta)];
-      row.eachCell({includeEmpty:true},(c,col)=>{ if(col>NC) return; c.font=font; c.border=BOX; c.alignment={vertical:"middle",wrapText:col===5||col===6}; });
-      [8,9,10].forEach(col=>ws.getCell(rn,col).numFmt=numFmt(x.cur));
-      [1,11].forEach(col=>{ if(ws.getCell(rn,col).value instanceof Date) ws.getCell(rn,col).numFmt="yyyy-mm-dd"; });
-      ws.getCell(rn,10).font={...font,color:{argb:"FFB42318"}};
+      row.values=[jobNo(x.r)||"",dt(x.r.signed),x.r.status,x.r.po||x.r.sub||"",x.r.title||"",orderInfo(x.r).supplier||"",x.total,x.paid||null,x.unpaid,dt(x.r.eta),x.cur];
+      COLS.forEach(([,,al],i)=>{ const c=row.getCell(i+1); c.font=font; c.border=BOX; c.alignment={vertical:"middle",horizontal:al,wrapText:i===4||i===5}; });
+      [7,8,9].forEach(col=>ws.getCell(rn,col).numFmt=numFmt(x.cur));
+      [2,10].forEach(col=>{ if(ws.getCell(rn,col).value instanceof Date) ws.getCell(rn,col).numFmt="yyyy-mm-dd"; });
+      ws.getCell(rn,9).font={...font,color:{argb:"FFB42318"}};
       row.height=22;
       rn++;
     });
     const last=rn-1;
-    /* 表尾:每个币种一行合计,SUMIF 按币种列 */
-    [...new Set(open.map(x=>x.cur))].forEach((cu,k)=>{
-      const lab=ws.getCell(rn,6); lab.value=`合计 ${cu}（${open.filter(x=>x.cur===cu).length} 笔）`; lab.font={...font,bold:true}; lab.alignment={horizontal:"right"};
-      ws.getCell(rn,7).value=cu; ws.getCell(rn,7).font={...font,bold:true};
-      [["H","total"],["I","paid"],["J","unpaid"]].forEach(([L,key],j)=>{
-        const c=ws.getCell(rn,8+j);
-        c.value={formula:`SUMIF(G3:G${last},"${cu}",${L}3:${L}${last})`,result:open.filter(x=>x.cur===cu).reduce((a,x)=>a+x[key],0)};
+    /* 表尾:每个币种一行合计(笔数多的币种在前,一般人民币在上) */
+    const curN=cu=>open.filter(x=>x.cur===cu).length;
+    [...new Set(open.map(x=>x.cur))].sort((a,b)=>curN(b)-curN(a)).forEach((cu,k)=>{
+      const lab=ws.getCell(rn,6); lab.value=`合计 ${cu}（${open.filter(x=>x.cur===cu).length} 笔）`; lab.font={...font,bold:true}; lab.alignment={horizontal:"right",vertical:"middle"};
+      [["G","total"],["H","paid"],["I","unpaid"]].forEach(([L,key],j)=>{
+        const c=ws.getCell(rn,7+j);
+        c.value={formula:`SUMIF(K3:K${last},"${cu}",${L}3:${L}${last})`,result:Math.round(open.filter(x=>x.cur===cu).reduce((a,x)=>a+x[key],0)*100)/100};
         c.numFmt=numFmt(cu); c.font={...font,bold:true,color:key==="unpaid"?{argb:"FFB42318"}:undefined};
+        c.alignment={horizontal:"right",vertical:"middle"};
         c.border={top:k?undefined:{style:"thin"},bottom:{style:"double"}};
       });
       ws.getRow(rn).height=22; rn++;
     });
     ws.pageSetup={orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:1,printTitlesRow:"2:2",
-      margins:{left:.4,right:.4,top:.5,bottom:.5,header:.3,footer:.3}};
+      printArea:`A1:J${rn-1}`,margins:{left:.4,right:.4,top:.5,bottom:.5,header:.3,footer:.3}};
     const out=await wb.xlsx.writeBuffer();
     const a=document.createElement("a");
     a.href=URL.createObjectURL(new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
     a.download=`未付明细 ${todayLocal()}.xlsx`;
     document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
-    toast(`已导出未付明细 ${open.length} 笔`,"ok");
+    toast(`已导出未付明细 ${open.length} 笔（按项目号排列）`,"ok");
   }catch(e){ toast(e.message||"导出失败","err"); }
   finally{ btn.disabled=false; btn.textContent=old; }
 }
