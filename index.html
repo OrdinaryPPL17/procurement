@@ -4927,7 +4927,7 @@ function ciplOpen(mbl){
       lines.push({ii,li,rid:x.r.id,bid:x.b.bid||"",po:poShortNo(x.r),
         desc:String(l.desc||"").trim(),unit:cgEff(l,"unit").v,
         qty:l.pcs,pkgs:l.pkgs,gw:l.gw,nw:l.nw,cbm:l.cbm,same:!!l.samePkg,
-        usd:String(l.usd||""),parts,split:parts.length>1});
+        usd:cpUsd2(l.usd),parts,split:parts.length>1});
     });
   });
   const b0=g.items[0].b, ymd=new Date().toISOString().slice(2,10).replace(/-/g,"");
@@ -4989,9 +4989,9 @@ function cpMismatch(L){
 /* 单价 / 金额 两个格子互相算。L.tot = 用户直接填的金额原文(填单价时清掉),单价存 L.usd */
 const cpLineQty=L=>cpNum(L.qty);
 /* 金额 ÷ QTY 算单价:从 2 位小数起,够让 QTY × 单价 四舍五入回原金额为止(最多 6 位) */
-function cpPriceFrom(t,q){ let p=t/q;
-  for(let d=2;d<=6;d++){ const f=Math.pow(10,d), v=Math.round(t/q*f)/f; p=v; if(Math.abs(Math.round(v*q*100)/100-t)<0.005) break; }
-  return String(p); }
+/* 单价一律两位小数(用户要求)。金额 ÷ QTY 除不尽时单价四舍五入到分,金额按 QTY × 单价 重算,可能跟填的差几分 —— 离开时提示 */
+function cpPriceFrom(t,q){ return (Math.round(t/q*100)/100).toFixed(2); }
+const cpUsd2=v=>{ const s=String(v==null?"":v).trim(); if(!s) return ""; const n=cgNum(s); return n==null?s:(Math.round(n*100)/100).toFixed(2); };
 function cpTotInput(L,u){
   const q=cpLineQty(L), pr=cgNum(u.v);
   const val=L.tot!=null?L.tot:(u.own&&pr!=null&&q?cpUsdFmt(q*pr):"");
@@ -5046,7 +5046,7 @@ function cpBindRows(){
     row.querySelectorAll(".cp-n").forEach(inp=>inp.addEventListener("change",cpRerenderSoon));
     const usd=row.querySelector(".cp-usd"), tot=row.querySelector(".cp-tot");
     if(usd) usd.addEventListener("input",()=>{ L.usd=usd.value.trim(); delete L.tot; cpSyncLine(L); });
-    if(usd) usd.addEventListener("change",cpRerenderSoon);   // 同品名的别的行默认值跟着变
+    if(usd) usd.addEventListener("change",()=>{ L.usd=cpUsd2(usd.value); usd.value=L.usd; cpRerenderSoon(); });   // 两位小数;同品名的别的行默认值跟着变
     if(tot) tot.addEventListener("input",()=>{
       const raw=tot.value.trim(), t=cgNum(raw), q=cpLineQty(L);
       L.tot=raw;
@@ -5054,7 +5054,11 @@ function cpBindRows(){
       if(usd) usd.value=L.usd;
       cpSyncLine(L);
     });
-    if(tot) tot.addEventListener("change",()=>{ delete L.tot; cpRerenderSoon(); });   // 离开时按算出的单价重新显示金额
+    if(tot) tot.addEventListener("change",()=>{
+      const t=cgNum(L.tot), q=cpLineQty(L), p=cgNum(L.usd);
+      if(t!=null&&q&&p!=null){ const back=Math.round(q*p*100)/100;
+        if(Math.abs(back-t)>=0.005) toast(`金额 ${cpUsdFmt(t)} ÷ ${cpFmt(q)} 除不尽，单价取两位 ${L.usd}，金额变成 ${cpUsdFmt(back)}`,"ok"); }
+      delete L.tot; cpRerenderSoon(); });   // 离开时按算出的单价重新显示金额
     const sp=row.querySelector(".cp-split");
     if(sp) sp.addEventListener("click",()=>{
       if(!L.split){
