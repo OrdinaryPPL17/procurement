@@ -2464,6 +2464,9 @@ async function loadData(silent){
       state.records=[]; state.suppliers=[]; state.settings={}; state.sha=null; state.loaded=true;
       await persist("init: 创建数据文件");
       toast("已在仓库创建数据文件","ok");
+    }else if(silent&&f.sha===state.sha&&state.loaded&&!state.fromCache){
+      /* 后台刷新、远端没变:什么都不换(换了对象,正开着的界面手里的引用就失效了) */
+      markSynced(); return;
     }else{
       const data=JSON.parse(f.text);
       state.records=normAll((data.records||[]).map(r=>r&&r.status==="到货"?{...r,status:"物流"}:r));
@@ -5277,7 +5280,11 @@ async function ciplSave(d,what){
   const ctns=d.ctns.filter(c=>c.no).map(c=>({no:c.no,type:c.type}));
   const no={ci:$("#cpCiNo").value.trim(),pl:$("#cpPlNo").value.trim()};
   const touched=new Set();
-  d.g.items.forEach(x=>{
+  /* 窗口打开期间 state.records 可能被整个换掉(后台刷新 / 保存时合并同事的改动),
+     d.g.items 里的 x.r 就成了没人引用的旧对象,改它等于白改 —— 一律按 id 重新取 */
+  const live=x=>{ const r=getRec(x.r.id); return r?{r,bid:x.bid,b:shGet(r,x.bid)}:null; };
+  d.g.items.forEach(x0=>{
+    const x=live(x0); if(!x) return;
     const tb=mblTgt(x); if(!tb) return;
     tb.ctns=ctns.map(c=>Object.assign({},c));
     if(d.soc) tb.soc=true; else delete tb.soc;
@@ -5286,7 +5293,7 @@ async function ciplSave(d,what){
     touched.add(x.r);
   });
   d.lines.forEach(L=>{
-    const x=d.g.items[L.ii], tb=x&&mblTgt(x), l=tb&&cargoOf(tb)[L.li]; if(!l) return;
+    const x=d.g.items[L.ii]&&live(d.g.items[L.ii]), tb=x&&mblTgt(x), l=tb&&cargoOf(tb)[L.li]; if(!l) return;
     if(String(L.usd||"").trim()) l.usd=String(L.usd).trim(); else delete l.usd;
     if(L.split){ l.parts=L.parts.map(p=>({c:p.c,qty:String(p.qty??""),pkgs:String(p.pkgs??""),gw:String(p.gw??""),nw:String(p.nw??""),cbm:String(p.cbm??"")})); delete l.ctn; }
     else { if(L.parts[0].c) l.ctn=L.parts[0].c; else delete l.ctn; delete l.parts; }
@@ -8532,7 +8539,10 @@ function startApp(){
   storage.removeItem("pt_auth"); // 清除旧版本遗留的登录记忆
   setTimeout(()=>$("#lgUser").focus(),50);
   // 每3分钟自动刷新,避免同事更新看不到
-  setInterval(()=>{ if(authUser() && ghReady() && !document.hidden && !currentId) loadData(true).catch(()=>{}); },180000);
+  /* 每 3 分钟后台刷新。⚠️ 有弹窗开着时不刷:刷新会把 state.records 整个换成新对象,弹窗里攥着的旧对象再改就落不了盘
+     (2026-10-01 清关窗口填了 28 行单价点保存,提交了但数据里什么都没有,就是这个原因)。
+     发货页展开的柜子有没保存的改动(hasUnsaved)也不刷,免得重画把改动冲掉 */
+  setInterval(()=>{ if(authUser() && ghReady() && !document.hidden && !currentId && !document.querySelector(".modal-mask.open") && !hasUnsaved()) loadData(true).catch(()=>{}); },180000);
 })();
 window.qSync=qSync; window.openPayReq=openPayReq; window.openStmt=openStmt; window.deleteRecord=deleteRecord; window.printRecord=printRecord; window.closeRecord=closeRecord; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
 window.changeStatus=changeStatus; window.removeAttachment=removeAttachment;
