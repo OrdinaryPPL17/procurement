@@ -2243,7 +2243,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 </div>
 
 <div id="toast"></div>
-<div id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div><div style="display:flex;gap:8px"><button class="btn" onclick="window.open(document.getElementById('lbImg').src,'_blank')">新标签页打开</button><button class="btn" onclick="document.getElementById('lightbox').classList.remove('open')">关闭</button></div></div>
+<div id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div><div style="display:flex;gap:8px"><button class="btn" onclick="lbDownload()">↓ 下载</button><button class="btn" onclick="lbNewTab()">新标签页打开</button><button class="btn" onclick="document.getElementById('lightbox').classList.remove('open')">关闭</button></div></div>
 <input type="file" id="fileInput" multiple style="display:none">
 
 <script>
@@ -2435,6 +2435,39 @@ const MIME={pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/j
   mp4:"video/mp4",mov:"video/quicktime"};
 const mimeOf=name=>MIME[(name||"").split(".").pop().toLowerCase()]||"";
 const canPreview=name=>!!mimeOf(name);
+/* 在新标签页里预览仓库文件(PDF 等)。
+   以前直接 tab.location=blob 地址:标签页标题和 Chrome 自带 PDF 工具栏下载下来的文件名都是那串 blob 编号(用户说「乱码」)。
+   blob 地址起不了名字,所以新标签页里写一个小页面:<title> = 真文件名,顶上一条「文件名 + ↓ 下载(download=真文件名)」,下面 iframe 放文件。
+   Chrome 自带工具栏留着(翻页 / 缩放 / 旋转 / 打印),它自己的下载按钮仍是编号名 —— 改不了,条上写了提示。
+   小页面里会把文件重新取一份、在自己那边建 blob 地址:原地址是主页面建的,主页面一关就失效 */
+function writePreviewTab(tab,url,name){
+  const E=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const isPdf=/\.pdf$/i.test(name);
+  tab.document.open();
+  tab.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${E(name)}</title><style>
+html,body{margin:0;height:100%}body{display:flex;flex-direction:column;background:#1B2A3A;font-family:Helvetica,Arial,"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif}
+.bar{display:flex;align-items:center;gap:14px;padding:8px 14px;color:#fff;font-size:13px}
+.nm{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.tip{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.6;font-size:12px}
+.dl{flex:0 0 auto;background:#E8630A;color:#fff;text-decoration:none;padding:6px 16px;border-radius:6px;font-weight:700;white-space:nowrap}
+.dl:hover{background:#C9540A}
+iframe{flex:1;border:0;width:100%;background:#fff}
+</style></head><body>
+<div class="bar"><span class="nm" title="${E(name)}">${E(name)}</span><span class="tip">${isPdf?"下载请点右边这个按钮 —— 下面 PDF 工具栏自带的下载，存下来的文件名是一串编号":""}</span><a class="dl" id="dl" href="${E(url)}" download="${E(name)}">↓ 下载</a></div>
+<iframe id="fr" src="${E(url)}"></iframe>
+<script>fetch(${JSON.stringify(url)}).then(function(r){return r.blob();}).then(function(b){var o=URL.createObjectURL(b);document.getElementById("dl").href=o;window.__own=o;}).catch(function(){});<\/script>
+</body></html>`);
+  tab.document.close();
+}
+async function previewRepoFile(path,name){
+  const tab=window.open("","_blank");   // 先开标签页,避免被拦截
+  try{ const url=await ghGetBlob(path,name); if(tab) writePreviewTab(tab,url,name); else window.open(url,"_blank"); }
+  catch(e){ if(tab) tab.close(); toast(e.message,"err"); }
+}
+/* 图片灯箱:记住真文件名,「下载」「新标签页打开」都用它 */
+function lbShow(url,name,cap){ const im=$("#lbImg"); im.src=url; im.dataset.fn=name||""; $("#lbCap").textContent=cap||name||""; $("#lightbox").classList.add("open"); }
+function lbDownload(){ const im=$("#lbImg"), a=document.createElement("a"); a.href=im.src; a.download=im.dataset.fn||"image"; document.body.appendChild(a); a.click(); a.remove(); }
+function lbNewTab(){ const im=$("#lbImg"), tab=window.open("","_blank"); if(tab) writePreviewTab(tab,im.src,im.dataset.fn||"image"); }
 async function ghGetBlob(path,name){ // 私有仓库也能取文件(含>1MB)
   if(attCache[path]) return attCache[path];
   const r=await fetch(apiBase()+path+"?ref="+encodeURIComponent(cfg.branch),{headers:ghHeaders({Accept:"application/vnd.github.raw+json"})});
@@ -3176,10 +3209,10 @@ function renderProjects(){
       </div>
       <div class="year-group ${closed?"hidden":""}" data-yeargroup="${esc(y)}">${ks.map(projHTML).join("")}</div>`;
   }).join("");
-  $$(".year-hd").forEach(h=>h.addEventListener("click",()=>{
+  box.querySelectorAll(".year-hd").forEach(h=>h.addEventListener("click",()=>{
     const y=h.dataset.year;
     closedYears.has(y)?closedYears.delete(y):closedYears.add(y);
-    h.classList.toggle("closed"); const grp=document.querySelector(`[data-yeargroup="${CSS.escape(y)}"]`); if(grp) grp.classList.toggle("hidden");
+    h.classList.toggle("closed"); const grp=box.querySelector(`[data-yeargroup="${CSS.escape(y)}"]`); if(grp) grp.classList.toggle("hidden");
   }));
   $$("[data-addto]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openBulk(b.dataset.addto==="(未填项目号)"?"":b.dataset.addto); }));
   $$(".proj-hd").forEach(h=>h.addEventListener("click",e=>{
@@ -3530,6 +3563,7 @@ const SORT_LABEL={default:"排序 ⇅",need:"按日期",job:"按项目号",title
 const SORT_CYCLE=["default","need","job","title"];
 let colSort={};
 let expandedCol=null;
+let bClosedYears=new Set(), bYearsInit=false;   // 看板展开视图里收起的年份(跟项目进度页的 closedYears 各管各的)
 function sortItems(items,mode){
   const arr=items.slice();
   if(mode==="need") arr.sort((a,b)=>{const x=(a.ship&&a.ship.eta)||a.neededBy||"9999",y=(b.ship&&b.ship.eta)||b.neededBy||"9999";return x.localeCompare(y);});
@@ -3621,11 +3655,18 @@ function render(){
     const jobKey2=k=>{ const m=String(k).match(/(\d+)\D+(\d+)/); return m?[+m[1],+m[2]]:null; };
     const keys=[...groups.keys()].sort((a,b)=>{ if(a==="(未填项目号)")return 1; if(b==="(未填项目号)")return -1;
       const ka=jobKey2(a),kb=jobKey2(b); if(ka&&kb) return (ka[0]-kb[0])||(ka[1]-kb[1]); return a.localeCompare(b,"zh"); });
-    board.innerHTML=`<section class="col col-expanded" data-status="${st}">
-      <div class="col-hd"><span class="nm">${st}</span><span class="ct">${items.length}</span>
-        <span class="srt" data-sortcol="${st}" title="点击切换排序">${SORT_LABEL[colSort[st]||"default"]}</span>
-        <span class="exp" data-expcol="${st}" title="收起">⤡ 收起</span></div>
-      <div class="col-body">${keys.length?keys.map(k=>{
+    /* 按项目号的年份(26-xxx → 2026)分段,跟「项目进度」页一个样子,点年份标题收起 / 展开。
+       只有一个年份时不加标题。第一次出现多个年份时,只留今年开着(没有今年就留最近一年),其余默认收起 */
+    const yOf=k=>{ const m=String(k).match(/^(\d{2})-/); return m?"20"+m[1]:"其他"; };
+    const byYear=[]; keys.forEach(k=>{ const y=yOf(k); const g=byYear.find(x=>x.y===y); g?g.keys.push(k):byYear.push({y,keys:[k]}); });
+    const multiY=byYear.length>1;
+    if(multiY&&!bYearsInit){
+      bYearsInit=true;
+      const cy=String(new Date().getFullYear()), ys=byYear.map(x=>x.y);
+      const keep=ys.includes(cy)?cy:(ys.filter(y=>/^\d{4}$/.test(y)).sort().pop()||ys[0]);
+      ys.forEach(y=>{ if(y!==keep) bClosedYears.add(y); });
+    }
+    const grpHTML=k=>{
         const all=groups.get(k);
         const list=sortItems(all.filter(r=>r.status===st),colSort[st]||"job");
         const dl=sortItems(all.filter(r=>r.status!==st),colSort[st]||"job").sort((a,b)=>DONE.indexOf(a.status)-DONE.indexOf(b.status));
@@ -3636,7 +3677,24 @@ function render(){
         return `<div class="cgrp"><div class="cgrp-hd"><span class="pjt">${esc(k)}</span><span>${cnt}</span>
           ${sumTxt?`<span class="amt">${sumTxt}</span>`:""}<span class="ln"></span></div>
           <div class="cgrid">${list.map(cardHTML).join("")}${dl.map(r=>cardHTML(r).replace('<article class="card','<article class="card card-done').replace('<span class="rid-r">',`<span class="rid-r"><span class="done-tag${r.status==="已取消"?" can":""}">${r.status}</span>`)).join("")}</div></div>`;
-      }).join(""):`<div class="empty">暂无</div>`}</div>
+    };
+    const bodyHTML=!keys.length?`<div class="empty">暂无</div>`
+      :!multiY?keys.map(grpHTML).join("")
+      :byYear.map(({y,keys:ks})=>{
+        const recs=ks.flatMap(k=>groups.get(k)), nSt=recs.filter(r=>r.status===st).length,
+              nDone=recs.filter(r=>r.status==="完结").length, nCan=recs.filter(r=>r.status==="已取消").length;
+        const closed=bClosedYears.has(y);
+        const info=[`${ks.length} 个项目`,nSt?`${st} ${nSt}`:"",nDone&&st!=="完结"?`完结 ${nDone}`:"",nCan&&st!=="已取消"?`已取消 ${nCan}`:""].filter(Boolean).join(" · ");
+        return `<div class="year-hd ${closed?"closed":""}" data-byear="${esc(y)}" title="${closed?"点击展开":"点击收起"}">
+            <span class="ycv">▼</span><span class="yr">${esc(y)}${y==="其他"?"":" 年"}</span><span class="yinfo">${info}</span><span class="yline"></span>
+          </div>
+          <div class="year-group ${closed?"hidden":""}" data-byeargroup="${esc(y)}">${closed?"":ks.map(grpHTML).join("")}</div>`;
+      }).join("");
+    board.innerHTML=`<section class="col col-expanded" data-status="${st}">
+      <div class="col-hd"><span class="nm">${st}</span><span class="ct">${items.length}</span>
+        <span class="srt" data-sortcol="${st}" title="点击切换排序">${SORT_LABEL[colSort[st]||"default"]}</span>
+        <span class="exp" data-expcol="${st}" title="收起">⤡ 收起</span></div>
+      <div class="col-body">${bodyHTML}</div>
     </section>`;
     bindBoardEvents();
     renderProjects(); renderCal(); renderFin(); renderShip(); renderAlert();
@@ -3666,6 +3724,11 @@ function render(){
   bindBoardEvents();
 }
 function bindBoardEvents(){
+  $$("#board .year-hd[data-byear]").forEach(h=>h.addEventListener("click",()=>{
+    const y=h.dataset.byear;
+    bClosedYears.has(y)?bClosedYears.delete(y):bClosedYears.add(y);
+    render();   /* 收起的年份不画卡片(老项目上百张),所以整块重画 */
+  }));
   $$("[data-expcol]").forEach(b=>b.addEventListener("click",e=>{
     e.stopPropagation();
     const opening = expandedCol!==b.dataset.expcol;
@@ -4545,13 +4608,11 @@ function blActHTML(g){
 /* 仓库里的文件:图片进灯箱,PDF 等新标签页,其余下载 —— 跟附件区同一套 */
 async function openRepoFile(path,name,type){
   if(type==="image"||/\.(jpe?g|png|gif|webp)$/i.test(name)){
-    try{ $("#lbImg").src=await ghGetBlob(path,name); $("#lbCap").textContent=name; $("#lightbox").classList.add("open"); }catch(e){ toast(e.message,"err"); }
+    try{ lbShow(await ghGetBlob(path,name),name); }catch(e){ toast(e.message,"err"); }
     return;
   }
   if(canPreview(name)){
-    const tab=window.open("","_blank");
-    try{ const url=await ghGetBlob(path,name); if(tab) tab.location=url; else window.open(url,"_blank"); }
-    catch(e){ if(tab) tab.close(); toast(e.message,"err"); }
+    await previewRepoFile(path,name);
   }else{
     try{ const url=await ghGetBlob(path,name); const a=document.createElement("a"); a.href=url; a.download=name; a.click(); }catch(e){ toast(e.message,"err"); }
   }
@@ -4850,7 +4911,7 @@ function phRender(){
   $$("#phGrid [data-phsrc]").forEach(img=>{ const p=ph[Number(img.dataset.phsrc)];
     ghGetBlob(p.path,p.name).then(u=>{ img.src=u; }).catch(()=>{ img.closest(".ph-img").classList.add("bad"); }); });
   $$("#phGrid [data-phview]").forEach(b=>b.addEventListener("click",async()=>{ const p=ph[Number(b.dataset.phview)];
-    try{ $("#lbImg").src=await ghGetBlob(p.path,p.name); $("#lbCap").textContent=`${p.ctn?p.ctn+" · ":""}${p.name}`; $("#lightbox").classList.add("open"); }catch(e){ toast(e.message,"err"); } }));
+    try{ lbShow(await ghGetBlob(p.path,p.name),p.name,`${p.ctn?p.ctn+" · ":""}${p.name}`); }catch(e){ toast(e.message,"err"); } }));
   $$("#phGrid [data-phc]").forEach(sel=>sel.addEventListener("change",async()=>{
     const g2=phGroup(); if(!g2) return;
     const arr=mblPhotos(g2).map(x=>Object.assign({},x)), i=Number(sel.dataset.phc);
@@ -6764,16 +6825,12 @@ function openDrawer(id,keep){
     const path=item.dataset.path;
     if(item.dataset.type==="image"){
       ghGetBlob(path,item.dataset.name).then(url=>{item.querySelector("img").src=url}).catch(()=>{});
-      item.addEventListener("click",async()=>{ try{ $("#lbImg").src=await ghGetBlob(path,item.dataset.name); $("#lbCap").textContent=item.dataset.name; $("#lightbox").classList.add("open"); }catch(e){toast(e.message,"err")} });
+      item.addEventListener("click",async()=>{ try{ lbShow(await ghGetBlob(path,item.dataset.name),item.dataset.name); }catch(e){toast(e.message,"err")} });
     }else{
       item.addEventListener("click",async()=>{
         const name=item.dataset.name;
         if(canPreview(name)){
-          const tab=window.open("","_blank"); // 先开标签页,避免被拦截
-          try{
-            const url=await ghGetBlob(path,name);
-            if(tab){ tab.location=url; } else { window.open(url,"_blank"); }
-          }catch(e){ if(tab) tab.close(); toast(e.message,"err"); }
+          await previewRepoFile(path,name);
         }else{
           try{ const url=await ghGetBlob(path,name); const a=document.createElement("a"); a.href=url; a.download=name; a.click(); toast("该格式无法在线预览,已下载"); }catch(e){toast(e.message,"err")}
         }
