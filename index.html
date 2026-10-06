@@ -392,7 +392,7 @@ body.readonly .card{cursor:pointer}
 .prow input,.prow select{padding:6px 8px;font-size:13px}
 /* 所有金额输入框统一:等宽字体 + 右对齐,数字位数对得齐好核对 */
 /* 金额框等宽字体;对齐一律靠左(用户不要一行里一左一右,2026-09-27 起全站数字框都靠左) */
-#oPrice,#fPrice,#fPay1a,#fPay2a,.prow .pamt,.arow .aamt{font-family:var(--mono)}
+#oPrice,#fPrice,.prow .pamt,.arow .aamt{font-family:var(--mono)}
 /* 报价的总价跟同一组的数量/单价一样靠左(以前只有总价靠右,一行里一左一右) */
 #qPrice,#qePrice,#qeQty,#qeUnitPrice{font-family:var(--mono)}
 .prow .prm{color:var(--steel);font-size:13px;padding:4px;border-radius:4px;text-align:center}
@@ -413,7 +413,7 @@ body.readonly .card{cursor:pointer}
 .o-add{display:block;width:100%;padding:8px;margin-top:2px;border:1px dashed var(--line);border-radius:6px;background:none;
   color:var(--ink-soft);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
 .o-add:hover{border-color:var(--safety);color:var(--safety);background:var(--safety-soft)}
-.ahead:has(+ #adjRows:empty),.phead:has(+ #pRows:empty){display:none}
+.ahead:has(+ #adjRows:empty),.phead:has(+ #pRows:empty),.ahead:has(+ #fAdjRows:empty),.phead:has(+ #fPRows:empty){display:none}
 .o-phint{margin-top:6px}
 /* 折叠 */
 .sec-hd{cursor:pointer;user-select:none}
@@ -427,14 +427,43 @@ body.readonly .card{cursor:pointer}
 .att-add:hover{border-color:var(--safety);color:var(--safety)}
 /* 时间线折叠 */
 .tl-more{font-size:12px;color:var(--safety);cursor:pointer;padding:4px 0;font-weight:700}
-.bfrow{display:grid;grid-template-columns:1fr 128px 60px 28px;gap:8px;align-items:center;font-size:12px;border:1px solid var(--line-soft);border-radius:6px;padding:5px 8px;margin-bottom:5px;background:#fff}
-.bfrow .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bfrow select{padding:4px 6px;font-size:12px}
-.bfrow .sz{color:var(--steel);font-family:var(--mono);text-align:right}
-.bfrow .rm{color:var(--steel);text-align:center;border-radius:4px}
-.bfrow .rm:hover{color:#fff;background:var(--reject)}
-.bf-sec{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink);border-top:1px solid var(--line-soft);padding-top:10px;margin:14px 0 8px}
-.bf-sec:first-child{border-top:none;padding-top:0;margin-top:0}
+.bf-att{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px;align-items:stretch}
+.bf-stk{display:flex;flex-direction:column;gap:10px;min-width:0}
+.bf-stk>.bf-az{flex:1}
+.bf-az{border:1px solid var(--line-soft);border-radius:8px;padding:9px 10px 10px;background:var(--paper);min-width:0;transition:border-color .12s,background .12s}
+.bf-az.over{border-color:var(--safety);background:var(--safety-soft)}
+.bf-azh{display:flex;align-items:baseline;gap:6px;font-size:12.5px;margin-bottom:7px;min-width:0}
+.bf-azh b{font-weight:700;white-space:nowrap}
+.bf-azh .n{font-family:var(--mono);font-size:11px;color:#fff;background:var(--ink);border-radius:99px;padding:0 6px;line-height:16px}
+.bf-azh .tip{font-size:11px;color:var(--steel);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.bf-af{display:grid;grid-template-columns:minmax(0,1fr) auto 22px;gap:6px;align-items:center;font-size:12px;border:1px solid var(--line-soft);border-radius:6px;padding:4px 4px 4px 8px;margin-bottom:5px;background:var(--card)}
+.bf-af .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bf-af .sz{color:var(--steel);font-family:var(--mono);font-size:11px}
+.bf-af .rm{color:var(--steel);text-align:center;border-radius:4px;line-height:20px}
+.bf-af .rm:hover{color:#fff;background:var(--reject)}
+.bf-az .o-add{padding:6px;font-size:12px;margin-top:0}
+.bf-fd{display:grid;grid-template-columns:minmax(0,1fr) auto 18px;gap:6px;align-items:center;font-size:12px;line-height:20px;border:1px solid var(--line-soft);border-radius:6px;padding:4px 6px 4px 8px;margin-bottom:5px;background:var(--card);cursor:pointer;transition:border-color .12s,background .12s}
+.bf-fd:hover{border-color:var(--steel)}
+.bf-fd.over{border-color:var(--safety);background:var(--safety-soft)}
+.bf-fd .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bf-fd .c{font-family:var(--mono);font-size:11px;color:var(--steel)}
+.bf-fd .pl{color:var(--steel);text-align:center}
+.bf-fd:hover .pl{color:var(--ink)}
+.bf-af.in{margin-left:14px;background:transparent}
+@media(max-width:1000px){ .bf-att{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media(max-width:640px){ .bf-att{grid-template-columns:minmax(0,1fr)} }
+/* 补录历史采购:宽窗口,左右两栏卡片(窄屏并成一栏) */
+#mBackfill .modal{width:min(1180px,100%)}
+/* 四张卡片按行对齐:同一行等高,不留参差的空角。付款行 6 列要 440px 以上,所以对半分(46% 那边备注框只剩 50px) */
+.bf-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:12px}
+#mBackfill .bf-cols>.st-sec{min-width:0;margin-top:0}
+.bf-cols>.st-sec .fld:last-child{margin-bottom:0}
+#mBackfill .prow,#mBackfill .phead{grid-template-columns:84px 128px 58px 110px minmax(0,1fr) 28px}
+#mBackfill .cg-ed{border:none;padding:0;background:none}   /* 已经在白卡片里了,不再套一层框 */
+#fCargoRows{overflow-x:auto;overflow-y:visible}
+#fCargoRows>.cg-row{min-width:1060px}
+@media(max-width:900px){ .bf-cols{grid-template-columns:minmax(0,1fr)} }
+@media(max-width:640px){ #fCargoRows>.cg-row{min-width:0} #mBackfill .prow,#mBackfill .phead{grid-template-columns:1fr 1fr} }
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .rq-asks{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
 .rq-ask{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:400;margin:0;cursor:pointer}
@@ -829,17 +858,21 @@ body.dw-filedrag #dwBody .att-add.file-dest[data-attopen]{font-size:0}
 .act-note{margin-top:10px}
 
 /* ===== 弹窗 ===== */
-.modal-mask{position:fixed;inset:0;background:rgba(27,42,58,.45);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow-y:auto}
+.modal-mask{position:fixed;inset:0;background:rgba(27,42,58,.45);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:0 16px;overflow-y:auto}   /* 上下留白放在 .modal 的 margin 上:滚动容器自己有 padding 的话,sticky 的标题 / 按钮会被顶进来一截,内容从缝里露出来 */
 .modal-mask.open{display:flex;animation:maskIn .18s ease-out}
 @keyframes maskIn{from{opacity:0}to{opacity:1}}
-.modal{background:var(--paper);border-radius:10px;width:min(560px,100%);box-shadow:var(--shadow-lg);border-top:4px solid var(--safety)}
+.modal{background:var(--paper);border-radius:10px;margin:6vh 0;width:min(560px,100%);box-shadow:var(--shadow-lg);border-top:4px solid var(--safety)}
 #mOrder .modal{width:min(680px,100%)}   /* 付款行 6 列,560px 下金额框只剩 67px,填不进 5795.60 */
 #mMbl .modal{width:min(760px,100%)}     /* 选订单列表要放得下 编号+标题+供应商+金额 */
 .modal-mask.open .modal{animation:modalIn .24s cubic-bezier(.2,.9,.3,1)}
 @keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
-.md-hd{padding:16px 20px 0;display:flex;justify-content:space-between;align-items:center}
+/* 弹窗比屏幕高时靠 .modal-mask 滚动,标题和按钮会滚出视野 —— 两头钉住。
+   间距挪到 hd / ft 自己身上(总量不变),钉住时才有底色可盖;.stuck 由 modalStick() 打,只在真的钉住时出分隔线 */
+.md-hd{padding:16px 20px 12px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:3;background:var(--paper);border-radius:8px 8px 0 0;border-bottom:1px solid transparent}
+.md-hd.stuck{border-bottom-color:var(--line);border-radius:0;box-shadow:0 4px 10px -8px rgba(27,42,58,.35)}
 .md-hd h2{font-size:16px;font-weight:800;letter-spacing:.06em}
-.md-bd{padding:16px 20px 20px}
+.md-bd{padding:4px 20px 8px}
+.md-bd:last-child{padding-bottom:20px}
 .fld{margin-bottom:12px}
 .fld label{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;letter-spacing:.04em}
 .fld .hint{font-size:11px;color:var(--steel);margin-top:3px}
@@ -869,7 +902,9 @@ body.dw-filedrag #dwBody .att-add.file-dest[data-attopen]{font-size:0}
 .st-tl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--steel);white-space:nowrap}
 .st-tl input{width:64px}
 @media(max-width:640px){ .st-side{align-self:start;padding-bottom:0;margin:-8px 0 12px} }
-.md-ft{padding:0 20px 20px;display:flex;justify-content:flex-end;gap:10px}
+.md-ft{padding:12px 20px 16px;display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;z-index:3;background:var(--paper);border-radius:0 0 10px 10px;border-top:1px solid transparent}
+/* 钉住时别改 padding / 高度:弹窗高度一变,刚好在临界点上会来回跳 */
+.md-ft.stuck{border-top-color:var(--line);border-radius:0;box-shadow:0 -4px 10px -8px rgba(27,42,58,.35)}
 
 /* toast */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:8px;align-items:center}
@@ -949,14 +984,11 @@ body.dw-filedrag #dwBody .att-add.file-dest[data-attopen]{font-size:0}
   .dw-tools{gap:6px}
   .dw-body{padding:14px 14px 60px}
   .dw-act{padding:10px 14px}
-  .modal-mask{padding:3vh 10px 10px;align-items:flex-start}
-  .modal{width:100%}
-  .md-bd{padding:14px}
-  /* 弹窗比屏幕高时靠 .modal-mask 滚动,保存按钮会滚出视野 —— 钉在底部 */
-  .md-ft{position:sticky;bottom:0;z-index:2;flex-wrap:wrap;gap:8px;margin-top:4px;
-    padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
-    background:var(--paper);border-top:1px solid var(--line);
-    border-radius:0 0 10px 10px}
+  .modal-mask{padding:0 10px;align-items:flex-start}
+  .modal{width:100%;margin:3vh 0 10px}
+  .md-hd{padding:14px 14px 10px}
+  .md-bd{padding:4px 14px 6px}
+  .md-ft,.md-ft.stuck{flex-wrap:wrap;gap:8px;padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px))}
   .md-ft .btn{flex:1;justify-content:center}
   /* 输入框统一 16px,避免 iOS 自动放大 */
   input,select,textarea{font-size:16px}
@@ -1798,63 +1830,81 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   <div class="modal">
     <div class="md-hd"><h2>补录历史采购</h2><button class="btn btn-sm" data-close="mBackfill"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
-      <div class="bf-sec">基本信息</div>
-      <div class="row3">
-        <div class="fld"><label>项目号 *</label><input id="fJobN" list="jobList" placeholder="24-017"></div>
-        <div class="fld"><label>二级项目号</label><input id="fSub" placeholder="NM02"></div>
-        <div class="fld"><label>最终状态</label><select id="fStatus"><option>完结</option><option>物流</option><option>下单</option><option>审批</option><option>报价</option><option>需求</option><option>已取消</option></select></div>
+      <!-- 跟「修改订单信息」「物流信息」同一套:白卡片分组(.st-sec),付款 / 变更项逐笔加,货物用明细表。
+           宽屏按行对齐:基本信息 | 合同与金额,付款 | 物流,同一行两张卡片等高;货物明细、附件占整行 -->
+      <div class="bf-cols">
+          <section class="st-sec">
+            <div class="st-h">基本信息</div>
+            <div class="row3">
+              <div class="fld"><label>项目号 *</label><input id="fJobN" list="jobList" placeholder="24-017"></div>
+              <div class="fld"><label>二级项目号</label><input id="fSub" placeholder="NM02"></div>
+              <div class="fld"><label>最终状态</label><select id="fStatus"><option>完结</option><option>物流</option><option>下单</option><option>审批</option><option>报价</option><option>需求</option><option>已取消</option></select></div>
+            </div>
+            <div class="row2">
+              <div class="fld"><label>中文标题 *</label><input id="fTitle" placeholder="例:隔热材"></div>
+              <div class="fld"><label>英文标题</label><input id="fTitleEn" placeholder="Insulation"></div>
+            </div>
+            <div class="row3">
+              <div class="fld"><label>目的地</label><input id="fDestRec" list="destList" placeholder="例:HONOLULU"></div>
+              <div class="fld"><label>需求人</label><input id="fReqN"></div>
+              <div class="fld"><label>需要日期</label><input type="date" id="fNeed"></div>
+            </div>
+            <div class="fld"><label>说明 / 规格</label><textarea id="fDesc" rows="2" placeholder="可选"></textarea></div>
+          </section>
+          <section class="st-sec">
+            <div class="st-h">合同与金额<span>没签合同的可以留空</span></div>
+            <div class="fld"><label>供应商</label><input id="fSup" list="supListData4" placeholder="可从供应商库选"><datalist id="supListData4"></datalist></div>
+            <div class="row2">
+              <div class="fld"><label>合同 / PO 号</label><input id="fPo" placeholder="HKG24017-NM02"></div>
+              <div class="fld"><label>签订日期</label><input type="date" id="fSigned"></div>
+            </div>
+            <div class="row2">
+              <div class="fld"><label>合同金额</label><div class="o-amt"><select id="fCur"><option>$</option><option>¥</option></select><input id="fPrice" type="number" step="0.01" placeholder="金额"></div></div>
+              <div class="fld"><label>交期</label><input type="date" id="fDue"></div>
+            </div>
+            <div class="fld"><label>变更项</label>
+              <div class="ahead"><span>金额</span><span>说明</span><span></span></div>
+              <div id="fAdjRows"></div>
+              <button type="button" class="o-add" id="fAdjAdd">＋ 添加变更项</button>
+              <div class="hint" id="fAdjHint"></div>
+            </div>
+          </section>
+          <section class="st-sec">
+            <div class="st-h">付款<span>可留空</span></div>
+            <div class="phead"><span>类型</span><span>付款日期</span><span>币种</span><span>金额</span><span>备注</span><span></span></div>
+            <div id="fPRows"></div>
+            <button type="button" class="o-add" id="fPAdd">＋ 添加一笔付款</button>
+            <div class="hint o-phint" id="fPHint"></div>
+          </section>
+          <section class="st-sec">
+            <div class="st-h">物流<span>可留空</span></div>
+            <div class="row2">
+              <div class="fld"><label>MBL# / 总提单号</label><input id="fBl" placeholder="例:COSU6398471230"></div>
+              <div class="fld"><label>船名 / 航次</label><input id="fVessel" placeholder="例:COSCO SHIPPING / 025E"></div>
+            </div>
+            <div class="row2">
+              <div class="fld"><label>ORIGIN 起运港</label><input id="fOrigin" placeholder="Qingdao, China"></div>
+              <div class="fld"><label>DESTINATION 目的港</label><input id="fDest" placeholder="Honolulu, Hawaii"></div>
+            </div>
+            <div class="row3">
+              <div class="fld"><label>ETD</label><input type="date" id="fEtd"></div>
+              <div class="fld"><label>ETA</label><input type="date" id="fEtaD"></div>
+              <div class="fld"><label>实际到货</label><input type="date" id="fArr"></div>
+            </div>
+            <div class="fld"><label>柜号 / 唛头</label><input id="fCtnr" placeholder="例:TCLU1234567 / 40HQ"></div>
+          </section>
       </div>
-      <div class="row2">
-        <div class="fld"><label>中文标题 *</label><input id="fTitle" placeholder="例:隔热材"></div>
-        <div class="fld"><label>英文标题</label><input id="fTitleEn" placeholder="Insulation"></div>
-      </div>
-      <div class="row3">
-        <div class="fld"><label>需求人</label><input id="fReqN"></div>
-        <div class="fld"><label>需要日期</label><input type="date" id="fNeed"></div>
-        <div class="fld"></div>
-      </div>
-      <div class="fld"><label>说明 / 规格</label><input id="fDesc" placeholder="可选"></div>
-
-      <div class="bf-sec">订单信息</div>
-      <div class="row3">
-        <div class="fld"><label>供应商</label><input id="fSup" list="supListData4" placeholder="可从供应商库选"><datalist id="supListData4"></datalist></div>
-        <div class="fld"><label>金额</label><div style="display:flex;gap:6px"><select id="fCur" style="width:74px"><option>$</option><option>¥</option></select><input id="fPrice" type="number" step="0.01" placeholder="金额"></div></div>
-        <div class="fld"><label>货期 / 交期</label><input id="fEta" placeholder="如 45天 / 现货"></div>
-      </div>
-      <div class="row2">
-        <div class="fld"><label>签订日期</label><input type="date" id="fSigned"></div>
-        <div class="fld"><label>合同 / PO号</label><input id="fPo" placeholder="HKG24017-NM02"></div>
-      </div>
-
-      <div class="bf-sec">付款（可留空）</div>
-      <div class="row3">
-        <div class="fld"><label>预付款日期</label><input type="date" id="fPay1d"></div>
-        <div class="fld"><label>预付款金额</label><input type="number" step="0.01" id="fPay1a"></div>
-        <div class="fld"><label>备注</label><input id="fPay1n" placeholder="如 30%定金"></div>
-      </div>
-      <div class="row3">
-        <div class="fld"><label>尾款日期</label><input type="date" id="fPay2d"></div>
-        <div class="fld"><label>尾款金额</label><input type="number" step="0.01" id="fPay2a"></div>
-        <div class="fld"><label>备注</label><input id="fPay2n" placeholder="如 发货前付清"></div>
-      </div>
-
-      <div class="bf-sec">物流（可留空）</div>
-      <div class="row2">
-        <div class="fld"><label>MBL# / 总提单号</label><input id="fBl"></div>
-        <div class="fld"><label>货物信息</label><input id="fCargo" placeholder="件数 / 毛重 / 体积"></div>
-      </div>
-      <div class="row2">
-        <div class="fld"><label>ORIGIN</label><input id="fOrigin" placeholder="Qingdao, China"></div>
-        <div class="fld"><label>DESTINATION</label><input id="fDest" placeholder="Honolulu, Hawaii"></div>
-      </div>
-      <div class="row3">
-        <div class="fld"><label>ETD</label><input type="date" id="fEtd"></div>
-        <div class="fld"><label>ETA</label><input type="date" id="fEtaD"></div>
-        <div class="fld"><label>实际到货</label><input type="date" id="fArr"></div>
-      </div>
-      <div class="bf-sec">附件（可留空）</div>
-      <div id="fAttList"></div>
-      <button class="btn" id="fAttAdd" style="border:1px dashed var(--line);width:100%;padding:8px;color:var(--ink-soft)">＋ 添加附件（可多选，逐个选分类）</button>
+      <section class="st-sec">
+        <div class="st-h">货物明细<span>可留空 · 跟发货页是同一张表</span></div>
+        <div class="cg-ed">
+          <div class="cg-wrap"><div class="cg-grid" id="fCargoRows"></div></div>
+          <div class="cg-ft"><button type="button" class="btn btn-sm" id="fCargoAdd">＋ 加一行</button><span class="cg-tot" id="fCargoTot"></span></div>
+        </div>
+      </section>
+      <section class="st-sec">
+        <div class="st-h">附件<span>可留空 · 文件夹跟详情里一致，点文件夹或把文件拖到那一行</span></div>
+        <div class="bf-att" id="fAttList"></div>
+      </section>
       <div class="hint" id="fHint" style="margin-top:8px"></div>
     </div>
     <div class="md-ft">
@@ -7227,26 +7277,66 @@ function printRecord(id){
 /* ================= 补录历史采购 ================= */
 const BF_GROUPS=["需求","报价","合同与付款","送审","物流"];
 let bfFiles=[];
+/* 补录的附件:一类一格,格里的文件夹跟详情里的一致(用户:「附件不能混在一起」「附件不是应该有文件夹分类吗」)。
+   文件夹取 tplFor(g) —— 合同与付款 / 送审 / 物流有模板,需求 / 报价平铺。
+   bfFiles=[{file,group,folder}],folder 是模板文件夹的名字,""=这一类的根层(不进文件夹)。
+   点文件夹那一行或它的「＋」选文件,也可以把文件拖到那一行;拖到格里别的地方 = 根层 */
+const BF_TIPS={"需求":"图纸、规格、照片","报价":"报价单、形式发票","合同与付款":"","送审":"","物流":""};
 function renderBfAtt(){
-  $("#fAttList").innerHTML=bfFiles.map((f,i)=>`<div class="bfrow">
-    <span class="fn" title="${esc(f.file.name)}">${/^image\//.test(f.file.type)?"🖼":"📎"} ${esc(f.file.name)}</span>
-    <select data-bfg="${i}">${BF_GROUPS.map(g=>`<option ${f.group===g?"selected":""}>${g}</option>`).join("")}</select>
-    <span class="sz">${fmtSize(f.file.size)}</span>
-    <button class="rm" data-bfrm="${i}"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
-  </div>`).join("");
+  const X=`<svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg>`;
+  const fileRow=([f,i],inFd)=>`<div class="bf-af${inFd?" in":""}"><span class="fn" title="${esc(f.file.name)}">${/^image\//.test(f.file.type)?"🖼":"📎"} ${esc(f.file.name)}</span><span class="sz">${fmtSize(f.file.size)}</span>
+        <button type="button" class="rm" data-bfrm="${i}" title="去掉">${X}</button></div>`;
+  const zone=g=>{
+    const fds=tplFor(g)||[];
+    const all=bfFiles.map((f,i)=>[f,i]).filter(([f])=>f.group===g);
+    const inFd=n=>all.filter(([f])=>(f.folder||"")===n);
+    const root=all.filter(([f])=>!fds.includes(f.folder||""));
+    return `<div class="bf-az" data-bfz="${g}">
+      <div class="bf-azh"><b>${g}</b>${all.length?`<span class="n">${all.length}</span>`:""}<span class="tip">${BF_TIPS[g]||""}</span></div>
+      ${fds.map(n=>{ const fs=inFd(n); return `<div class="bf-fd" data-bffd="${esc(n)}" title="点这里选文件，或把文件拖到这一行"><span class="nm">📁 ${esc(n)}</span><span class="c">${fs.length||""}</span><span class="pl" aria-hidden="true">＋</span></div>${fs.map(x=>fileRow(x,true)).join("")}`; }).join("")}
+      ${root.map(x=>fileRow(x,false)).join("")}
+      <button type="button" class="o-add" data-bfadd="${g}">${fds.length?"＋ 其他文件":"＋ 添加"}</button>
+    </div>`; };
+  /* 没有文件夹的分类只有一个按钮,单独占一列会撑出大空框 —— 相邻的叠成一列 */
+  const cols=[];
+  BF_GROUPS.forEach(g=>{ const flat=!(tplFor(g)||[]).length, last=cols[cols.length-1];
+    if(flat&&last&&last.flat) last.gs.push(g); else cols.push({flat,gs:[g]}); });
+  $("#fAttList").innerHTML=cols.map(c=>c.gs.length>1?`<div class="bf-stk">${c.gs.map(zone).join("")}</div>`:zone(c.gs[0])).join("");
+  const pick=(g,folder)=>{
+    $("#fileInput").onchange=e=>{ [...e.target.files].forEach(f=>bfFiles.push({file:f,group:g,folder})); e.target.value=""; renderBfAtt(); };
+    $("#fileInput").click();
+  };
   $$("#fAttList [data-bfrm]").forEach(b=>b.addEventListener("click",()=>{ bfFiles.splice(+b.dataset.bfrm,1); renderBfAtt(); }));
-  $$("#fAttList [data-bfg]").forEach(sel=>sel.addEventListener("change",()=>{ bfFiles[+sel.dataset.bfg].group=sel.value; }));
+  $$("#fAttList [data-bfadd]").forEach(b=>b.addEventListener("click",()=>pick(b.dataset.bfadd,"")));
+  $$("#fAttList .bf-fd").forEach(d=>d.addEventListener("click",()=>pick(d.closest(".bf-az").dataset.bfz,d.dataset.bffd)));
+  /* 拖放:落在文件夹行 → 进那个文件夹(只描那一行);落在格里别处 → 根层(描整格) */
+  $$("#fAttList .bf-az").forEach(z=>{
+    const hasFile=e=>[...(e.dataTransfer&&e.dataTransfer.types||[])].includes("Files");
+    const clear=()=>{ z.classList.remove("over"); z.querySelectorAll(".bf-fd.over").forEach(x=>x.classList.remove("over")); };
+    z.addEventListener("dragover",e=>{ if(!hasFile(e)) return; e.preventDefault(); clear();
+      const fd=e.target.closest&&e.target.closest(".bf-fd"); (fd||z).classList.add("over"); });
+    z.addEventListener("dragleave",e=>{ if(!z.contains(e.relatedTarget)) clear(); });
+    z.addEventListener("drop",e=>{ if(!hasFile(e)) return; e.preventDefault(); e.stopPropagation(); clear();
+      const fd=e.target.closest&&e.target.closest(".bf-fd");
+      [...e.dataTransfer.files].forEach(f=>bfFiles.push({file:f,group:z.dataset.bfz,folder:fd?fd.dataset.bffd:""})); renderBfAtt(); });
+  });
 }
 function openBackfill(keepJob){
   bfFiles=[];
   const job=keepJob||"";
-  const ids=["fSub","fTitle","fTitleEn","fNeed","fDesc","fSup","fPrice","fEta","fSigned","fPo","fPay1d","fPay1a","fPay1n","fPay2d","fPay2a","fPay2n","fBl","fCargo","fOrigin","fDest","fEtd","fEtaD","fArr"];
+  const ids=["fSub","fTitle","fTitleEn","fNeed","fDesc","fDestRec","fSup","fPrice","fDue","fSigned","fPo","fBl","fVessel","fOrigin","fDest","fEtd","fEtaD","fArr","fCtnr"];
   ids.forEach(i=>{ const el=$("#"+i); if(el) el.value=""; });
   $("#fJobN").value=job; $("#fReqN").value=cfg.name||""; $("#fStatus").value="完结"; $("#fCur").value="$";
   supBindList("#fSup","#supListData4");
+  $("#fAdjRows").innerHTML=""; updateAdjHint(PS_BF);
+  $("#fPRows").innerHTML=""; updatePayHint(PS_BF);
+  cgRenderInto($("#fCargoRows"),[],bfCargoSync); bfCargoSync();
   $("#fHint").textContent=""; renderBfAtt();
   openModal("mBackfill"); setTimeout(()=>$(job?"#fSub":"#fJobN").focus(),50);
 }
+/* 补录出来的记录跟正常走流程的记录是同一个结构:
+   供应商 + 金额 → 一条已选定的报价;交期是日期(rec.eta);目的地 rec.dest;变更项 rec.adjusts;
+   付款逐笔 rec.payments;物流 rec.ship(含船名、柜号),货物是 cargoLines 明细行 */
 async function saveBackfill(keepOpen){
   if(isViewer()) return denyRO();
   const job=$("#fJobN").value.trim(), title=$("#fTitle").value.trim();
@@ -7254,36 +7344,51 @@ async function saveBackfill(keepOpen){
   if(!title) return toast("请填写中文标题","err");
   const sup=$("#fSup").value.trim(), cur=$("#fCur").value, price=$("#fPrice").value.trim();
   const status=$("#fStatus").value;
+  const pays=readPayRows(PS_BF).map(p=>Object.assign({},p,{amount:p.amount===""?0:p.amount}));
+  const adjs=readAdjRows(PS_BF);
   const rec={
     id:uid(), title, titleEn:$("#fTitleEn").value.trim(), job, sub:$("#fSub").value.trim(),
+    dest:$("#fDestRec").value.trim(),
     requester:$("#fReqN").value.trim()||cfg.name||"", neededBy:$("#fNeed").value||"",
     desc:$("#fDesc").value.trim(), descEn:"", status, createdAt:now(), updatedAt:now(),
-    quotes: sup?[{supplier:sup,price:parseFloat(price)||0,currency:cur,lead:$("#fEta").value.trim(),note:"",selected:true,by:cfg.name,at:now()}]:[],
-    attachments:[], timeline:[], po:$("#fPo").value.trim(), eta:$("#fEta").value.trim(), signed:$("#fSigned").value||"",
-    payments:[], ship:{}
+    quotes: sup?[{supplier:sup,price:parseFloat(price)||0,currency:cur,lead:"",note:"",selected:true,by:cfg.name,at:now()}]:[],
+    attachments:[], timeline:[], po:$("#fPo").value.trim(), eta:$("#fDue").value||"", signed:$("#fSigned").value||"",
+    payments:pays, ship:{}
   };
-  const p1a=$("#fPay1a").value.trim(), p2a=$("#fPay2a").value.trim();
-  if(p1a||$("#fPay1d").value) rec.payments.push({kind:"预付款",date:$("#fPay1d").value||"",cur,amount:p1a===""?0:Number(p1a),note:$("#fPay1n").value.trim()});
-  if(p2a||$("#fPay2d").value) rec.payments.push({kind:"尾款",date:$("#fPay2d").value||"",cur,amount:p2a===""?0:Number(p2a),note:$("#fPay2n").value.trim()});
-  const shipFields={bl:"fBl",cargo:"fCargo",origin:"fOrigin",dest:"fDest",etd:"fEtd",eta:"fEtaD",arrived:"fArr"};
+  if(adjs.length) rec.adjusts=adjs;
+  /* 没填供应商就没有报价可挂金额 —— 金额 / 币种直接写在订单字段上,不丢 */
+  if(!sup&&(price||pays.length||adjs.length)){ rec.oCur=cur; if(price) rec.oPrice=Number(price); }
+  const shipFields={bl:"fBl",vessel:"fVessel",origin:"fOrigin",dest:"fDest",etd:"fEtd",eta:"fEtaD",arrived:"fArr",ctnr:"fCtnr"};
   Object.entries(shipFields).forEach(([k,id])=>{ const v=$("#"+id).value.trim(); if(v) rec.ship[k]=v; });
+  const cargo=cgReadFrom($("#fCargoRows"));
+  if(cargo.length) rec.ship.cargoLines=cargo;
   const parts=[];
   if(sup) parts.push("供应商 "+sup+(price?` ${cur}${money(price)}`:""));
   if(rec.po) parts.push("合同 "+rec.po);
+  if(adjs.length) parts.push(`变更项 ${adjs.length} 笔`);
   if(rec.payments.length) parts.push(`付款 ${rec.payments.length} 笔`);
   migrateCargo(rec.ship);
-  if(Object.keys(rec.ship).length) parts.push("物流信息已录");
+  if(Object.keys(rec.ship).length) parts.push("物流信息已录"+(cargo.length?`（货物 ${cargo.length} 行）`:""));
   log(rec,"补录历史采购（状态 "+status+"）",parts.join("; "));
+  /* 文件夹跟正常流程一致:走到的阶段该有的模板文件夹 + 这次选了文件的分类 */
+  { const gs=new Set(tplGroupsFor(rec)); bfFiles.forEach(f=>{ if(f.folder&&tplFor(f.group)) gs.add(f.group); });
+    const made=[]; gs.forEach(g=>applyFolderTpl(rec,g).forEach(n=>made.push(`${attLabel(g)}/${n}`)));
+    if(made.length) log(rec,"自动建文件夹",made.join("、")); }
   state.records.unshift(rec);
   render();
   const ok=await persist(`补录 ${job}${rec.sub?"-"+rec.sub:""} ${title}`);
   if(ok) toast(`已补录 ${job}${rec.sub?"-"+rec.sub:""} ${title}`,"ok");
   if(bfFiles.length){
-    const byGroup={};
-    bfFiles.forEach(f=>{ (byGroup[f.group]=byGroup[f.group]||[]).push(f.file); });
+    const slots=new Map();   // "分类\n文件夹" -> File[]
+    bfFiles.forEach(f=>{ const k=f.group+"\n"+(f.folder||""); if(!slots.has(k)) slots.set(k,[]); slots.get(k).push(f.file); });
     const total=bfFiles.length; bfFiles=[]; renderBfAtt();
     toast(`正在上传 ${total} 个附件…`);
-    for(const [g,fs] of Object.entries(byGroup)){ await uploadFiles(rec.id,fs,g); }
+    for(const [k,fs] of slots){
+      const [g,folder]=k.split("\n");
+      const live=getRec(rec.id)||rec;   // persist 合并后 state.records 里可能是新对象,文件夹 id 现查
+      const fd=folder?afList(live,g,"").find(x=>x.name===folder):null;
+      await uploadFiles(rec.id,fs,g,fd?fd.fid:"");
+    }
   }
   if(keepOpen){ openBackfill(job); $("#fHint").textContent=`上一条已保存：${title}`; }
   else closeModal("mBackfill");
@@ -7387,33 +7492,42 @@ async function saveEditQuote(){
 
 /* ================= 修改订单信息 ================= */
 let editingOrderId=null;
-function addAdjRow(v){
+/* 付款 / 变更项的行编辑器有两处在用:「修改订单信息」(PS_ORDER)和「补录历史采购」(PS_BF)。
+   S 说明这一套的容器、币种框、金额框、提示在哪;不传就是订单窗口那套,老的调用不用改。
+   ⚠️ 这些函数别直接当事件回调传(addEventListener("input",updatePayHint) 会把事件对象当成 S),要包一层箭头函数 */
+const PS_ORDER={rows:"#pRows",adj:"#adjRows",cur:"#oCur",price:"#oPrice",phint:"#pHint",ahint:"#adjHint"};
+const PS_BF={rows:"#fPRows",adj:"#fAdjRows",cur:"#fCur",price:"#fPrice",phint:"#fPHint",ahint:"#fAdjHint"};
+function addAdjRow(v,S){
+  S=S||PS_ORDER;
   v=v||{};
   const div=document.createElement("div"); div.className="arow";
   div.innerHTML=`<input type="number" step="0.01" class="aamt" placeholder="金额（可负）" value="${v.amount!==undefined&&v.amount!==""?esc(String(v.amount)):""}">
     <input class="anote" placeholder="说明，如 增加配件 / 含税运费 / 折让">
     <button class="arm" title="删除本行"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>`;
   div.querySelector(".anote").value=v.note||"";
-  div.querySelector(".arm").addEventListener("click",()=>{ div.remove(); updateAdjHint(); updatePayHint(); });
-  div.querySelectorAll("input").forEach(i=>i.addEventListener("input",()=>{ updateAdjHint(); updatePayHint(); }));
-  $("#adjRows").appendChild(div); updateAdjHint();
+  div.querySelector(".arm").addEventListener("click",()=>{ div.remove(); updateAdjHint(S); updatePayHint(S); });
+  div.querySelectorAll("input").forEach(i=>i.addEventListener("input",()=>{ updateAdjHint(S); updatePayHint(S); }));
+  $(S.adj).appendChild(div); updateAdjHint(S);
 }
-function readAdjRows(){
-  const box=$("#adjRows"); if(!box) return [];
+function readAdjRows(S){
+  S=S||PS_ORDER;
+  const box=$(S.adj); if(!box) return [];
   return [...box.querySelectorAll(".arow")].map(r=>({
     amount:r.querySelector(".aamt").value===""?0:Number(r.querySelector(".aamt").value),
     note:r.querySelector(".anote").value.trim()
   })).filter(a=>a.amount!==0||a.note);
 }
-function updateAdjHint(){
-  const box=$("#adjHint"); if(!box) return;
-  const as=readAdjRows(), cur=$("#oCur")?$("#oCur").value:"$";
+function updateAdjHint(S){
+  S=S||PS_ORDER;
+  const box=$(S.ahint); if(!box) return;
+  const as=readAdjRows(S), cur=$(S.cur)?$(S.cur).value:"$";
   const sum=as.reduce((a,x)=>a+(Number(x.amount)||0),0);
   box.textContent=as.length
     ? `${as.length} 笔，合计 ${cur}${money(sum)} —— 会加到合同总额里，请款单和对账单都读这里（多笔在单据上合并成一行）`
     : "增补协议 / 折让（可填负数）。没有变更就不用加。";
 }
-function addPayRow(v){
+function addPayRow(v,S){
+  S=S||PS_ORDER;
   v=v||{};
   const div=document.createElement("div"); div.className="prow";
   const kinds=["预付款","尾款","进度款","其他"];
@@ -7424,13 +7538,14 @@ function addPayRow(v){
     <input class="pnote" placeholder="备注(可选)" value="${esc(v.note||"")}">
     <button class="prm" title="删除本行"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>`;
   /* 没指定币种就跟订单金额的币种(以前固定默认 $,人民币订单每次都要手动改) */
-  const sel=div.querySelector(".pcur"); sel.value=v.cur||($("#oCur")&&$("#oCur").value)||"$";
-  div.querySelector(".prm").addEventListener("click",()=>{ div.remove(); updatePayHint(); });
-  div.querySelectorAll("input,select").forEach(i=>i.addEventListener("input",updatePayHint));
-  $("#pRows").appendChild(div); updatePayHint();
+  const sel=div.querySelector(".pcur"); sel.value=v.cur||($(S.cur)&&$(S.cur).value)||"$";
+  div.querySelector(".prm").addEventListener("click",()=>{ div.remove(); updatePayHint(S); });
+  div.querySelectorAll("input,select").forEach(i=>i.addEventListener("input",()=>updatePayHint(S)));
+  $(S.rows).appendChild(div); updatePayHint(S);
 }
-function readPayRows(){
-  return [...$$("#pRows .prow")].map(r=>({
+function readPayRows(S){
+  S=S||PS_ORDER;
+  return [...$$(S.rows+" .prow")].map(r=>({
     kind:r.querySelector(".pkind").value,
     date:r.querySelector(".pdate").value||"",
     cur:r.querySelector(".pcur").value,
@@ -7438,13 +7553,14 @@ function readPayRows(){
     note:r.querySelector(".pnote").value.trim()
   })).filter(p=>p.amount!==""||p.date);
 }
-function updatePayHint(){
-  const ps=readPayRows(); const cur=$("#oCur")?$("#oCur").value:"$";
+function updatePayHint(S){
+  S=S||PS_ORDER;
+  const ps=readPayRows(S); const cur=$(S.cur)?$(S.cur).value:"$";
   const paid=ps.filter(p=>p.cur===cur).reduce((a,p)=>a+(Number(p.amount)||0),0);
-  const base=Number($("#oPrice")?$("#oPrice").value:0)||0;
-  const adj=readAdjRows().reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const base=Number($(S.price)?$(S.price).value:0)||0;
+  const adj=readAdjRows(S).reduce((a,x)=>a+(Number(x.amount)||0),0);
   const tot=base+adj;
-  $("#pHint").textContent=ps.length?`已录 ${ps.length} 笔 · 合计 ${cur}${money(paid)}${tot?` · ${adj?"合同总额":"订单"} ${cur}${money(tot)}${adj?`（含变更项 ${cur}${money(adj)}）`:""} · 未付 ${cur}${money(tot-paid)}`:""}`:"未录入付款";
+  $(S.phint).textContent=ps.length?`已录 ${ps.length} 笔 · 合计 ${cur}${money(paid)}${tot?` · ${adj?"合同总额":"订单"} ${cur}${money(tot)}${adj?`（含变更项 ${cur}${money(adj)}）`:""} · 未付 ${cur}${money(tot-paid)}`:""}`:"未录入付款";
 }
 function openEditOrder(id){
   const rec=getRec(id); if(!rec)return;
@@ -7937,6 +8053,19 @@ function modalSnap(m){
 }
 function modalDirty(m){ return m._snap!==undefined && modalSnap(m)!==m._snap; }
 function openModal(id){ const m=$("#"+id); m.classList.add("open"); m._snap=modalSnap(m); }
+/* 标题 / 按钮是否正钉着:钉住才出分隔线和阴影。滚动、窗口变化、弹窗内容增减(加一行付款)时都重算 */
+function modalStick(){
+  $$(".modal-mask.open").forEach(mk=>{
+    const hd=mk.querySelector(".md-hd"), ft=mk.querySelector(".md-ft"), md=mk.querySelector(".modal"); if(!md) return;
+    const mr=md.getBoundingClientRect(), kr=mk.getBoundingClientRect();
+    if(hd) hd.classList.toggle("stuck",mr.top<kr.top-1);
+    if(ft) ft.classList.toggle("stuck",mr.bottom>kr.bottom+1);
+  });
+}
+document.addEventListener("scroll",e=>{ if(e.target.classList&&e.target.classList.contains("modal-mask")) modalStick(); },true);
+window.addEventListener("resize",modalStick);
+if(window.ResizeObserver){ const ro=new ResizeObserver(modalStick); document.querySelectorAll(".modal-mask .modal").forEach(m=>ro.observe(m)); }
+{ const mo=new MutationObserver(modalStick); document.querySelectorAll(".modal-mask").forEach(m=>mo.observe(m,{attributes:true,attributeFilter:["class"]})); }   // 开 / 关
 function closeModal(id){ const m=$("#"+id); m.classList.remove("open"); delete m._snap; }
 /* 手滑关窗:改过东西才问一句 */
 function tryCloseModal(m){
@@ -8434,10 +8563,6 @@ $("#bulkClear").addEventListener("click",clearSelection);
 $("#undoBtn").addEventListener("click",doUndo);
 let rzT=null;
 window.addEventListener("resize",()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ renderAlert(); if(viewMode==="board") render(); },200); });
-$("#fAttAdd").addEventListener("click",()=>{
-  $("#fileInput").onchange=e=>{ [...e.target.files].forEach(f=>bfFiles.push({file:f,group:"合同与付款"})); e.target.value=""; renderBfAtt(); };
-  $("#fileInput").click();
-});
 $("#fSave").addEventListener("click",()=>saveBackfill(false));
 $("#fSaveNext").addEventListener("click",()=>saveBackfill(true));
 $("#bSave").addEventListener("click",saveBulk);
@@ -8490,7 +8615,17 @@ $("#cpSoc").addEventListener("change",e=>{ if(ciplD) ciplD.soc=e.target.checked;
 $("#cpCtnAdd").addEventListener("click",()=>{ if(!ciplD) return; ciplD.ctns.push({no:"",type:""}); cpRenderCtns(); cpRenderRows();
   const ins=$$("#cpCtns .cp-cno"); if(ins.length) ins[ins.length-1].focus(); });
 $("#pAddRow").addEventListener("click",()=>{ const last=[...$$("#pRows .prow")].pop(); const k=last&&last.querySelector(".pkind").value==="预付款"?"尾款":"尾款"; addPayRow({kind:k,cur:$("#oCur").value}); });
-["oCur","oPrice"].forEach(id=>$("#"+id).addEventListener("input",updatePayHint));
+["oCur","oPrice"].forEach(id=>$("#"+id).addEventListener("input",()=>updatePayHint()));
+["fCur","fPrice"].forEach(id=>$("#"+id).addEventListener("input",()=>{ updateAdjHint(PS_BF); updatePayHint(PS_BF); }));
+$("#fAdjAdd").addEventListener("click",()=>addAdjRow({},PS_BF));
+$("#fPAdd").addEventListener("click",()=>{ const last=[...$$("#fPRows .prow")].pop(); addPayRow({kind:last&&last.querySelector(".pkind").value==="预付款"?"尾款":(last?"尾款":"预付款")},PS_BF); });
+/* 补录窗口里的货物明细(跟 mShip 用同一个行编辑器,按容器操作) */
+const bfCargoSync=()=>{ $("#fCargoTot").textContent=cgTotalText(cgReadFrom($("#fCargoRows"))); };
+$("#fCargoAdd").addEventListener("click",()=>{
+  const box=$("#fCargoRows"); box.insertAdjacentHTML("beforeend",cgRowHTML(null));
+  cgBindIn(box,bfCargoSync); bfCargoSync();
+  const rows=box.querySelectorAll(".cg-row:not(.cg-head)"); const last=rows[rows.length-1]; if(last) last.querySelector(".cg-i").focus();
+});
 $("#spSave").addEventListener("click",saveSupplier);
 $("#spDelete").addEventListener("click",deleteSupplier);
 
