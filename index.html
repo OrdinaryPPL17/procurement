@@ -1373,6 +1373,9 @@ body.dark .md-row .fx{background:#4A555F}
 .iv-head span:nth-child(4),.iv-head span:nth-child(6),.iv-head span:nth-child(7){text-align:right}   /* 跟下面的数字列同一侧 */
 .iv-head span:nth-child(4),.iv-head span:nth-child(7){padding-right:7px}
 .iv-foot{font-weight:700;border-top:1px solid var(--line)!important;padding-top:8px}
+.iv-src{margin-bottom:10px;min-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iv-miss input{border-color:var(--reject);background-color:var(--reject-soft)}
+.iv-miss .no{color:var(--reject);font-weight:700}
 .iv-foot .pr{color:var(--ink)}
 @media(max-width:640px){ .iv-row{min-width:640px} }
 .sf-head{font-size:12px;color:var(--ink-soft);margin-bottom:10px;line-height:1.7}
@@ -2123,16 +2126,17 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
   <div class="modal">
     <div class="md-hd"><h2>开票资料</h2><button class="btn btn-sm" data-close="mInv"><svg class="ix" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button></div>
     <div class="md-bd">
-      <div class="hint" id="invHead" style="margin-bottom:10px"></div>
+      <div class="hint" id="invHead" style="margin-bottom:4px"></div>
+      <div class="hint iv-src" id="invSrc"></div>
       <div id="invWarn"></div>
       <div class="row2">
         <div class="fld"><label>销方名称（厂商）</label><input id="invSeller"></div>
         <div class="fld"><label>购买方</label><div class="iv-buyer" id="invBuyer"></div></div>
       </div>
-      <div class="fld"><label>开票明细<span class="cp-sub">数量、金额取货物明细；单价按金额 ÷ 数量倒挤</span></label>
+      <div class="fld"><label>开票明细<span class="cp-sub">名称、数量、单位取报关单；金额取货物明细的 RMB 总金额；单价按金额 ÷ 数量倒挤</span></label>
         <div class="cp-wrap"><div id="invRows"></div></div>
       </div>
-      <div class="hint">「报关单参考」按货物明细生成：项号、商品编号、商品名称、申报要素、数量及单位，商品名称和数量用红框标出。这里的修改只用于这份文件，不改货物明细。</div>
+      <div class="hint">「报关单参考」照报关单列出项号、商品编号、商品名称、申报要素、成交数量及单位，商品名称和数量用红框标出。这里的修改只用于这份文件，不改货物明细。</div>
     </div>
     <div class="md-ft">
       <button class="btn" data-close="mInv">取消</button>
@@ -7124,7 +7128,7 @@ function hasExpDecl(rec,group){
 /* 申报要素里的型号:第 3 段以后第一个「字母 + 数字」的段(0.5T-6m、CT3325L) */
 function invSpecGuess(el){
   const seg=String(el||"").split(/[|｜]/).map(x=>x.trim());
-  return seg.slice(2).find(x=>/[A-Za-z]/.test(x)&&/\d/.test(x)&&/^[A-Za-z0-9.\-\/×*+#()（）φΦ]+$/.test(x))||"";
+  return seg.slice(2).find(x=>/[A-Za-z]/.test(x)&&/\d/.test(x)&&/^[A-Za-z0-9.\-\/×*+#()（）φΦ、,，~ ]+$/.test(x))||"";
 }
 /* 单价倒挤:最多 6 位小数,去掉末尾 0,至少留 2 位 */
 function invPrice(amt,qty){
@@ -7144,30 +7148,136 @@ function openInv(id,bid){
     const a=cargoAmt(l);
     return {no:i+1,cn:cn||String(l.desc||"").trim(),spec:invSpecGuess(el),qty:String(l.pcs||"").trim(),unit:cgEff(l,"unitCn",m).v,
       amt:a==null?"":invMoney(a),hs:cgEff(l,"hs",m).v,el,desc:String(l.desc||"").trim()}; });
-  invCtx={id,bid:bid||"",rows,po:poFullNo(rec),bl:String(b.bl||"").trim()};
+  invCtx={id,bid:bid||"",rows,po:poFullNo(rec),bl:String(b.bl||"").trim(),decl:null,
+    src:cargoOf(b).map((l,i)=>({cn:rows[i].cn,hs:rows[i].hs,qty:l.pcs,desc:l.desc,el:rows[i].el}))};
   const bs=shBatches(rec), bi=bs.findIndex(x=>(x.bid||"")===(bid||""));
   $("#invHead").innerHTML=`<b class="mono">${esc(invCtx.po)}</b> · ${esc(rec.title||"")}${bs.length>1?` · 第 ${bi+1} 批`:""}${invCtx.bl?` · MBL <span class="mono">${esc(invCtx.bl)}</span>`:""}`;
   $("#invSeller").value=oi.supplier||"";
+  $("#invSrc").textContent="";
   const v=invInfo();
   $("#invBuyer").innerHTML=v.name?`${esc(v.name)}${v.tax?`<span class="tax">${esc(v.tax)}</span>`:""}`:`<span class="miss">还没填 —— 在「设置 → 开票信息」里填一次</span>`;
-  const miss=[]; if(!rows.length) miss.push("这一批还没有货物明细，先在「编辑」里填");
-  if(!v.name) miss.push("设置里的开票信息还没填，文件开头的购买方和结尾的邮寄地址会是空的");
-  $("#invWarn").innerHTML=miss.length?`<div class="sf-warn">${miss.map(esc).join("<br>")}</div>`:"";
+  invCtx.miss=[]; if(!rows.length) invCtx.miss.push("这一批还没有货物明细，先在「编辑」里填");
+  if(!v.name) invCtx.miss.push("设置里的开票信息还没填，文件开头的购买方和结尾的邮寄地址会是空的");
   renderInvRows();
-  $("#invGo").disabled=!rows.length;
   openModal("mInv");
+  invLoadDecl(rec,b,invCtx);
+}
+/* 报关单为准:开票名称、数量、单位、商品编号、申报要素都从「出口报关」里的报关单 PDF 读(pdf.js);
+   金额报关单上是美元,开票要 RMB,所以金额仍取货物明细。读不到 / 对不上的行保留货物明细的值,并标红提示 */
+function invDeclFiles(rec,b){
+  const g=shGroup(b.bid), fds=afAll(rec,g).filter(f=>MBL_ROLE.exp.re.test(f.name));
+  const ids=new Set(); fds.forEach(f=>{ ids.add(f.fid); afDesc(rec,f.fid).forEach(x=>ids.add(x)); });
+  const fs=(rec.attachments||[]).filter(a=>(a.group||"需求")===g&&ids.has(a.fid||"")&&/\.pdf$/i.test(a.name||a.path||""));
+  return fs.sort((x,y)=>(/报关单/.test(y.name)?1:0)-(/报关单/.test(x.name)?1:0));
+}
+async function invLoadDecl(rec,b,ctx){
+  const busy=on=>{ $("#invGo").disabled=on||!ctx.rows.length; $("#invGo").textContent=on?"读取报关单…":"↓ 生成 Word"; };
+  const warn=()=>{ if(invCtx!==ctx) return; $("#invWarn").innerHTML=ctx.miss.length?`<div class="sf-warn">${ctx.miss.map(esc).join("<br>")}</div>`:""; };
+  const files=invDeclFiles(rec,b);
+  if(!files.length||!ctx.rows.length){ warn(); busy(false); return; }
+  busy(true); $("#invSrc").textContent="正在读取报关单…";
+  let decl=null, used=null, err="";
+  for(const f of files){
+    try{ const url=await ghGetBlob(f.path,f.name); const buf=await (await fetch(url)).arrayBuffer();
+      const d=await declRead(buf); if(d.items.length){ decl=d; used=f; break; } }
+    catch(e){ err=e.message||String(e); }
+  }
+  if(invCtx!==ctx) return;          // 弹窗已经换成别的订单了
+  if(!decl){
+    ctx.miss.unshift(`没读到报关单${err?`（${err}）`:""}，下面先按货物明细填 —— 单位请手动改成中文`);
+    $("#invSrc").textContent=""; warn(); busy(false); return;
+  }
+  const hit=declMatch(ctx.src,decl.items);
+  hit.forEach((it,i)=>{ const r=ctx.rows[i];
+    if(!it){ r.nomatch=true; return; }
+    Object.assign(r,{dno:it.no,cn:it.name,qty:it.qty,unit:it.unit,hs:it.hs,el:it.el,deal:it.deal,spec:invSpecGuess(it.el)||r.spec,nomatch:false}); });
+  ctx.decl={no:decl.no,contract:decl.contract,bl:decl.bl,file:used.name};
+  const miss=hit.map((x,i)=>x?null:ctx.rows[i].cn||ctx.rows[i].desc).filter(Boolean);
+  if(miss.length) ctx.miss.unshift(`报关单里没找到：${miss.join("、")}（标红的行），这几行还是货物明细的值，请核对`);
+  $("#invSrc").innerHTML=`已按报关单填 ${hit.filter(Boolean).length}/${hit.length} 行 · 报关单号 <span class="mono">${esc(decl.no||"—")}</span> · <span title="${esc(used.name)}">${esc(used.name)}</span>`;
+  warn(); renderInvRows(); busy(false);
+}
+/* ── 读报关单 ── pdf.js(点的时候才从 CDN 加载)。坐标用 viewport 换算,横版 / 旋转 90° 的都一样处理 */
+const PDFJS_CDN="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+/* 中文报关单用 UniGB-UTF16-H 这类预置 CMap,cdnjs 没放 cmaps 目录(实测取不到),用 jsdelivr 的 npm 包 */
+const PDFJS_CMAPS="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/";
+async function loadPdfJs(){
+  if(!window.pdfjsLib) await loadScript(PDFJS_CDN+"pdf.min.js");
+  if(!window.pdfjsLib) throw new Error("PDF 读取组件加载失败");
+  pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_CDN+"pdf.worker.min.js";
+  return pdfjsLib;
+}
+async function declRead(buf){
+  const L=await loadPdfJs();
+  const doc=await L.getDocument({data:new Uint8Array(buf),cMapUrl:PDFJS_CMAPS,cMapPacked:true}).promise;
+  const out={no:"",bl:"",contract:"",items:[]};
+  for(let i=1;i<=doc.numPages;i++){
+    const pg=await doc.getPage(i), vp=pg.getViewport({scale:1}), tc=await pg.getTextContent();
+    const its=tc.items.filter(t=>t.str&&t.str.trim()).map(t=>{ const m=L.Util.transform(vp.transform,t.transform); return {x:m[4],y:m[5],s:t.str.trim()}; });
+    if(its.some(t=>/出口货物报关单/.test(t.s))) declPage(its,out);   // 放行通知书、委托协议那几页跳过
+  }
+  try{ doc.destroy(); }catch(e){}
+  return out;
+}
+/* 一页报关单 → 表头字段 + 商品行。商品行从「项号 + 10 位商品编号」那一行开始,到下一项为止:
+   名称列第一段是商品名称,后面几段接起来是申报要素(PDF 里折行了);数量列从上到下是
+   法定第一数量 / 法定第二数量 / 成交数量,开票用最后一个(成交数量及单位) */
+function declPage(its,out){
+  const find=re=>its.find(t=>re.test(t.s));
+  const below=re=>{ const l=find(re); if(!l) return ""; const c=its.filter(t=>t!==l&&t.y>l.y+3&&t.y<l.y+24&&Math.abs(t.x-l.x)<30).sort((a,b)=>a.y-b.y||Math.abs(a.x-l.x)-Math.abs(b.x-l.x)); return c[0]?c[0].s:""; };
+  const right=re=>{ const l=find(re); if(!l) return ""; const c=its.filter(t=>t!==l&&Math.abs(t.y-l.y)<3&&t.x>l.x).sort((a,b)=>a.x-b.x); return c[0]?c[0].s:""; };
+  if(!out.no) out.no=(right(/^海关编号/).match(/\d{18}/)||find(/^\*?\d{18}\*?$/)&&find(/^\*?\d{18}\*?$/).s.match(/\d{18}/)||[""])[0];
+  if(!out.bl) out.bl=below(/^提运单号$/);
+  if(!out.contract) out.contract=below(/^合同协议号$/);
+  const hNo=its.find(t=>t.s==="项号"), hHs=its.find(t=>t.s==="商品编号"), hQ=its.find(t=>t.s==="数量及单位"), hP=find(/^单价\/总价/);
+  if(!hNo||!hHs||!hQ) return;
+  const endY=its.filter(t=>t.y>hNo.y&&/特殊关系确认|^报关人员|兹申明/.test(t.s)).map(t=>t.y).sort((a,b)=>a-b)[0]||1e9;
+  const body=its.filter(t=>t.y>hNo.y+4&&t.y<endY-2);
+  const qMin=hQ.x-40, qMax=hP?hP.x+12:hQ.x+90;
+  const hsOf=st=>body.find(t=>/^\d{10}$/.test(t.s)&&Math.abs(t.y-st.y)<3);
+  const starts=body.filter(t=>/^\d{1,3}$/.test(t.s)&&t.x<hHs.x-4&&hsOf(t)).sort((a,b)=>a.y-b.y);
+  starts.forEach((st,k)=>{
+    const hs=hsOf(st), y0=st.y-3, y1=k+1<starts.length?starts[k+1].y-3:endY;
+    const seg=body.filter(t=>t.y>=y0&&t.y<y1).sort((a,b)=>a.y-b.y||a.x-b.x);
+    const nameCol=seg.filter(t=>t!==hs&&t!==st&&t.x>hs.x+20&&t.x<qMin);
+    const qs=seg.filter(t=>t.x>=qMin&&t.x<qMax&&/^[\d.,]+\s*[^\d\s.,]+$/.test(t.s)).map(t=>t.s);
+    const deal=qs[qs.length-1]||"", m=deal.match(/^([\d.,]+)\s*(.+)$/)||[];
+    out.items.push({no:+st.s,hs:hs.s,name:nameCol[0]?nameCol[0].s:"",el:nameCol.slice(1).map(t=>t.s).join(""),qtys:qs,deal,qty:m[1]||"",unit:m[2]||""});
+  });
+}
+/* 货物明细行 ↔ 报关单商品行。同一柜报关单里有别的订单的货,所以按分数挑:
+   名称一样 +3、名称包含 +2、商品编号一样 +2、数量一样 +1.5、型号(如 8T-30m)在申报要素里 +1,够 2.5 分才算
+   (2.5 = 只有数量 + 型号都对上;光数量一样不算) */
+const declNz=s=>String(s||"").replace(/[\s()（）\[\]【】]/g,"").toLowerCase();
+function declMatch(src,items){
+  const used=new Set();
+  return src.map(l=>{
+    const cn=declNz(l.cn), hs=String(l.hs||"").replace(/\D/g,""), q=cnum(l.qty);
+    const toks=(String(l.desc||"")+" "+String(l.el||"")).split(/[\s|｜,，;；]+/).filter(t=>/[A-Za-z]/.test(t)&&/\d/.test(t)&&t.length>=2);
+    let best=-1, bs=0;
+    items.forEach((it,i)=>{ if(used.has(i)) return; let sc=0; const nm=declNz(it.name), qOk=!!(q&&cnum(it.qty)===q), tOk=toks.some(t=>it.el.toLowerCase().includes(t.toLowerCase()));
+      if(cn&&nm===cn) sc+=3; else if(cn&&nm&&(nm.includes(cn)||cn.includes(nm))) sc+=2;
+      if(hs&&it.hs===hs) sc+=2;
+      if(qOk) sc+=1.5;
+      if(tOk) sc+=1;
+      if(sc>bs){ bs=sc; best=i; } });
+    /* 没中文名、没商品编号的行:数量 + 型号都对上(2.5 分)也算 */
+    if(best>=0&&bs>=2.5){ used.add(best); return items[best]; }
+    return null;
+  });
 }
 function renderInvRows(){
   const R=invCtx.rows;
   const tot=R.reduce((s,r)=>s+cnum(r.amt),0);
   $("#invRows").innerHTML=`<div class="iv-row iv-head"><span></span><span>开票名称</span><span>规格型号</span><span>开票数量</span><span>单位</span><span>单价（倒挤）</span><span>开票金额（含税）</span></div>`
-    +R.map((r,i)=>`<div class="iv-row" data-ivi="${i}"><span class="no">${r.no}</span>
+    +R.map((r,i)=>`<div class="iv-row${r.nomatch?" iv-miss":""}" data-ivi="${i}"${r.nomatch?' title="报关单里没找到这一行，用的是货物明细的值"':""}><span class="no">${r.nomatch?"—":(r.dno||r.no)}</span>
       <input data-ivk="cn" value="${esc(r.cn)}" title="${esc(r.desc)}"><input data-ivk="spec" value="${esc(r.spec)}" placeholder="—">
       <input data-ivk="qty" class="n" value="${esc(r.qty)}"><input data-ivk="unit" value="${esc(r.unit)}">
       <span class="pr" data-ivpr>${esc(invPrice(r.amt,r.qty))}</span><input data-ivk="amt" class="n" value="${esc(r.amt)}" placeholder="0.00"></div>`).join("")
     +(R.length?`<div class="iv-row iv-foot"><span></span><span>总合计</span><span></span><span></span><span></span><span></span><span class="pr" id="invTot">¥ ${invMoney(tot)}</span></div>`:`<div class="cp-empty">没有货物明细</div>`);
   $$("#invRows [data-ivk]").forEach(inp=>inp.addEventListener("input",()=>{
     const row=inp.closest("[data-ivi]"), r=R[+row.dataset.ivi]; r[inp.dataset.ivk]=inp.value;
+    if(inp.dataset.ivk==="qty"||inp.dataset.ivk==="unit") r.deal="";
     row.querySelector("[data-ivpr]").textContent=invPrice(r.amt,r.qty);
     $("#invTot").textContent="¥ "+invMoney(R.reduce((s,x)=>s+cnum(x.amt),0));
   }));
@@ -7190,7 +7300,7 @@ function invDocx(d){
   const body=d.rows.map(r=>TR([C(W1[0],CP(r.cn)),C(W1[1],CP(r.spec)),C(W1[2],CP(r.qty)),C(W1[3],CP(r.unit)),C(W1[4],CP(invPrice(r.amt,r.qty),{jc:"right"})),C(W1[5],CP(invMoney(r.amt),{jc:"right"}))]));
   const W2=[650,1300,2000,3688,2000];
   const head2=["项号","商品编号","商品名称","规格型号（申报要素）","数量及单位"].map((t,i)=>C(W2[i],CP(t,{b:true,sz:19}),{fill:"EDEDED"}));
-  const body2=d.rows.map(r=>TR([C(W2[0],CP(String(r.no),{sz:19})),C(W2[1],CP(r.hs,{sz:19})),C(W2[2],CP(r.cn,{sz:19}),{red:true}),C(W2[3],CP(r.el,{sz:18,jc:"left"})),C(W2[4],CP(`${r.qty}${r.unit}`,{sz:19}),{red:true})]));
+  const body2=d.rows.map(r=>TR([C(W2[0],CP(r.nomatch?"—":String(r.dno||r.no),{sz:19})),C(W2[1],CP(r.hs,{sz:19})),C(W2[2],CP(r.cn,{sz:19}),{red:true}),C(W2[3],CP(r.el,{sz:18,jc:"left"})),C(W2[4],CP(r.deal||`${r.qty}${r.unit}`,{sz:19}),{red:true})]));
   const tot=d.rows.reduce((s,r)=>s+cnum(r.amt),0);
   const v=d.buyer, BLUE="1F3FD0";
   const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -7201,7 +7311,7 @@ ${KV("销方名称：",d.seller,{color:BLUE})}
 ${TBL(W1,[TR(head,true),...body])}
 ${P(R("总合计：  ￥ "+invMoney(tot)+" 元",{b:true,sz:28}),{before:200,after:360})}
 ${P(R("报关单参考：",{b:true,sz:28,color:BLUE}),{after:60})}
-${P(R([d.po?"合同号 "+d.po:"",d.bl?"提单号 "+d.bl:""].filter(Boolean).join("    "),{sz:20,color:"666666"}),{after:120})}
+${P(R([d.declNo?"报关单号 "+d.declNo:"",(d.contract||d.po)?"合同号 "+(d.contract||d.po):"",d.bl?"提单号 "+d.bl:""].filter(Boolean).join("    "),{sz:20,color:"666666"}),{after:120})}
 ${TBL(W2,[TR(head2,true),...body2])}
 ${P("",{after:240})}
 ${KV("邮寄地址：",v.mail)}
@@ -7221,7 +7331,8 @@ ${P(R(v.who||"",{b:true,sz:28}),{after:0})}
 const invFileName=d=>zipSafe(`开票资料_${d.po||"未编号"}_${d.seller||"厂商"}`)+".docx";
 function invGenerate(){
   if(!invCtx||!invCtx.rows.length) return;
-  const d={rows:invCtx.rows,seller:$("#invSeller").value.trim(),buyer:invInfo(),po:invCtx.po,bl:invCtx.bl};
+  const D=invCtx.decl||{};
+  const d={rows:invCtx.rows,seller:$("#invSeller").value.trim(),buyer:invInfo(),po:invCtx.po,bl:D.bl||invCtx.bl,declNo:D.no||"",contract:D.contract||""};
   const blob=invDocx(d), a=document.createElement("a");
   a.href=URL.createObjectURL(blob); a.download=invFileName(d); document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
