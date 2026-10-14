@@ -1401,6 +1401,10 @@ body.dark .md-row .fx{background:#4A555F}
 .sf-none{padding:28px 12px;text-align:center;color:var(--steel);font-size:13px}
 .mbl-foot{display:flex;align-items:center;gap:14px;margin-top:14px;padding:12px 14px;flex-wrap:wrap;
   background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 1px 2px rgba(27,42,58,.05)}
+.mbl-autost{font-size:12px;color:var(--steel);white-space:nowrap;margin-left:auto}
+.mbl-foot .mbl-autost:not(:empty)+.btn-ink{margin-left:0}
+.mbl-autost.done{color:var(--approve)}
+.mbl-autost:empty{display:none}
 .mbl-foot .tot{font-size:12px;display:flex;gap:16px;flex-wrap:wrap}
 .mbl-foot .tot b{font-family:var(--mono)}
 .mbl-foot .btn-ink{margin-left:auto}
@@ -4325,7 +4329,7 @@ function mblBodyHTML(g){
     ${(isViewer()||!g.mbl)?"":`<button type="button" class="mbl-addord" data-addto="${esc(g.mbl)}">＋ 加订单进这个柜</button>`}
     <div class="mbl-foot">
       <span class="tot" data-tot="1"></span>
-      ${isViewer()?"":`<button class="btn btn-ink" data-save="${esc(g.key)}">保存这一柜</button>`}
+      ${isViewer()?"":`<span class="mbl-autost${mblSavedAt[g.key]?" done":""}" data-autost="1" title="格子改完、离开或按回车就会自动保存">${mblSavedAt[g.key]?"已自动保存 "+mblSavedAt[g.key]:""}</span><button class="btn btn-ink" data-save="${esc(g.key)}">保存这一柜</button>`}
     </div>`;
 }
 
@@ -5585,6 +5589,7 @@ function bindShip(){
     sfBind(sec,g);
     mblSyncTot(sec,g);
     sec._snap=mblSnap(sec);     /* 展开那一刻的界面值,收起时拿来比 */
+    if(!isViewer()) mblAutoBind(sec,key);
   });
 }
 
@@ -5961,7 +5966,8 @@ function mblSyncTot(sec,g){
   if(box) box.innerHTML=bits.join("");
 }
 
-async function saveShipGroup(key){
+async function saveShipGroup(key,opt){
+  opt=opt||{};
   if(isViewer()) return denyRO();
   const sec=$(`#shipList .mbl[data-mbl="${CSS.escape(key)}"]`); if(!sec) return;
   const g=shipGroups().find(x=>x.key===key); if(!g) return;
@@ -5993,15 +5999,60 @@ async function saveShipGroup(key){
     }
     if(changed) touched.set(x.r.id,x.r);
   });
-  if(!touched.size){ sec._snap=mblSnap(sec); return toast("没有改动"); }
+  if(!touched.size){ sec._snap=mblSnap(sec); if(!opt.auto) toast("没有改动"); return; }
   touched.forEach(r=>log(r,renamed?"改 MBL#":"发货页统一录入",
     renamed?`${g.mbl} → ${newNo}`:`MBL# ${g.mbl||"(未填)"}`));
   if(renamed){ shipOpen.delete(key); shipOpen.add(newNo); }
-  render();
+  /* 自动保存时光标多半已经在下一个格子里了 —— 这时整页重画会把光标和刚敲的字冲掉。
+     只更新快照,等光标离开这一柜再重画(mblMaybeRender) */
+  if(opt.auto&&!renamed&&sec.contains(document.activeElement)){ sec._snap=mblSnap(sec); mblLater.add(key); }
+  else { mblLater.delete(key); render(); }
   if(await persist(renamed?`MBL# ${g.mbl} → ${newNo}（${touched.size} 个订单）`
                           :`MBL# ${g.mbl||"(未填)"} 统一录入 ${touched.size} 条`))
     toast(renamed?`MBL# 已改成 ${newNo} · ${touched.size} 个订单`
-                 :`已保存 ${touched.size} 条记录${nShare?` · ${nShare} 处共享字段`:""}${nCargo?` · ${nCargo} 个订单的货物明细`:""}`,"ok");
+                 :`${opt.auto?"已自动保存":"已保存"} ${touched.size} 条记录${nShare?` · ${nShare} 处共享字段`:""}${nCargo?` · ${nCargo} 个订单的货物明细`:""}`,"ok");
+}
+/* ── 发货页自动保存(用户:金额填了没存上、填完也没有回车) ──
+   以前要点卡片最底下的「保存这一柜」,按钮常在屏幕外。现在:格子改完(change,离开格子时触发)
+   或按回车,0.7 秒后自动存这一柜;正在存的时候又改了,存完再补一次。底部按钮保留。
+   MBL# 那一格改了会弹确认(改整柜),所以它只在按回车或点按钮时存,不跟着离开格子自动存。 */
+const mblTimer={}, mblBusy=new Set(), mblAgain=new Set(), mblLater=new Set(), mblSavedAt={};
+function mblAutoBind(sec,key){
+  const kick=()=>{ clearTimeout(mblTimer[key]); mblTimer[key]=setTimeout(()=>mblAutoRun(key),700); mblFootState(sec,"wait"); };
+  sec.addEventListener("change",e=>{ if(e.target.closest(".cg-ed,[data-cargo]")||e.target.matches("[data-share]")) kick(); });
+  sec.addEventListener("keydown",e=>{
+    if(e.key!=="Enter"||e.isComposing||e.shiftKey||e.altKey||e.ctrlKey||e.metaKey) return;
+    const t=e.target; if(!t.matches||t.tagName==="TEXTAREA") return;
+    if(t.matches("[data-mblno]")){ e.preventDefault(); saveShipGroup(key); return; }
+    if(t.matches("input")&&(t.closest("[data-cargo]")||t.matches("[data-share]"))){ e.preventDefault(); t.blur(); kick(); }
+  });
+  sec.addEventListener("focusout",e=>{ if(!sec.contains(e.relatedTarget)) setTimeout(()=>mblMaybeRender(key),0); });
+}
+async function mblAutoRun(key){
+  delete mblTimer[key];
+  if(mblBusy.has(key)){ mblAgain.add(key); return; }
+  mblBusy.add(key);
+  const sec=()=>$(`#shipList .mbl[data-mbl="${CSS.escape(key)}"]`);
+  try{ if(sec()) mblFootState(sec(),"busy"); await saveShipGroup(key,{auto:true}); mblSavedAt[key]=new Date().toTimeString().slice(0,5); }
+  finally{
+    mblBusy.delete(key);
+    if(mblAgain.delete(key)) return mblAutoRun(key);
+    const s=sec(); if(s) mblFootState(s,s._snap&&mblSnap(s)!==s._snap?"":"done");
+    mblMaybeRender(key);
+  }
+}
+/* 光标离开了、没有在等 / 在存、也没有没存的改动 → 才整页重画(更新收起时那一行的合计) */
+function mblMaybeRender(key){
+  if(!mblLater.has(key)||mblTimer[key]||mblBusy.has(key)) return;
+  const sec=$(`#shipList .mbl[data-mbl="${CSS.escape(key)}"]`);
+  if(sec&&(sec.contains(document.activeElement)||(sec._snap&&mblSnap(sec)!==sec._snap))) return;
+  mblLater.delete(key); render();
+}
+function mblFootState(sec,st){
+  const el=sec.querySelector("[data-autost]"); if(!el) return;
+  el.className="mbl-autost"+(st?" "+st:"");
+  const key=sec.dataset.mbl;
+  el.textContent=st==="wait"||st==="busy"?"保存中…":(st==="done"&&mblSavedAt[key]?"已自动保存 "+mblSavedAt[key]:"");
 }
 
 /* ================= 付款请款单 =================
@@ -9028,7 +9079,7 @@ function startApp(){
   /* 每 3 分钟后台刷新。⚠️ 有弹窗开着时不刷:刷新会把 state.records 整个换成新对象,弹窗里攥着的旧对象再改就落不了盘
      (2026-10-01 清关窗口填了 28 行单价点保存,提交了但数据里什么都没有,就是这个原因)。
      发货页展开的柜子有没保存的改动(hasUnsaved)也不刷,免得重画把改动冲掉 */
-  setInterval(()=>{ if(authUser() && ghReady() && !document.hidden && !currentId && !document.querySelector(".modal-mask.open") && !hasUnsaved()) loadData(true).catch(()=>{}); },180000);
+  setInterval(()=>{ if(authUser() && ghReady() && !document.hidden && !currentId && !document.querySelector(".modal-mask.open") && !hasUnsaved() && !(document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".mbl")) && !Object.keys(mblTimer).length && !mblBusy.size) loadData(true).catch(()=>{}); },180000);
 })();
 window.qSync=qSync; window.openPayReq=openPayReq; window.openStmt=openStmt; window.deleteRecord=deleteRecord; window.printRecord=printRecord; window.closeRecord=closeRecord; window.openEditQuote=openEditQuote; window.pickQuote=pickQuote; window.unpickQuote=unpickQuote; window.delQuote=delQuote; window.addQuote=addQuote;
 window.changeStatus=changeStatus; window.removeAttachment=removeAttachment;
