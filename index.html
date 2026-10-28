@@ -2503,7 +2503,7 @@ async function renumberAll(){
 }
 window.renumberAll=renumberAll;
 const fmtSize=b=>b>1048576?(b/1048576).toFixed(1)+"MB":b>1024?Math.round(b/1024)+"KB":b+"B";
-const b64encode=str=>{ const bytes=new TextEncoder().encode(str); let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin); };
+const b64encode=str=>{ const bytes=new TextEncoder().encode(str); let bin=""; for(let i=0;i<bytes.length;i+=0x8000) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000)); return btoa(bin); };
 const b64decode=b64=>{ const bin=atob(b64.replace(/\n/g,"")); const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0)); return new TextDecoder().decode(bytes); };
 
 /* ================= GitHub API ================= */
@@ -2536,7 +2536,7 @@ async function ghPut(path,contentB64,message,sha){
   const body={message,content:contentB64,branch:cfg.branch};
   if(sha) body.sha=sha;
   const r=await fetch(apiBase()+path,{method:"PUT",headers:ghHeaders(),body:JSON.stringify(body)});
-  if(!r.ok){ const t=await r.text(); throw new Error("保存失败 "+r.status+(r.status===409?"(版本冲突)":"")+" "+t.slice(0,120)); }
+  if(!r.ok){ const t=await r.text(); const e=new Error("保存失败 "+r.status+(r.status===409?"(版本冲突)":"")+" "+t.slice(0,120)); e.status=r.status; throw e; }
   return r.json();
 }
 async function ghDelete(path,sha,message){
@@ -2653,29 +2653,60 @@ function setSaving(on){
   if(on){ if(el){ el.dataset.prev=el.textContent; el.innerHTML='<span class="saving-dot"></span> 保存中…'; } }
   else if(el&&el.dataset.prev){ el.textContent=el.dataset.prev; delete el.dataset.prev; }
 }
-async function persist(message){
-  if(state.fromCache){ toast("正在同步最新数据，请稍候再操作","err"); return false; }
-  if(!authUser()){ toast("请先登录再保存","err"); return false; }   // 登录界面拦不住控制台,这里才拦得住
-  if(isViewer()){ toast("只读账号，改动不会保存","err"); return false; }
-  if(!ghReady()){ toast("请先在用户名菜单 → 数据仓库设置里配置","err"); return false; }
+/* ── 保存 ──
+   2026-10-28 用户:「创建一个，要保存好几秒」。以前每次保存:先 GET 一次元数据,文件超过 1MB 时
+   再 GET 一次 raw 把整份数据下载下来(只为了比 sha),再 PUT 整份上传 —— 三次请求、两次整份传输。
+   现在:手里有 state.sha 就直接 PUT;只有 GitHub 说版本对不上(409 / 422,同事刚存过)才下载最新、合并、再 PUT。
+   连着触发的几次保存排队合并成一次(pq),不会一次次互相顶出冲突。 */
+let pq=null, pqMsgs=[], pqWaiters=[];
+function persist(message){
+  if(state.fromCache){ toast("正在同步最新数据，请稍候再操作","err"); return Promise.resolve(false); }
+  if(!authUser()){ toast("请先登录再保存","err"); return Promise.resolve(false); }   // 登录界面拦不住控制台,这里才拦得住
+  if(isViewer()){ toast("只读账号，改动不会保存","err"); return Promise.resolve(false); }
+  if(!ghReady()){ toast("请先在用户名菜单 → 数据仓库设置里配置","err"); return Promise.resolve(false); }
+  return new Promise(res=>{ pqMsgs.push(message); pqWaiters.push(res); if(!pq) pq=persistPump(); });
+}
+async function persistPump(){
   setSaving(true);
+  let ok=false;
   try{
-    // 保存前检查远端是否被同事改过
-    const f=await ghGetFile(cfg.path);
-    if(f && f.sha!==state.sha && state.sha!==null){
-      const data=JSON.parse(f.text);
-      state.records=normAll(mergeRecords(remote_(data.records),state.records));
-      state.suppliers=mergeSuppliers(remote_(data.suppliers),state.suppliers);
-      toast("检测到同事更新,已自动合并");
+    while(pqMsgs.length){
+      const msgs=pqMsgs.splice(0), ws=pqWaiters.splice(0);
+      ok=await persistNow(msgs.length>1?`${msgs[0]} 等 ${msgs.length} 项`:msgs[0]);
+      ws.forEach(w=>w(ok));
     }
-    mblSyncAll();   // 合并完再对一次账,落盘的永远是一致的
-    /* 不缩进:同样的数据能省 38% 体积。数据文件是机器读写的,没人看 diff。 */
-    const payload=JSON.stringify({updatedAt:now(),updatedBy:cfg.name,settings:state.settings||{},records:state.records,suppliers:state.suppliers});
-    const res=await ghPut(cfg.path,b64encode(payload),`${cfg.name||"匿名"}: ${message}`,f?f.sha:undefined);
-    state.sha=res.content.sha;
-    setSaving(false); markSynced(); saveCache();
+  }finally{ pq=null; setSaving(false); if(ok) markSynced(); }   // 先撤「保存中…」再写「已同步」,反过来会被撤回成旧时间
+}
+function persistMerge(f){
+  const data=JSON.parse(f.text);
+  state.records=normAll(mergeRecords(remote_(data.records),state.records));
+  state.suppliers=mergeSuppliers(remote_(data.suppliers),state.suppliers);
+  toast("检测到同事更新,已自动合并");
+}
+async function persistNow(message){
+  try{
+    let base=state.sha;
+    if(!base){                       // 还没有版本号(第一次建文件等):照老办法先读一次
+      const f=await ghGetFile(cfg.path);
+      if(f&&state.sha!==null&&f.sha!==state.sha) persistMerge(f);
+      base=f?f.sha:undefined;
+    }
+    for(let tries=0;;tries++){
+      mblSyncAll();   // 合并完再对一次账,落盘的永远是一致的
+      /* 不缩进:同样的数据能省 38% 体积。数据文件是机器读写的,没人看 diff。 */
+      const payload=JSON.stringify({updatedAt:now(),updatedBy:cfg.name,settings:state.settings||{},records:state.records,suppliers:state.suppliers});
+      try{
+        const res=await ghPut(cfg.path,b64encode(payload),`${cfg.name||"匿名"}: ${message}`,base);
+        state.sha=res.content.sha; break;
+      }catch(e){
+        if(!(e.status===409||e.status===422)||tries>=2) throw e;
+        const f=await ghGetFile(cfg.path);        // 同事刚存过:取最新 → 合并 → 用新版本号再存
+        if(f){ if(f.sha!==base) persistMerge(f); base=f.sha; } else base=undefined;
+      }
+    }
+    saveCache();
     return true;
-  }catch(e){ setSaving(false); toast(e.message,"err"); return false; }
+  }catch(e){ toast(e.message,"err"); return false; }
 }
 
 /* ================= 业务操作 ================= */
