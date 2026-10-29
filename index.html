@@ -4134,7 +4134,7 @@ function shipSecHTML(rec){
         <div class="shb-hd"><span class="fold">▼</span><span class="shb-n">第 ${i+1} 批</span>
           <span class="shb-st ${st[1]}">${st[0]}</span>
           <span class="shb-sum">${esc(b.bl||"")}${b.eta?` · ETA ${fmtD(b.eta)}`:""}${b.arrived?` · 到货 ${fmtD(b.arrived)}`:(arrByEta(b)?" · 按 ETA 已到货":"")}</span>
-          <span class="hdbtns">${invBtn(b)}${isViewer()?"":`<button class="btn btn-sm" data-shedit="${esc(b.bid||"")}">✎ 编辑</button>${i?`<button class="btn btn-sm" data-shdel="${esc(b.bid)}" title="删除这一批">🗑</button>`:""}`}</span>
+          <span class="hdbtns">${invBtn(b)}${isViewer()?"":`<button class="btn btn-sm" data-shedit="${esc(b.bid||"")}">✎ 编辑</button><button class="btn btn-sm" data-shdel="${esc(b.bid||"__first__")}" title="${i?"删除这一批":"删除第 1 批，后面的批次往前顺延"}">🗑</button>`}</span>
         </div>
         <div class="shb-bd">${shipKvHTML(b,bLate(b))}
           <div class="att-sub"><span>货物信息</span><span class="tip">按明细行填，合计自动算</span></div>
@@ -8227,19 +8227,43 @@ async function saveEditShip(){
   closeModal("mShip"); render(); openDrawer(editingShipId,true);
   if(await persist(`${rec.id} 更新物流信息${tag}${wb}`)) toast("已保存","ok");
 }
+/* 删一批。rec.ship 永远是第 1 批、shipMore 是第 2 批起 —— 删第 1 批就把第 2 批提上来当 rec.ship,
+   它的附件 / 文件夹从「物流#bid」改回「物流」,整柜共享的引用 share.bid 也改成 ""。
+   这一批自己传的附件(不是整柜共享的引用)还在就不让删;共享引用和空文件夹跟着批次一起清掉
+   (共享引用只在批次存在时才会被 mblSyncAll 对账,批次没了不清就成了孤儿) */
 async function delShipBatch(id,bid){
   if(isViewer()) return denyRO();
   const rec=getRec(id); if(!rec||!bid) return;
-  const idx=shMore(rec).findIndex(b=>b.bid===bid); if(idx<0) return;
-  const n=idx+2;
-  const na=(rec.attachments||[]).filter(a=>(a.group||"需求")===shGroup(bid)).length;
-  if(na) return toast(`第 ${n} 批还挂着 ${na} 个附件，请先删除附件`,"err");
-  if(!confirm(`确认删除第 ${n} 批发货记录?`)) return;
-  const b=rec.shipMore.splice(idx,1)[0];
-  shbFold.delete(id+"|"+bid);
-  log(rec,`删除第 ${n} 批发货`,shipDesc(b)||"（空批次）");
+  const first=bid==="__first__"; if(first) bid="";
+  const bs=shBatches(rec), idx=bs.findIndex(b=>(b.bid||"")===bid); if(idx<0) return;
+  if(first&&bs.length<2) return;            // 只有一批时不删,用「编辑」清空
+  const n=idx+1, g=shGroup(bid);
+  const own=(rec.attachments||[]).filter(a=>(a.group||"需求")===g&&!a.share).length;
+  if(own) return toast(`第 ${n} 批还挂着 ${own} 个附件，请先删除或移到别的批次`,"err");
+  if(!confirm(first?`确认删除第 1 批发货记录？
+删掉后第 2 批变成第 1 批，后面的依次往前。`:`确认删除第 ${n} 批发货记录?`)) return;
+  rec.attachments=(rec.attachments||[]).filter(a=>(a.group||"需求")!==g);       // 只剩共享引用了
+  if(Array.isArray(rec.attFolders)) rec.attFolders=rec.attFolders.filter(f=>f.group!==g);
+  let gone;
+  if(first){
+    gone=rec.ship||{};
+    const nb=rec.shipMore.shift(), ob=nb.bid; delete nb.bid;
+    rec.ship=nb;
+    if(!rec.shipMore.length) delete rec.shipMore;
+    const og=shGroup(ob);
+    (rec.attachments||[]).forEach(a=>{ if(a.group===og){ a.group="物流"; if(a.share) a.share.bid=""; } });
+    (rec.attFolders||[]).forEach(f=>{ if(f.group===og) f.group="物流"; });
+    const fk=id+"|"+(ob||"1"), wasFold=shbFold.has(fk); shbFold.delete(fk); shbFold.delete(id+"|1");
+    if(wasFold) shbFold.add(id+"|1");
+    log(rec,"删除第 1 批发货",(shipDesc(gone)||"（空批次）")+"；原第 2 批改为第 1 批");
+  }else{
+    gone=rec.shipMore.splice(idx-1,1)[0];
+    if(!rec.shipMore.length) delete rec.shipMore;
+    shbFold.delete(id+"|"+bid);
+    log(rec,`删除第 ${n} 批发货`,shipDesc(gone)||"（空批次）");
+  }
   render(); openDrawer(id,true);
-  if(await persist(`${rec.id} 删除第 ${n} 批发货`)) toast("已删除","ok");
+  if(await persist(`${rec.id} 删除第 ${n} 批发货`)) toast(first?"已删除，原第 2 批改为第 1 批":"已删除","ok");
 }
 
 /* ================= 仓库体积 ================= */
