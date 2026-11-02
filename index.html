@@ -2042,7 +2042,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
         <div class="fld"><label>贸易国（地区）</label><input id="csTrade" placeholder="香港"></div>
         <div class="fld"><label>运抵国（地区）</label><input id="csArrive" placeholder="美国"></div>
       </div>
-      <div class="hint">USD 报关价由模板里的公式算：采购总价 × 加价率 ÷ 汇率 × 利润点。汇率和利润点会记住，下次预填。</div>
+      <div class="hint">USD 报关价按人民币总价核算：总价 = 采购总价 × 加价率 × 利润点 ÷ 汇率（四舍五入到分），单价 = 总价 ÷ 数量倒挤。汇率和利润点会记住，下次预填。</div>
     </div>
     <div class="md-ft"><button class="btn" data-close="mCustoms">取消</button><button class="btn btn-ink" id="csGo" title="Ctrl+Enter">生成并下载</button></div>
   </div>
@@ -4420,6 +4420,8 @@ function openCustoms(mbl){
 }
 
 function csFillWorkbook(wb,d){
+  /* 模板里的公式带着旧的缓存值(合计、报关单 E 列等),让 Excel / WPS 打开时整本重算,不显示旧数 */
+  wb.calcProperties=Object.assign({},wb.calcProperties,{fullCalcOnLoad:true});
   const sc=wb.getWorksheet("Sales Contract"), ci=wb.getWorksheet("Template_CI"),
         pl=wb.getWorksheet("Template_PL"), cs=wb.getWorksheet("报关单及申报要素");
   if(!sc||!ci||!pl||!cs) throw new Error("模板里少了 sheet，检查 customs_template.xlsx");
@@ -4429,6 +4431,7 @@ function csFillWorkbook(wb,d){
   set(sc,"B11",d.buyer.name); set(sc,"B12",d.buyer.addr);
   set(sc,"B13",d.buyer.attn); set(sc,"B14",d.buyer.tel);
   set(sc,"H18",d.markup);
+  set(sc,"G19",null);   // 「单价RMB」那一列不用了(跟她们的新模板一致)
   /* 合计行下面这几格是跟着货位段走的,不能再写死行号 ——
      模板从 16 行加长到 60 行时这里整体下移了 44 行 */
   const T=R.scTotal;
@@ -4444,12 +4447,16 @@ function csFillWorkbook(wb,d){
     set(sc,`A${n}`,i+1);
     /* 公式逐行写死,不指望模板里预先拉好 —— 老模板第 30-35 行就漏了 E/F/G,
        导致第 11 项往后单价总价栏是空的 */
+    /* 2026-11-02 李会计 / 刘晓琳改的算法:报关金额以人民币总价核算,单价倒挤。
+       以前是先算 USD 单价(四舍五入到分)再乘数量,数量一大总价就跟人民币总价折出来的对不上。
+       现在:总价 M = ROUND(含税人民币 I × 利润点 K ÷ 汇率 J, 2);单价 L = M ÷ 数量(不取整,显示两位)。
+       G 列「单价RMB」她们的模板里删了,不再写 */
     sc.getCell(`E${n}`).value={formula:`L${n}`};
     sc.getCell(`F${n}`).value={formula:`M${n}`};
-    sc.getCell(`G${n}`).value={formula:`I${n}/C${n}`};
+    sc.getCell(`G${n}`).value=null;
     sc.getCell(`I${n}`).value={formula:`H${n}*$H$18`};
-    sc.getCell(`L${n}`).value={formula:`ROUND(G${n}/J${n}*K${n},2)`};
-    sc.getCell(`M${n}`).value={formula:`L${n}*C${n}`};
+    sc.getCell(`M${n}`).value={formula:`ROUND(I${n}*K${n}/J${n},2)`};
+    sc.getCell(`L${n}`).value={formula:`M${n}/C${n}`};
     set(pl,`D${n}`,r.pkgs); set(pl,`E${n}`,r.gw); set(pl,`F${n}`,r.nw); set(pl,`G${n}`,r.cbm);
   });
   for(let n=R.scFirst+d.rows.length;n<=R.scLast;n++){
@@ -4463,9 +4470,14 @@ function csFillWorkbook(wb,d){
     /* 报关单是中文的,F 列要中文单位。没填中文的先退回英文(以前一直是这么填的),警告里会提示补 */
     set(cs,`B${n}`,r.hs); set(cs,`C${n}`,r.cn); set(cs,`F${n}`,r.unitCn||r.unit);
     set(cs,`L${n}`,"中国"); set(cs,`M${n}`,d.arrive); set(cs,`N${n}`,r.origin);
+    /* 报关单金额也照新算法:总价直接取销售合同的总价,单价 = 总价 ÷ 数量(倒挤)。
+       以前模板里是 单价取合同单价、总价 = 单价 × 数量 */
+    const s=R.scFirst+i;
+    cs.getCell(`J${n}`).value={formula:`'Sales Contract'!F${s}`};
+    cs.getCell(`I${n}`).value={formula:`J${n}/E${n}`};
   });
   for(let n=R.csFirst+d.rows.length;n<=R.csLast;n++)
-    ["B","C","F","L","M","N","O"].forEach(c2=>set(cs,`${c2}${n}`,null));
+    ["B","C","F","I","J","L","M","N","O"].forEach(c2=>set(cs,`${c2}${n}`,null));   // I/J 也清:空行的 J÷E 会是 #DIV/0!
   d.rows.forEach((r,i)=>{
     const n=R.elFirst+i; if(n>R.elLast) return;
     set(cs,`A${n}`,i+1);
