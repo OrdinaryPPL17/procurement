@@ -2971,8 +2971,8 @@ async function uploadFiles(id,files,group,fid){
       let blob=file, name=file.name;
       if(isImg){ blob=await compressImage(file); name=name.replace(/\.[^.]+$/,"")+".jpg"; }
       if(blob.size>25*1048576){ toast(`${file.name} 超过25MB,已跳过`,"err"); continue; }
-      const safe=name.replace(/[^\w.\-\u4e00-\u9fff]+/g,"_");
-      const path=`uploads/${new Date().getFullYear()}/${id}/${Date.now()}_${safe}`;
+      const safe=upName(name);
+      const path=`uploads/${new Date().getFullYear()}/${id}/${Date.now()}_${upPath(name)}`;
       toast(`上传中 ${safe} (${fmtSize(blob.size)})…`);
       const res=await ghPut(path,await blobToB64(blob),`${cfg.name}: 上传附件 ${rec.id}`);
       const at={name:safe,path,sha:res.content.sha,size:blob.size,type:isImg?"image":"file",group:group||"需求",by:cfg.name,at:now()};
@@ -4517,7 +4517,7 @@ function csFileName(g,no){
   const t=new Date(), p2=n=>String(n).padStart(2,"0");
   const ymd=String(t.getFullYear()).slice(2)+p2(t.getMonth()+1)+p2(t.getDate());
   const titles=[...new Set(g.items.map(x=>x.r.title).filter(Boolean))].join("");
-  return `${ymd} ${titles} ${String(no||g.mbl).replace(/[^0-9A-Za-z]+/g,"")} 报关资料.xlsx`
+  return `${ymd} ${titles} ${String(no||g.mbl).replace(/[^0-9A-Za-z-]+/g,"")} 报关资料.xlsx`
          .replace(/[\\/:*?"<>|]+/g,"").trim();
 }
 
@@ -4800,8 +4800,8 @@ async function uploadBl(){
     let blob=file, name=file.name;
     if(isImg){ blob=await compressImage(file); name=name.replace(/\.[^.]+$/,"")+".jpg"; }
     if(blob.size>25*1048576) throw new Error("超过 25MB");
-    const safe=name.replace(/[^\w.\-一-鿿]+/g,"_");
-    const path=`uploads/${new Date().getFullYear()}/MBL_${g.mbl.replace(/[^\w\-]+/g,"_")}/${Date.now()}_${safe}`;
+    const safe=upName(name);
+    const path=`uploads/${new Date().getFullYear()}/MBL_${g.mbl.replace(/[^\w\-]+/g,"_")}/${Date.now()}_${upPath(name)}`;
     const res=await ghPut(path,await blobToB64(blob),`${cfg.name}: 上传提单 ${g.mbl}`);
     const doc={name:safe,path,sha:res.content.sha,size:blob.size,type:isImg?"image":"file",kind,by:cfg.name,at:now()};
     const old=mblBlDoc(g);
@@ -5001,8 +5001,8 @@ async function mdUpload(files){
         let blob=f, name=f.name;
         if(isImg){ blob=await compressImage(f); name=name.replace(/\.[^.]+$/,"")+".jpg"; }
         if(blob.size>25*1048576){ toast(`${f.name} 超过 25MB，跳过`,"err"); continue; }
-        const safe=name.replace(/[^\w.\-一-鿿]+/g,"_");
-        const path=`${dir}/${Date.now()}_${safe}`;
+        const safe=upName(name);
+        const path=`${dir}/${Date.now()}_${upPath(name)}`;
         const res=await ghPut(path,await blobToB64(blob),`${cfg.name}: ${K.name} ${g.mbl}`);
         cur.push({kind:docKind,name:safe,path,sha:res.content.sha,size:blob.size,type:isImg?"image":"file",by:cfg.name,at:now()});
         n++;
@@ -5103,8 +5103,8 @@ async function phUpload(files){
       btn.textContent=`上传中 ${n+1}/${list.length}…`;
       try{
         const blob=await compressImage(f,1600,.82);
-        const safe=f.name.replace(/\.[^.]+$/,"").replace(/[^\w.\-一-鿿]+/g,"_")+".jpg";
-        const path=`${dir}/${Date.now()}_${safe}`;
+        const base=f.name.replace(/\.[^.]+$/,"")+".jpg", safe=upName(base);
+        const path=`${dir}/${Date.now()}_${upPath(base)}`;
         const res=await ghPut(path,await blobToB64(blob),`${cfg.name}: 装箱照片 ${g.mbl}`);
         arr.push({name:safe,path,sha:res.content.sha,size:blob.size,ctn,by:cfg.name,at:now()});
         n++;
@@ -6156,7 +6156,7 @@ function jobFullNo(r){
    (系统的 Microsoft Print to PDF 不认 title,那个只能手填)。
    格式照用户手工命名的习惯:HKG26016NM10 上海西斯 易燃品安全柜30预付款申请 */
 function payReqFileName(d,suffix){
-  const po=String(d.po||"").replace(/[^0-9A-Za-z]+/g,"");
+  const po=String(d.po||"").replace(/[^0-9A-Za-z-]+/g,"");   // 保留「-」:HKG26015-NM05(刘晓琳:下载的文件名少了一个 -)
   const kind=String(d.kind||"").trim();
   let note=String(d.note||"").replace(/%/g,"").trim();
   if(kind && note.indexOf(kind)>=0) note=note.replace(kind,"").trim();   /* 备注里已经写了"预付款"就不重复 */
@@ -7435,6 +7435,12 @@ function invGenerate(){
 }
 $("#invGo").addEventListener("click",invGenerate);
 
+/* ── 上传文件的名字 ──
+   刘晓琳:空格被系统换成了「_」,文件名跟她们存的对不上。
+   显示名(附件列表、下载时的文件名)= 原文件名,只去掉 Windows 文件名不允许的字符;
+   仓库路径照旧只留 字母数字 . - 中文,外加空格(空格 fetch 会自动编成 %20)。已经传上去的老文件名不动 */
+const upName=n=>String(n||"").replace(/[\\/:*?"<>|\u0000-\u001f]+/g,"").replace(/\s+/g," ").trim()||"未命名";
+const upPath=n=>String(n||"").replace(/[^\w.\- \u4e00-\u9fff]+/g,"_").replace(/ +/g," ").trim()||"file";
 /* ================= 打包导出 =================
    zip 里放：<单号>.pdf（信息汇总） + 各分类文件夹下的全部附件（保留自建子文件夹和顺序）。
    zip 用自写的 store 模式打包器(不压缩,附件本身多是 jpg/pdf 已压缩),不引第三方库。
