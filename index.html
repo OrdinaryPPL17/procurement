@@ -1665,7 +1665,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 </header>
 
 <div class="filters">
-  <input type="search" id="fSearch" placeholder="搜索标题 / PO号 / 项目号 / 供应商 / 目的地…" title="合同PO号、项目号、PR编号、标题、供应商、目的地都能搜;分隔符可省略">
+  <input type="search" id="fSearch" placeholder="搜索标题 / PO号 / 项目号 / MBL# / 供应商…" title="合同PO号、项目号、PR编号、标题、供应商、目的地、MBL# / 提单号、柜号都能搜;分隔符可省略">
   <button class="btn btn-sm only-mobile-ib" id="btnFilterToggle">筛选 ▾</button>
   <select id="fJob"><option value="">全部项目</option></select>
   <select id="fDestSel"><option value="">全部目的地</option></select>
@@ -3631,8 +3631,11 @@ function renderCal(){
 function searchParts(r){
   let sup="";
   try{ sup=orderInfo(r).supplier||""; }catch(e){}
+  /* 每一批的 MBL# 和柜号也能搜(用户:发货页应该能搜 MBL#)。看板 / 项目进度 / 发货共用这一个搜索框 */
+  const ship=[];
+  try{ shBatches(r).forEach(b=>{ if(b.bl) ship.push(b.bl); if(b.ctnr) ship.push(b.ctnr); }); }catch(e){}
   return [r.title,r.titleEn,r.desc,r.descEn,r.id,r.job,r.sub,fullJob(r),r.po,r.dest,sup,
-    ...(r.quotes||[]).map(x=>x.supplier)].filter(Boolean).map(String);
+    ...(r.quotes||[]).map(x=>x.supplier),...ship].filter(Boolean).map(String);
 }
 /* 只留字母数字汉字:这样 "HKG26024-NM02" / "hkg26024nm02" / "26024 nm02" 都能命中同一条 */
 const sKey=v=>String(v||"").toLowerCase().replace(/[^0-9a-z\u4e00-\u9fa5]+/g,"");
@@ -4234,7 +4237,12 @@ function shipGroups(){
   state.records.forEach(r=>{
     if(!passFilter(r)) return;
     const bs=shBatches(r);
+    /* 搜的是 MBL# / 柜号:只列对上的那几批,同一单的别的柜不跟着出来 */
+    const q=$("#fSearch").value.trim(), qk=sKey(q);
+    const hitB=b=>!!qk&&[b.bl,b.ctnr].some(v=>v&&sKey(v).includes(qk));
+    const onlyHit=bs.some(hitB);
     bs.forEach((b,i)=>{
+      if(onlyHit&&!hitB(b)) return;
       const mbl=String(b.bl||"").trim();
       /* 有 MBL 号的一定列出来;没号的只列已经在物流/完结的,免得把还没发的也堆进来 */
       if(!mbl && !(r.status==="物流"||r.status==="完结")) return;
