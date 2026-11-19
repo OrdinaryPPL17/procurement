@@ -4362,6 +4362,7 @@ function mblBodyHTML(g){
         <div class="mbl-docs-g"><span class="mbl-docs-l">生成</span>
           <button class="btn btn-sm" data-customs="${esc(g.mbl)}" title="出口报关：销售合同 / 发票 / 装箱单 / 报关单">报关资料<span class="doc-sub">出口</span></button>
           <button class="btn btn-sm" data-cipl="${esc(g.mbl)}" title="进口清关：Commercial Invoice + Packing List">清关文件<span class="doc-sub">进口</span></button>
+          <button class="btn btn-sm" data-invpr="${esc(g.mbl)}" title="把这一柜各订单「合同与付款 → 发票」里的增值税发票拼成两张一页的 A4，打开预览打印">发票<span class="doc-sub">打印</span></button>
         </div>
         <div class="mbl-docs-g"><span class="mbl-docs-l">附件</span>
           ${phBtnHTML(g)}${docBtnHTML(g,"cd")}${blActHTML(g)}${docBtnHTML(g,"cc")}
@@ -5636,6 +5637,8 @@ function bindShip(){
     if(add) add.addEventListener("click",e=>{ e.stopPropagation(); openMblPick(add.dataset.addto); });
     const cus=sec.querySelector("[data-customs]");
     if(cus) cus.addEventListener("click",e=>{ e.stopPropagation(); openCustoms(cus.dataset.customs); });
+    const ip=sec.querySelector("[data-invpr]");
+    if(ip) ip.addEventListener("click",e=>{ e.stopPropagation(); printInvoices(ip.dataset.invpr); });
     const cp=sec.querySelector("[data-cipl]");
     if(cp) cp.addEventListener("click",e=>{ e.stopPropagation();
       if(sec._snap&&mblSnap(sec)!==sec._snap) return toast("这一柜有没保存的改动，先点「保存这一柜」再生成","err");
@@ -7461,6 +7464,119 @@ function invGenerate(){
   toast("已生成 "+a.download,"ok");
 }
 $("#invGo").addEventListener("click",invGenerate);
+
+/* ── 打印发票:一柜的增值税发票拼成 A4,上下两张 ──
+   用户要的:「自动调取合同里的发票信息，两个发票上下在一张A4纸上」(样本 USG0347771_HKG26-015-B7)。
+   发票从每个订单「合同与付款」下名字带「发票」的文件夹里取(模板是「5. 发票」,含子文件夹),按柜里订单顺序。
+   PDF 多页就每页占一格;jpg / png 也收。
+   ⚠️ 税务局电子发票(Suwell OFD 转的 PDF)的红章是 /Stamp 注释,不在正文里 —— pdf-lib 的 embedPage 只嵌正文,
+   直接嵌红章就没了。所以先「拍平」:把每个注释的外观流 /AP /N 按 Rect 画进页面内容,再删掉注释,然后嵌入(矢量,不失真) */
+function invPrFiles(g){
+  const out=[], miss=[];
+  const seen=new Set();
+  g.items.forEach(x=>{
+    if(seen.has(x.r.id)) return; seen.add(x.r.id);
+    const r=getRec(x.r.id)||x.r, G="合同与付款";
+    const fds=afAll(r,G).filter(f=>/发票/.test(f.name));
+    const ids=new Set(); fds.forEach(f=>{ ids.add(f.fid); afDesc(r,f.fid).forEach(d=>ids.add(d)); });
+    const fs=(r.attachments||[]).filter(a=>(a.group||"需求")===G&&ids.has(a.fid||"")&&/\.(pdf|jpe?g|png)$/i.test(a.name||a.path||""));
+    if(!fs.length) miss.push(poShortNo(r)+" "+(r.title||""));
+    fs.forEach(a=>out.push({a,r}));
+  });
+  return {files:out,miss};
+}
+/* 注释拍平:返回一份只有一页、红章已经画进正文的新 PDF 的那一页 */
+async function invFlatPage(L,src,i){
+  const {PDFDocument,PDFName,PDFArray,PDFDict,PDFNumber}=L;
+  const tmp=await PDFDocument.create();
+  const [pg]=await tmp.copyPages(src,[i]); tmp.addPage(pg);
+  const ctx=tmp.context, node=pg.node;
+  const ann=node.lookup(PDFName.of("Annots"));
+  if(ann instanceof PDFArray&&ann.size()){
+    let res=node.lookup(PDFName.of("Resources"));
+    if(!(res instanceof PDFDict)){ res=ctx.obj({}); node.set(PDFName.of("Resources"),res); }
+    let xo=res.lookup(PDFName.of("XObject"));
+    if(!(xo instanceof PDFDict)){ xo=ctx.obj({}); res.set(PDFName.of("XObject"),xo); }
+    const num=v=>v instanceof PDFNumber?v.asNumber():Number(v&&v.asNumber?v.asNumber():v);
+    const arr=a=>a instanceof PDFArray?a.asArray().map(x=>num(ctx.lookup(x))):null;
+    let ops="";
+    for(let k=0;k<ann.size();k++){
+      const a=ann.lookup(k); if(!(a instanceof PDFDict)) continue;
+      const fl=num(a.lookup(PDFName.of("F"))||0)||0; if(fl&2) continue;            // Hidden
+      const ap=a.lookup(PDFName.of("AP")); if(!(ap instanceof PDFDict)) continue;
+      let nRef=ap.get(PDFName.of("N")), nObj=ctx.lookup(nRef);
+      if(nObj instanceof PDFDict&&!nObj.dict){                                       // 有多种状态的外观:取 /AS 那一个
+        const as=a.lookup(PDFName.of("AS")); nRef=as?nObj.get(as):null; nObj=nRef?ctx.lookup(nRef):null; }
+      if(!nObj||!nObj.dict) continue;
+      const rect=arr(a.lookup(PDFName.of("Rect"))); if(!rect) continue;
+      const bb=arr(nObj.dict.lookup(PDFName.of("BBox")))||[0,0,1,1];
+      const M=arr(nObj.dict.lookup(PDFName.of("Matrix")))||[1,0,0,1,0,0];
+      const pts=[[bb[0],bb[1]],[bb[2],bb[1]],[bb[0],bb[3]],[bb[2],bb[3]]].map(([x,y])=>[M[0]*x+M[2]*y+M[4],M[1]*x+M[3]*y+M[5]]);
+      const bx0=Math.min(...pts.map(p=>p[0])),bx1=Math.max(...pts.map(p=>p[0])),by0=Math.min(...pts.map(p=>p[1])),by1=Math.max(...pts.map(p=>p[1]));
+      const rx0=Math.min(rect[0],rect[2]),rx1=Math.max(rect[0],rect[2]),ry0=Math.min(rect[1],rect[3]),ry1=Math.max(rect[1],rect[3]);
+      if(bx1-bx0<=0||by1-by0<=0) continue;
+      const sx=(rx1-rx0)/(bx1-bx0), sy=(ry1-ry0)/(by1-by0);
+      const name="FlatAnn"+k;
+      const ref=nRef instanceof L.PDFRef?nRef:ctx.register(nObj);
+      xo.set(PDFName.of(name),ref);
+      ops+=`q ${sx} 0 0 ${sy} ${rx0-sx*bx0} ${ry0-sy*by0} cm /${name} Do Q\n`;
+    }
+    if(ops){
+      const st=ctx.flateStream(ops);
+      const cs=node.get(PDFName.of("Contents")), csv=ctx.lookup(cs);
+      const list=csv instanceof PDFArray?csv.asArray():[cs];
+      node.set(PDFName.of("Contents"),ctx.obj([ctx.register(ctx.flateStream("q\n")),...list,ctx.register(ctx.flateStream("Q\n")),ctx.register(st)]));
+    }
+    node.delete(PDFName.of("Annots"));
+  }
+  return pg;
+}
+async function invComposePdf(items){
+  await loadPdfLib(); const L=window.PDFLib;
+  const out=await L.PDFDocument.create();
+  const W=595.28,H=841.89,M=20,half=H/2;
+  const slots=[];   // {embed|image, w, h}
+  for(const it of items){
+    const buf=it.buf, nm=it.name||"";
+    if(/\.pdf$/i.test(nm)){
+      const src=await L.PDFDocument.load(buf,{ignoreEncryption:true});
+      for(let i=0;i<src.getPageCount();i++){
+        const fp=await invFlatPage(L,src,i);
+        const [e]=await out.embedPages([fp]);
+        slots.push({e,w:e.width,h:e.height});
+      }
+    }else{
+      const im=/\.png$/i.test(nm)?await out.embedPng(buf):await out.embedJpg(buf);
+      slots.push({im,w:im.width,h:im.height});
+    }
+  }
+  for(let i=0;i<slots.length;i+=2){
+    const pg=out.addPage([W,H]);
+    [slots[i],slots[i+1]].forEach((s,j)=>{ if(!s) return;
+      const sc=Math.min((W-2*M)/s.w,(half-2*M)/s.h), w=s.w*sc, h=s.h*sc;
+      const x=(W-w)/2, y=(j===0?half:0)+(half-h)/2;
+      if(s.e) pg.drawPage(s.e,{x,y,width:w,height:h}); else pg.drawImage(s.im,{x,y,width:w,height:h});
+    });
+  }
+  return {bytes:await out.save(),n:slots.length,pages:Math.ceil(slots.length/2)};
+}
+async function printInvoices(mbl){
+  const g=shipGroups().find(x=>x.key===mbl); if(!g) return toast("找不到这一柜","err");
+  const {files,miss}=invPrFiles(g);
+  if(!files.length) return toast("这一柜的订单在「合同与付款 → 发票」里还没有发票","err");
+  const tab=window.open("","_blank");   // 先开标签页,不然异步之后被拦
+  if(tab) tab.document.write(`<meta charset="utf-8"><title>正在拼发票…</title><p style="font:14px sans-serif;padding:24px;color:#555">正在拼 ${files.length} 张发票…</p>`);
+  try{
+    const items=[];
+    for(const f of files){ const url=await ghGetBlob(f.a.path,f.a.name); items.push({name:f.a.name,buf:await (await fetch(url)).arrayBuffer()}); }
+    const r=await invComposePdf(items);
+    const csNo=String((g.items.find(x=>String(x.b.csNo||"").trim())||{b:{}}).b.csNo||"").trim();
+    const name=zipSafe([g.mbl,csNo,"发票"].filter(Boolean).join(" "))+".pdf";
+    const url=URL.createObjectURL(new Blob([r.bytes],{type:"application/pdf"}));
+    if(tab) writePreviewTab(tab,url,name); else window.open(url,"_blank");
+    toast(`已拼好 ${r.n} 张发票，共 ${r.pages} 页`+(miss.length?` · 没有发票：${miss.join("、")}`:""),miss.length?"err":"ok");
+  }catch(e){ if(tab) tab.close(); toast("发票拼版失败："+(e.message||e),"err"); }
+}
 
 /* ── 上传文件的名字 ──
    刘晓琳:空格被系统换成了「_」,文件名跟她们存的对不上。
