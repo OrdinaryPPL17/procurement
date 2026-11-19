@@ -1136,7 +1136,7 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 /* 按比例分配,整行均匀撑满。用固定 px 的话多余空间会全被 MBL# 那列吃掉,
    号码孤零零在最左、数值挤在右边,眼睛又要横跨一大段 */
 .mbl-cols{display:grid;
-  grid-template-columns:12px minmax(190px,3fr) minmax(44px,1fr) minmax(120px,2.2fr) minmax(66px,1.2fr)
+  grid-template-columns:12px minmax(190px,3fr) minmax(130px,2fr) minmax(44px,1fr) minmax(120px,2.2fr) minmax(66px,1.2fr)
     minmax(76px,1.4fr) minmax(56px,1fr) minmax(84px,1.5fr) minmax(84px,1.5fr) minmax(60px,1.2fr);
   gap:0 12px;align-items:center}
 .mbl-head{padding:0 14px 7px;font-size:10px;font-weight:700;color:var(--steel);letter-spacing:.08em;opacity:.75}
@@ -1150,6 +1150,7 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 .mbl-no{font-family:var(--mono);font-weight:700;font-size:13.5px;color:var(--ink)}
 .mbl-no.none{color:var(--steel);font-weight:600;font-family:inherit;font-size:13px}
 .mbl-n{font-size:12px;color:var(--steel);text-align:right;font-family:var(--mono)}
+.mbl-cs{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
 .mbl-amt{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);text-align:right}
 .mbl-sub{font-family:var(--mono);font-size:11px;color:var(--steel);text-align:right}
 .mbl-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-align:right}
@@ -1157,7 +1158,7 @@ body.entering>main{animation:appIn .55s cubic-bezier(.22,.61,.36,1) .13s both}
 /* 绿色变量叫 --approve,没有 --ok —— 写错名字的话颜色和边框会静默失效 */
 .mbl-ok i{font-style:normal;font-size:10px;color:var(--approve);background:var(--approve-soft);border-radius:999px;padding:2px 7px;white-space:nowrap}
 @media(max-width:1100px){
-  .mbl-cols{grid-template-columns:12px minmax(120px,1fr) repeat(4,auto);gap:4px 10px}
+  .mbl-cols{grid-template-columns:12px minmax(120px,1fr) repeat(5,auto);gap:4px 10px}
   .mbl-head{display:none}
 }
 /* 展开区:米白底,里面每一块纯白卡片浮起来 —— 不然共享字段和几个订单的明细糊成一片。
@@ -1665,7 +1666,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
 </header>
 
 <div class="filters">
-  <input type="search" id="fSearch" placeholder="搜索标题 / PO号 / 项目号 / MBL# / 供应商…" title="合同PO号、项目号、PR编号、标题、供应商、目的地、MBL# / 提单号、柜号都能搜;分隔符可省略">
+  <input type="search" id="fSearch" placeholder="搜索标题 / PO号 / 项目号 / MBL# / 供应商…" title="合同PO号、项目号、PR编号、标题、供应商、目的地、MBL# / 提单号、柜号、结汇合同号都能搜;分隔符可省略">
   <button class="btn btn-sm only-mobile-ib" id="btnFilterToggle">筛选 ▾</button>
   <select id="fJob"><option value="">全部项目</option></select>
   <select id="fDestSel"><option value="">全部目的地</option></select>
@@ -1697,7 +1698,7 @@ body.dark .psub .st.报价,body.dark .psub .st.审批{background:#1E2A3C;color:#
       <label class="ship-only"><input type="checkbox" id="shipHideDone"> 只看未到货</label>
       <button class="btn btn-primary btn-sm" id="btnNewMbl">＋ 新建 MBL#</button>
     </span></div>
-  <div class="mbl-head mbl-cols"><span></span><span>MBL#</span><span style="text-align:right">订单</span>
+  <div class="mbl-head mbl-cols"><span></span><span>MBL#</span><span>结汇合同号</span><span style="text-align:right">订单</span>
     <span style="text-align:right">金额</span><span style="text-align:right">CBM</span><span style="text-align:right">毛重</span>
     <span style="text-align:right">件数</span><span style="text-align:right">ETD</span><span style="text-align:right">ETA</span><span></span></div>
   <div id="shipList"></div>
@@ -3633,7 +3634,7 @@ function searchParts(r){
   try{ sup=orderInfo(r).supplier||""; }catch(e){}
   /* 每一批的 MBL# 和柜号也能搜(用户:发货页应该能搜 MBL#)。看板 / 项目进度 / 发货共用这一个搜索框 */
   const ship=[];
-  try{ shBatches(r).forEach(b=>{ if(b.bl) ship.push(b.bl); if(b.ctnr) ship.push(b.ctnr); }); }catch(e){}
+  try{ shBatches(r).forEach(b=>{ if(b.bl) ship.push(b.bl); if(b.ctnr) ship.push(b.ctnr); if(b.csNo) ship.push(b.csNo); }); }catch(e){}
   return [r.title,r.titleEn,r.desc,r.descEn,r.id,r.job,r.sub,fullJob(r),r.po,r.dest,sup,
     ...(r.quotes||[]).map(x=>x.supplier),...ship].filter(Boolean).map(String);
 }
@@ -4106,6 +4107,7 @@ function shipKvHTML(b,late){
     <dt>DESTINATION</dt><dd>${esc(b.dest||"—")}</dd>
     <dt>ETD</dt><dd class="mono">${b.etd?fmtD(b.etd):"—"}</dd>
     <dt>ETA</dt><dd class="mono">${b.eta?fmtD(b.eta):"—"}${late?' <span style="color:var(--reject);font-weight:700">已超期</span>':""}${arrByEta(b)?' <span class="kv-arr" title="没填实际到货日期，ETA 已到，按 ETA 算">已到货（按 ETA）</span>':""}</dd>
+    ${b.csNo?`<dt>结汇合同号</dt><dd class="mono">${esc(b.csNo)}</dd>`:""}
     <dt>船名 / 航次</dt><dd>${esc(b.vessel||"—")}</dd>
     <dt>柜号 / 唛头</dt><dd class="mono">${esc(b.ctnr||"—")}</dd>
     ${b.arrived?`<dt>实际到货</dt><dd class="mono">${fmtD(b.arrived)}</dd>`:""}
@@ -4216,7 +4218,8 @@ function customsTotals(rows){
 /* ================= 发货(MBL 拼柜)视图 =================
    一行 = 一条采购记录(订单)的一个批次。几个订单填同一个 MBL# 就是拼在一个柜里。
    共享字段(船名/ETD/ETA/起运港/目的港/柜号)填一次同步给全组;货物明细每个订单各填各的。 */
-const MBL_SHARE=[["vessel","船名 / 航次"],["etd","ETD"],["eta","ETA"],
+/* csNo = 结汇合同号(每一票发运一个,生成报关资料时自动带进「合同号」)。2026-11-19 加 */
+const MBL_SHARE=[["csNo","结汇合同号"],["vessel","船名 / 航次"],["etd","ETD"],["eta","ETA"],
                  ["origin","ORIGIN"],["dest","DESTINATION"],["ctnr","柜号 / 唛头"]];
 let shipOpen=new Set();      // 展开着的 MBL key
 /* 「有没有改动」靠比对界面快照,不用脏标记 —— cgRenderInto 渲染完会调一次 onChange
@@ -4239,7 +4242,7 @@ function shipGroups(){
     const bs=shBatches(r);
     /* 搜的是 MBL# / 柜号:只列对上的那几批,同一单的别的柜不跟着出来 */
     const q=$("#fSearch").value.trim(), qk=sKey(q);
-    const hitB=b=>!!qk&&[b.bl,b.ctnr].some(v=>v&&sKey(v).includes(qk));
+    const hitB=b=>!!qk&&[b.bl,b.ctnr,b.csNo].some(v=>v&&sKey(v).includes(qk));
     const onlyHit=bs.some(hitB);
     bs.forEach((b,i)=>{
       if(onlyHit&&!hitB(b)) return;
@@ -4294,6 +4297,7 @@ function renderShip(){
       <div class="mbl-hd mbl-cols" data-toggle="${esc(g.key)}"${g.recN!==g.items.length?` title="${g.recN} 个订单，其中有订单分了多批装，共 ${g.items.length} 批"`:""}>
         <span class="mbl-fold">${open?"▼":"►"}</span>
         <span class="mbl-no ${g.mbl?"":"none"}">${g.mbl?esc(g.mbl):"未填 MBL#"}${blTagHTML(mblBlDoc(g))}</span>
+        <span class="mbl-cs" data-lb="合同号" title="${esc(firstOf("csNo"))}">${esc(firstOf("csNo"))}</span>
         <span class="mbl-n" data-lb="订单">${nTxt}</span>
         <span class="mbl-amt">${esc(mblMoneyText(g.money))}</span>
         <span class="mbl-sub" data-lb="CBM">${c.cbm!=null?cgFmt(c.cbm):""}</span>
@@ -4419,7 +4423,11 @@ function openCustoms(mbl){
   const fix=$("#csFix");
   if(fix) fix.addEventListener("click",()=>{ closeModal("mCustoms"); openGoods(mbl); });
   const c=csCfg(), t=new Date(), iso=d=>d.toISOString().slice(0,10);
-  $("#csNo").value=(state.settings||{}).customs&&(state.settings.customs.lastNo||"")||"";
+  /* 合同号 = 这一柜的结汇合同号。没填就空着(以前预填「上次用的」,换一柜就是错的),提示里给上次的号作参考 */
+  { const own=String((g.items.find(x=>String(x.b.csNo||"").trim())||{b:{}}).b.csNo||"").trim();
+    const last=((state.settings||{}).customs||{}).lastNo||"";
+    $("#csNo").value=own;
+    $("#csNo").placeholder=own?"":(last?`这一柜还没填结汇合同号 · 上次：${last}`:"这一柜还没填结汇合同号"); }
   $("#csDate").value=iso(t); $("#csInvDate").value=iso(t);
   $("#csRate").value=c.rate; $("#csProfit").value=c.profit; $("#csMarkup").value=c.markup;
   $("#csTrade").value=c.trade; $("#csArrive").value=c.arrive;
@@ -4572,10 +4580,21 @@ async function genCustoms(){
                 trade:$("#csTrade").value.trim(),arrive:$("#csArrive").value.trim(),lastNo:no};
     closeModal("mCustoms");
     toast(`已生成 ${rows.length} 行货的报关资料。检查没问题后，在「附件 → 报关单」传定稿`,"ok");
+    let dirty=false;
     if(JSON.stringify(cur)!==JSON.stringify(next)&&!isViewer()){
-      state.settings=state.settings||{}; state.settings.customs=next;
-      await persist(`报关参数（汇率 ${rate}）`);
+      state.settings=state.settings||{}; state.settings.customs=next; dirty=true;
     }
+    /* 弹窗里填 / 改的合同号记回这一柜(各订单的这一批都写),下次直接带出来。按 id 重新取,别用 g 里的旧引用 */
+    if(!isViewer()){
+      const live=shipGroups().find(x=>x.key===customsMbl);
+      const tgts=(live?live.items:[]).map(x=>{ const r=getRec(x.r.id); return r?shGet(r,x.bid):null; }).filter(Boolean);
+      if(tgts.some(b=>String(b.csNo||"").trim()!==no)){
+        tgts.forEach(b=>b.csNo=no);
+        new Set(live.items.map(x=>x.r.id)).forEach(id=>{ const r=getRec(id); if(r) log(r,"结汇合同号",`${g.mbl} → ${no}`); });
+        dirty=true; render();
+      }
+    }
+    if(dirty) await persist(`报关资料 ${g.mbl} · 合同号 ${no}`);
   }catch(e){
     toast(e.message||"生成失败","err");
   }finally{ btn.disabled=false; btn.textContent=old; }
@@ -4842,7 +4861,7 @@ async function removeBl(mbl){
    (同一个 path,带 share:{mbl,bid}),按用途放进物流下的文件夹。引用是派生数据:
    mblSyncAll() 按批次上的清单对账 —— 缺的补、多的删,在 render() 和 persist() 里都跑,幂等。
    所以后加进柜的订单自动补上,移出的自动拿掉,同事那边合并丢了也会被补回来。 */
-const MBL_FIELDS=["blDoc","ctns","soc","ciplNo","photos","mblDocs"];
+const MBL_FIELDS=["blDoc","ctns","soc","ciplNo","photos","mblDocs","csNo"];   // csNo:后加进柜的订单自动带上,移出时清掉
 const MBL_ROLE={pack:{re:/打包装箱/,def:"1. 打包装箱"},exp:{re:/出口报关|报关单/,def:"2. 出口报关"},imp:{re:/进口清关|清关文件/,def:"3. 进口清关"}};
 const MBL_DOC_KIND={cd:{name:"报关单",role:"exp",dir:"cd",tip:"出口报关单（报关行回的定稿）"},cc:{name:"清关文件",role:"imp",dir:"cc",tip:"进口清关文件定稿：CI、PL、7501 等"}};
 /* 一个批次从这个柜挪走(移出 / 换 MBL#)时,整柜的东西不能带走,不然会被当成新柜的 */
